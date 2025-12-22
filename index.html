@@ -28832,7 +28832,7 @@ function createGoblinWidget(uniqueId, data = null) {
     };
 
     const container = document.createElement('div');
-    container.className = 'goblin-embed-container expanded';
+    container.className = 'goblin-embed-container'; 
     container.id = `goblin-${uniqueId}`;
 
     const now = new Date();
@@ -29547,6 +29547,10 @@ async function rerenderMovieScreen(dossierId) {
                 
                 // 2. 重新渲染整个屏幕以更新楼层号和内容
                 await rerenderMovieScreen(appState.currentMovieSession.dossierId);
+
+setTimeout(() => {
+            DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
+        }, 50);
                 
                 utils.showToast('剧情片段已删除');
             } catch (error) {
