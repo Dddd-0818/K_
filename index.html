@@ -14554,12 +14554,43 @@ body.light-mode .goblin-embed-container {
                 <div class="form-group"><label for="api-url">API URL</label><input type="text" id="api-url" placeholder="api.openai.com"></div>
                 <div class="form-group"><label for="api-key">API Key</label><input type="password" id="api-key" placeholder="sk-..."></div>
                 <div class="form-group"><label for="api-model-select">模型 (Model)</label><div class="model-fetch-group"><select id="api-model-select"><option value="">-- 先拉取模型 --</option></select><button id="fetch-models-button">拉取</button></div></div>
+            
+        <!-- 4. 温度调节 (Temperature) -->
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between;">
+                <label for="api-temp" style="font-size:12px; opacity:0.8;">随机性 (Temperature)</label>
+                <!-- 显示当前数值 -->
+                <span id="api-temp-value" style="font-family:monospace; color:var(--text-color); font-size:12px;">0.7</span>
             </div>
-            <div class="api-buttons">
-                <button id="set-active-api-button">设为当前</button>
-                <button id="save-settings-button">保存</button>
-            </div>
+            <!-- 【修复】width: 96% 防止撑破容器，display: block 独占一行 -->
+            <input type="range" id="api-temp" min="0" max="2" step="0.1" value="0.7" style="width: 96%; cursor: pointer; display: block; margin: 5px 0;">
+            <p style="font-size: 10px; opacity: 0.5; margin: 0;">
+                值越高越随机(有创造力)，值越低越保守。默认为 0.7。
+            </p>
         </div>
+
+        <!-- 5. 核采样调节 (Top P) -->
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between;">
+                <label for="api-topp" style="font-size:12px; opacity:0.8;">核采样 (Top P)</label>
+                <!-- 显示当前数值 -->
+                <span id="api-topp-value" style="font-family:monospace; color:var(--text-color); font-size:12px;">1.0</span>
+            </div>
+            <!-- 【修复】width: 96% -->
+            <input type="range" id="api-topp" min="0" max="1" step="0.05" value="1.0" style="width: 96%; cursor: pointer; display: block; margin: 5px 0;">
+            <p style="font-size: 10px; opacity: 0.5; margin: 0;">
+                控制输出的多样性。通常建议只调节其中一项。
+            </p>
+        </div>
+
+    </div>
+
+    <!-- 底部按钮 -->
+    <div class="api-buttons">
+        <button id="set-active-api-button">设为当前</button>
+        <button id="save-settings-button">保存</button>
+    </div>
+</div>
 
 <!-- 新增：MiniMax 全局配置页 -->
 <div id="minimax-settings-page" class="settings-page">
@@ -18574,6 +18605,10 @@ petBubbleCssEditor: document.getElementById('pet-bubble-css-editor'),
             wobbleUploadBtn: document.getElementById('wobble-upload-btn'),
             wobbleFileInput: document.getElementById('wobble-file-input'), // 这里引用你放在底部的input
             wobbleImg: document.getElementById('wobble-img'),
+apiTempInput: document.getElementById('api-temp'),
+apiTempValue: document.getElementById('api-temp-value'),
+apiToppInput: document.getElementById('api-topp'),
+apiToppValue: document.getElementById('api-topp-value'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -18868,31 +18903,42 @@ async getDuePendingActions() {
 
         const apiHelper = {
             async _callChatAPI(messages) {
-                const preset = appState.activeApiPreset;
-                if (!preset) throw new Error("未设置当前 API。");
-                if (!preset.url || !preset.key || !preset.model) throw new Error("当前 API 配置无效或不完整。");
-                
-                // 【核心升级】智能处理多模态消息
-                const processedMessages = messages.map(msg => {
-                    if (Array.isArray(msg.content)) { // 这是我们为识图设定的新格式
-                        return {
-                            role: msg.role,
-                            content: msg.content.map(part => {
-                                if (part.type === 'image_url') {
-                                    return {
-                                        type: 'image_url',
-                                        image_url: part.image_url,
-                                    };
-                                }
-                                return part; // text part
-                            })
-                        };
-                    }
-                    return msg;
-                });
+    const preset = appState.activeApiPreset;
+    if (!preset) throw new Error("未设置当前 API。");
+    if (!preset.url || !preset.key || !preset.model) throw new Error("当前 API 配置无效或不完整。");
+    
+    // 【核心修改】读取预设中的温度和TopP，如果没有则使用默认值
+    // 默认值：Temperature = 0.7, Top P = 1.0
+    const temperature = preset.temperature !== undefined ? parseFloat(preset.temperature) : 0.7;
+    const top_p = preset.top_p !== undefined ? parseFloat(preset.top_p) : 1.0;
 
-                const requestBody = { model: preset.model, messages: processedMessages, temperature: 0.7, stream: false };
-console.log('📦 发送给 AI 的最终数据包:', JSON.stringify(requestBody, null, 2));
+    // 智能处理多模态消息 (保持你原有的逻辑不变)
+    const processedMessages = messages.map(msg => {
+        if (Array.isArray(msg.content)) { 
+            return {
+                role: msg.role,
+                content: msg.content.map(part => {
+                    if (part.type === 'image_url') {
+                        return { type: 'image_url', image_url: part.image_url };
+                    }
+                    return part; 
+                })
+            };
+        }
+        return msg;
+    });
+
+    // 【核心修改】将参数加入请求体
+    const requestBody = { 
+        model: preset.model, 
+        messages: processedMessages, 
+        stream: false,
+        temperature: temperature, // <--- 传入温度
+        top_p: top_p              // <--- 传入 Top P
+    };
+
+    console.log(`📦 发送给 AI (Temp:${temperature}, TopP:${top_p}):`, JSON.stringify(requestBody, null, 2));
+
                 let url = preset.url.trim();
                 if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
                 url = url.replace(/\/$/, "");
@@ -22762,23 +22808,38 @@ ${historySection}
             });
         }
         async function loadActiveApiPresetIntoForm() {
-            const activePresetName = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'active_api_preset');
-            if (activePresetName) {
-                const preset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, activePresetName);
-                if (preset) {
-                    DOM.apiNameInput.value = preset.name; DOM.apiUrlInput.value = preset.url; DOM.apiKeyInput.value = preset.key;
-                    if (preset.models && preset.models.length > 0) {
-                        DOM.apiModelSelect.innerHTML = '';
-                        preset.models.forEach(m => { DOM.apiModelSelect.innerHTML += `<option value="${m.id}">${m.id}</option>`; });
-                        DOM.apiModelSelect.value = preset.model || preset.models[0].id;
-                    } else { DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>'; }
-                    appState.loadedPresetModel = preset.model || null;
-                }
-            } else {
-                DOM.apiNameInput.value = ''; DOM.apiUrlInput.value = ''; DOM.apiKeyInput.value = '';
-                DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>';
-            }
+    const activePresetName = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'active_api_preset');
+    if (activePresetName) {
+        const preset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, activePresetName);
+        if (preset) {
+            DOM.apiNameInput.value = preset.name; 
+            DOM.apiUrlInput.value = preset.url; 
+            DOM.apiKeyInput.value = preset.key;
+            
+            // 【新增】回显温度和 Top P，如果没存过，就用默认值
+            const temp = preset.temperature !== undefined ? preset.temperature : 0.7;
+            const topp = preset.top_p !== undefined ? preset.top_p : 1.0;
+            
+            DOM.apiTempInput.value = temp;
+            DOM.apiTempValue.textContent = temp;
+            DOM.apiToppInput.value = topp;
+            DOM.apiToppValue.textContent = topp;
+
+            if (preset.models && preset.models.length > 0) {
+                DOM.apiModelSelect.innerHTML = '';
+                preset.models.forEach(m => { DOM.apiModelSelect.innerHTML += `<option value="${m.id}">${m.id}</option>`; });
+                DOM.apiModelSelect.value = preset.model || preset.models[0].id;
+            } else { DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>'; }
+            appState.loadedPresetModel = preset.model || null;
         }
+    } else {
+        DOM.apiNameInput.value = ''; DOM.apiUrlInput.value = ''; DOM.apiKeyInput.value = '';
+        DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>';
+        // 恢复默认
+        DOM.apiTempInput.value = 0.7; DOM.apiTempValue.textContent = '0.7';
+        DOM.apiToppInput.value = 1.0; DOM.apiToppValue.textContent = '1.0';
+    }
+}
         function resetCreationForm() {
             DOM.charNameInput.value = ''; DOM.charBgInput.value = ''; DOM.userNameInput.value = ''; DOM.userBgInput.value = '';
             DOM.charAvatarArea.style.backgroundImage = 'none'; DOM.charAvatarArea.innerHTML = '<i class="ri-image-add-line"></i>';
@@ -28728,6 +28789,10 @@ async function enterMovieMode(dossierId) {
         renderMovieTurn(turn, offset + index + 1, false); 
     });
 
+setTimeout(() => {
+        DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
+    }, 50);
+
     // 如果是全新开局，自动发开场白
     if (fullHistory.length === 0 && appState.currentMovieSession.openingPrompt) {
         const openingTurn = { 
@@ -29891,6 +29956,9 @@ async function switchTimeline(timeline) {
         // D. 更新内存与界面
         appState.currentMovieHistoryFull = newHistoryInMemory;
         await rerenderMovieScreen(dossierId);
+       setTimeout(() => {
+            DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
+        }, 50);
         
         // E. 持久化保存新的标题
         DOM.movieCharacterName.innerHTML = newDisplayName;
@@ -38484,14 +38552,38 @@ document.addEventListener('click', (e) => {
                     utils.showToast('模型已拉取并保存！');
                 } catch (error) { utils.showToast(`拉取模型失败: ${error.message}`); DOM.apiModelSelect.innerHTML = '<option value="">拉取失败</option>'; } finally { DOM.fetchModelsButton.textContent = '拉取'; DOM.fetchModelsButton.disabled = false; }
             });
+
+// --- API 参数滑块监听 ---
+DOM.apiTempInput.addEventListener('input', () => {
+    DOM.apiTempValue.textContent = DOM.apiTempInput.value;
+});
+
+DOM.apiToppInput.addEventListener('input', () => {
+    DOM.apiToppValue.textContent = DOM.apiToppInput.value;
+});
             DOM.saveApiSettingsButton.addEventListener('click', async () => {
-                const name = DOM.apiNameInput.value.trim(), url = DOM.apiUrlInput.value.trim(), key = DOM.apiKeyInput.value.trim(), model = DOM.apiModelSelect.value;
-                if (!name || !url || !key) return utils.showToast('请填写所有字段！');
-                const existingPreset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, name) || {};
-                const presetToSave = { ...existingPreset, name, url, key, model };
-                await dbHelper.set(CONSTANTS.STORE_NAMES.API_PRESETS, presetToSave);
-                await populateApiPresets(); utils.showToast(`配置 "${name}" 已保存！`);
-            });
+    const name = DOM.apiNameInput.value.trim(), url = DOM.apiUrlInput.value.trim(), key = DOM.apiKeyInput.value.trim(), model = DOM.apiModelSelect.value;
+    
+    // 【新增】获取滑块的值
+    const temperature = parseFloat(DOM.apiTempInput.value);
+    const top_p = parseFloat(DOM.apiToppInput.value);
+
+    if (!name || !url || !key) return utils.showToast('请填写所有字段！');
+    
+    const existingPreset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, name) || {};
+    
+    // 【新增】保存 temperature 和 top_p
+    const presetToSave = { 
+        ...existingPreset, 
+        name, url, key, model, 
+        temperature, 
+        top_p 
+    };
+    
+    await dbHelper.set(CONSTANTS.STORE_NAMES.API_PRESETS, presetToSave);
+    await populateApiPresets(); 
+    utils.showToast(`配置 "${name}" (Temp:${temperature}) 已保存！`);
+});
             DOM.setActiveApiButton.addEventListener('click', async () => {
                 const name = DOM.apiNameInput.value.trim(); if(!name) return utils.showToast("配置名称不能为空！");
                 const preset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, name);
@@ -38501,12 +38593,24 @@ document.addEventListener('click', (e) => {
                 await populateApiPresets(); utils.showToast(`"${name}" 已设为当前 API 配置。`);
             });
             DOM.loadPresetButton.addEventListener('click', async () => {
-                const preset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, DOM.apiPresetSelect.value);
-                if (preset) {
-                    DOM.apiNameInput.value = preset.name; DOM.apiUrlInput.value = preset.url; DOM.apiKeyInput.value = preset.key;
-                    DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>'; appState.loadedPresetModel = preset.model || null;
-                }
-            });
+    const preset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, DOM.apiPresetSelect.value);
+    if (preset) {
+        DOM.apiNameInput.value = preset.name; 
+        DOM.apiUrlInput.value = preset.url; 
+        DOM.apiKeyInput.value = preset.key;
+        
+        // 【新增】回显
+        const temp = preset.temperature !== undefined ? preset.temperature : 0.7;
+        const topp = preset.top_p !== undefined ? preset.top_p : 1.0;
+        DOM.apiTempInput.value = temp;
+        DOM.apiTempValue.textContent = temp;
+        DOM.apiToppInput.value = topp;
+        DOM.apiToppValue.textContent = topp;
+
+        DOM.apiModelSelect.innerHTML = '<option value="">-- 先拉取模型 --</option>'; 
+        appState.loadedPresetModel = preset.model || null;
+    }
+});
             DOM.deletePresetButton.addEventListener('click', async () => {
                 const name = DOM.apiPresetSelect.value; if (!name || !confirm(`确定删除 "${name}" 吗？`)) return;
                 const activePreset = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'active_api_preset');
