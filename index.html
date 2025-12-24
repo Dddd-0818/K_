@@ -23932,25 +23932,23 @@ if (message.status === 'intercepted') {
                 // --- 5. 【核心修复】智能创建模块 (增强脚本支持) ---
                 let moduleElement;
                 
-                // 判断是否是完整 HTML 文档 (包含 <html> 或 <!DOCTYPE)
+                // 判断是否是完整 HTML 文档
                 if (/^\s*<!doctype html/i.test(htmlContent) || /<html/i.test(htmlContent)) {
                     // === 分支A: 完整文档 -> 使用 iframe (最稳妥) ===
                     moduleElement = document.createElement('iframe');
                     moduleElement.style.cssText = 'width: 100%; border: none; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background: #fff;';
-                    // 【关键】增加 allow-forms 和 allow-popups，确保交互能用
                     moduleElement.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups'; 
                     moduleElement.srcdoc = htmlContent;
                     
-                    // 自动高度调整
+                    // 【核心修改】强制给高高度
+                    
+                    moduleElement.style.height = '600px'; 
+                    
+                    // (可选) 如果你想保留自动高度调整作为兜底，可以这样写，但首选固定高度
                     moduleElement.addEventListener('load', () => {
-                        try {
-                            const body = moduleElement.contentWindow.document.body;
-                            const html = moduleElement.contentWindow.document.documentElement;
-                            const height = Math.max(body.scrollHeight, body.offsetHeight, html.clientHeight, html.scrollHeight, html.offsetHeight);
-                            moduleElement.style.height = (height + 20) + 'px'; // 加一点余量
-                        } catch (e) { 
-                            moduleElement.style.height = '350px'; // 兜底高度
-                        }
+                        // 尝试读取内部高度，但通常跨域或渲染时机问题导致不准
+                        // 所以这里其实建议直接写死 600px 或者 75vh
+                        moduleElement.style.height = '600px'; 
                     });
                 } else {
                     // === 分支B: 只是代码片段 -> 使用 div + 脚本激活 ===
