@@ -14,6 +14,7 @@
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Noto+Serif+KR:wght@300;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Pirata+One&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -21,6 +22,7 @@
    <link href="https://fonts.googleapis.com/css2?family=Ruthie&family=Special+Elite&display=swap" rel="stylesheet"> 
    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Pinyon+Script&family=Noto+Serif+SC:wght@200;300;400;500&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
    <script src="https://unpkg.com/pinyin-pro"></script>
+   <script src="https://unpkg.com/@phosphor-icons/web"></script>
    <script src="https://unpkg.com/lucide@latest"></script>
    <script src="https://unpkg.com/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
    <script src="https://unpkg.com/idb@7/build/umd.js"></script>
@@ -13687,10 +13689,26 @@ body.light-mode .ins-avatar {
 }
 
 /* --- 3. 卡片内容区 --- */
+/* 修改：正文阅读模式 (小说风格) */
 .ins-card-body {
-    padding: 15px 20px; /* 增加左右内边距 */
-    font-size: 15px;
-    line-height: 1.8;   /* 增加行高，阅读更舒适 */
+    /* --- 核心：两端对齐，像书本一样 --- */
+    text-align: justify !important; 
+    text-justify: inter-ideograph; /* 优化中文标点对齐 */
+    
+    /* --- 布局：左右留白适中 --- */
+    padding: 25px 20px !important; 
+    
+    /* --- 文字体验 --- */
+    font-size: 13px;       /* 字号适中 */
+    line-height: 1.85;     /* 宽松的行高，呼吸感强 */
+    letter-spacing: 0.5px; /* 字间距 */
+    color: inherit;        /* 跟随主题色 */
+}
+
+.ins-card-body br {
+    content: "";
+    display: block;
+    margin-bottom: 10px; /* 让每一行换行都稍微空开一点 */
 }
 /* 剧本特定样式保留 */
 .ins-card-body .dialogue { 
@@ -13847,17 +13865,6 @@ body.light-mode .action-icons i:hover {
     color: #000 !important;
 }
 
-/* 5. 【新需求】剧本内容居中排版 */
-.ins-card-body {
-    text-align: center !important; /* 强制居中 */
-    padding: 20px 25px !important; /* 增加一点左右留白，居中更好看 */
-}
-
-/* 6. (优化) 让对话内容的引号也居中，保持整齐 */
-.ins-card-body .dialogue {
-    display: inline-block; /* 保持在行内，但允许换行 */
-    text-align: center;
-}
 /* =======================================================
    ===   🚑 最终修复：解锁浅色模式颜色控制权           ===
    ======================================================= */
@@ -14158,6 +14165,234 @@ body.light-mode .goblin-embed-container {
     /* 允许换行 */
     white-space: normal; 
 }
+
+/* =========================================
+   ===   新增：韩系胶囊留言板组件 (Ins Style) ===
+   ========================================= */
+
+/* 定义局部变量，防止污染全局 */
+.capsule-component-root {
+    --capsule-h: 56px; /* 高度稍微减小一点点，更精致 */
+    --capsule-ink: #111;
+    --capsule-paper: #fff;
+    --capsule-border: 1px solid #111;
+    
+    /* Grid 定位 */
+    grid-column: 1 / 3;
+    grid-row: 5 / 6;
+    align-self: center;
+    justify-self: center;
+    
+    /* === 核心修改：更保守的宽度 === */
+    width: 82%;        /* 改为 82%，给左右留出足够的安全空间 */
+    max-width: 310px;  /* 限制最大宽度为 310px，确保在 iPhone SE 等小屏上也不溢出 */
+    margin-top: 15px;
+    margin-left: auto; /* 强制居中 */
+    margin-right: auto;
+    /* =========================== */
+
+    position: relative;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+/* 胶囊外层包装 */
+.capsule-wrapper {
+    position: relative;
+    width: 100%; /* 撑满容器 */
+    height: var(--capsule-h);
+}
+
+/* 装饰星星 */
+.deco-star {
+    position: absolute;
+    color: #e0e0e0; /* 深色模式下星星改淡一点，或者保持黑色看你喜好 */
+    font-size: 14px;
+    animation: twinkle 3s infinite ease-in-out;
+    pointer-events: none;
+    z-index: 0;
+}
+/* 浅色模式下星星变黑 */
+body.light-mode .deco-star { color: var(--capsule-ink); }
+
+.star-1 { top: -15px; left: 20px; animation-delay: 0s; }
+.star-2 { bottom: -12px; right: 40px; font-size: 10px; animation-delay: 1.5s; }
+.star-3 { top: -10px; right: 80px; font-size: 8px; animation-delay: 0.5s; }
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2) rotate(15deg); }
+}
+
+/* 胶囊本体 */
+.capsule {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: var(--capsule-paper);
+    border: var(--capsule-border);
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6px 0 20px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.2); /* 深色模式阴影重一点 */
+    overflow: hidden;
+    z-index: 10;
+    transition: box-shadow 0.3s;
+}
+body.light-mode .capsule {
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.05);
+}
+
+/* 左侧标签 */
+.tag-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-style: italic;
+    font-weight: 600;
+    padding-right: 15px;
+    border-right: 1px solid #eee;
+    white-space: nowrap;
+    color: var(--capsule-ink);
+    flex-shrink: 0;
+    font-family: 'Playfair Display', serif;
+}
+
+.spinning-icon { animation: spin-slow 8s linear infinite; }
+@keyframes spin-slow { 100% { transform: rotate(360deg); } }
+
+/* 滚动区域 */
+.marquee-container {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    margin: 0 10px;
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.marquee-track {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    position: absolute;
+    white-space: nowrap;
+    /* 时间改成 30s，让滚动变慢 */
+    /* 这里的 linear 保持匀速 */
+    animation: scroll-left 30s linear infinite;
+}
+.marquee-container:hover .marquee-track { animation-play-state: paused; }
+
+.msg-item {
+    font-size: 14px;
+    margin-right: 40px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    font-family: sans-serif;
+    font-weight: 500;
+}
+.msg-item::before {
+    content: '•';
+    color: #ccc;
+    margin-right: 8px;
+}
+
+@keyframes scroll-left {
+    0% { 
+        /* 从容器右侧外开始 */
+        transform: translateX(100%); 
+    }
+    100% { 
+        
+        transform: translateX(calc(-100% - 50px)); 
+    }
+}
+
+/* 写留言按钮 (圆钮) */
+.capsule-action-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--capsule-ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.capsule-action-btn:active { transform: scale(0.9); }
+
+/* 输入层 */
+.capsule-input-layer {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--capsule-paper);
+    display: flex;
+    align-items: center;
+    
+    /* === 修改点：减小左右内边距 === */
+    /* 左边 15px (给光标留位)，右边 4px (紧贴边缘) */
+    padding: 0 4px 0 15px !important; 
+    
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 20;
+    box-sizing: border-box; /* 确保不溢出 */
+}
+.capsule.writing .capsule-input-layer { transform: translateY(0); }
+
+.capsule-input {
+    flex: 1; 
+    min-width: 0; /* 关键：允许输入框无限收缩，不撑开父容器 */
+    border: none; 
+    background: transparent;
+    font-size: 14px; 
+    color: var(--capsule-ink);
+    
+    /* === 修改点：减小右侧间距 === */
+    margin-right: 5px; 
+}
+
+/* 内部小按钮 */
+.capsule-close-icon {
+    /* === 修改点：减小点击热区，节省空间 === */
+    padding: 5px; 
+    color: #bbb; 
+    cursor: pointer; 
+    font-size: 16px; /*稍微改小一点点 */
+    flex-shrink: 0; 
+    transition: color 0.2s;
+}
+.capsule-close-icon:hover { color: var(--capsule-ink); }
+
+.capsule-send-btn {
+    /* === 修改点：更紧凑的按钮样式 === */
+    font-size: 11px;      /* 字号微调 */
+    padding: 0 12px;      /* 左右内边距减小 */
+    height: 32px;         /* 高度微调 */
+    margin-left: 2px;     /* 左边距减小 */
+    
+    background: var(--capsule-ink); 
+    color: #fff;
+    border: none; 
+    border-radius: 20px; 
+    cursor: pointer;
+    font-weight: 600; 
+    flex-shrink: 0;       /* 核心：禁止按钮被压缩 */
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+.capsule-send-btn:hover { opacity: 0.8; }
     </style>
 </head>
 
@@ -14501,10 +14736,48 @@ body.light-mode .goblin-embed-container {
 
         </div>
         <!-- ▲▲▲▲▲▲ [新增结束] ▲▲▲▲▲▲ -->
+<!-- 在这里插入胶囊组件 -->
+<div class="capsule-component-root">
+    <div class="capsule-wrapper">
+        <!-- 装饰星星 -->
+        <i class="ph-fill ph-star-four deco-star star-1"></i>
+        <i class="ph-fill ph-star-four deco-star star-2"></i>
+        <i class="ph-fill ph-sparkle deco-star star-3"></i>
+
+        <div class="capsule" id="ins-capsule">
+            
+            <!-- 左侧标签 -->
+            <div class="tag-icon">
+                <i class="ph ph-asterisk spinning-icon"></i>
+                <span>Notes</span>
+            </div>
+
+            <!-- 滚动留言区 -->
+            <div class="marquee-container">
+                <div class="marquee-track" id="ins-track">
+                    <span class="msg-item">Coffee first ☕</span>
+                    <span class="msg-item">今天也要开心呀</span>
+                    <span class="msg-item">Deadline is coming...</span>
+                </div>
+            </div>
+
+            <!-- 写留言按钮 -->
+            <div class="capsule-action-btn" id="open-capsule-input-btn">
+                <i class="ph ph-pencil-simple"></i>
+            </div>
+
+            <!-- 输入层 -->
+            <div class="capsule-input-layer">
+                <input type="text" class="capsule-input" id="capsule-msg-input" placeholder="Type here..." maxlength="30" autocomplete="off">
+                
+                <i class="ph ph-x capsule-close-icon" id="close-capsule-input-btn"></i>
+                <button class="capsule-send-btn" id="send-capsule-msg-btn">POST</button>
+            </div></div></div>
+        </div>
     </div>
-   </div>
+  </div>
  </div>
-</div>  
+</div>
                            
 <div class="pagination">
                 <div class="dot active"></div>
@@ -14779,7 +15052,6 @@ body.light-mode .goblin-embed-container {
                 
 <textarea id="pet-css-editor" placeholder="#pet-avatar { ... }" style="width: 100%; box-sizing: border-box; min-height: 80px; font-family: monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap; background: rgba(0,0,0,0.3); color: #aaffaa; border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); resize: vertical;"></textarea>
             </div>
-        </div>
 
         <hr style="border:none; border-top:1px dashed rgba(255,255,255,0.15); margin: 5px 0;">
 
@@ -18609,6 +18881,12 @@ apiTempInput: document.getElementById('api-temp'),
 apiTempValue: document.getElementById('api-temp-value'),
 apiToppInput: document.getElementById('api-topp'),
 apiToppValue: document.getElementById('api-topp-value'),
+insCapsule: document.getElementById('ins-capsule'),
+insTrack: document.getElementById('ins-track'),
+openCapsuleInputBtn: document.getElementById('open-capsule-input-btn'),
+closeCapsuleInputBtn: document.getElementById('close-capsule-input-btn'),
+sendCapsuleMsgBtn: document.getElementById('send-capsule-msg-btn'),
+capsuleMsgInput: document.getElementById('capsule-msg-input'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -20122,6 +20400,12 @@ createMoviePrompt(sessionSettings, movieHistory, userInput) {
   ${dossier.user.background || '你的灵魂伴侣，这部电影的另一位主角。'}
 
 ---
+# ⚠️ 字数与质量铁律 (LENGTH & QUALITY RULE) - 【最高优先级】
+1.  **目标字数：** 本次回复的剧情文本（story_content）**必须严格达到 ${responseLength} 字以上**！
+2.  **拒绝简写：** 绝对禁止“一笔带过”，绝对禁止因为【HUD 状态栏】而降低剧情文本（story_content）的字数和质量。
+3.  **惩罚机制：** 如果字数过少和质量降低，将被视为“拍摄事故”。
+
+---
 
 # 🚫 【语言禁忌 (Forbidden Words) - 强制执行】
 **为了保持电影的沉浸感与文学性，请严格遵守以下语言规范：**
@@ -20164,7 +20448,7 @@ createMoviePrompt(sessionSettings, movieHistory, userInput) {
 ---
 
 # 📤 输出规则：【铁律】 (Output Format Rules)
-**你必须严格返回一个 JSON 对象，包含以下两个字段：**
+**你必须返回一个包含以下两个字段的 JSON 对象。请确保 JSON 格式绝对正确，不要截断。**
 
 ## 1. \`widget_update\` (状态栏调度)
 请根据当前剧情，更新以下字段。**仅填写发生变化的字段。**
@@ -20204,7 +20488,7 @@ createMoviePrompt(sessionSettings, movieHistory, userInput) {
     - **旁白/动作**: 使用常规文本。
     - **角色对话**: 当角色【${dossier.character.name}】说话时，必须用中文引号 “ ” 包裹。
     - **内心独白**: 当需要展现角色【${dossier.character.name}】的内心活动时，必须用星号 * * 将其包裹。
-4.  **篇幅控制**: 请根据指示，将你的回复篇幅控制在 **${responseLength}** 字左右。
+4.  **篇幅控制**: 请根据指示，请务必写够 **${responseLength}** 字左右。
 5.  **融合主角行动**: 用户的输入是主角的行动或对话。你必须自然地将用户的输入作为“已发生的事实”，并在此基础上续写接下来的场景和反应。
 
 ## JSON 示例 (Example)
@@ -29363,7 +29647,8 @@ async function loadMoreMovieTurns() {
 }
 
 /**
- * 【V3.0 - 状态快照修复版】处理用户输入，推动剧情
+ * 【V5.0 - 暴力拆箱修复版】处理用户输入，推动剧情
+ * 修复：彻底解决 AI 返回 ```json 代码块导致屏幕显示乱码的问题
  */
 async function handleMovieSend() {
     const userInput = DOM.movieInput.value.trim();
@@ -29375,7 +29660,7 @@ async function handleMovieSend() {
     DOM.movieInput.disabled = true;
     DOM.movieSendBtn.disabled = true;
     DOM.movieInput.value = '';
-    DOM.movieInput.placeholder = '导演正在调度...';
+    DOM.movieInput.placeholder = '导演正在调度长镜头...';
     DOM.movieInputCard.classList.add('waiting-for-reply');
 
     try {
@@ -29388,52 +29673,86 @@ async function handleMovieSend() {
         appState.currentMovieHistoryFull.push(userTurn);
         renderMovieTurn(userTurn, appState.currentMovieHistoryFull.length, false);
 
-        // 3. 请求 AI (导演)
+        // 3. 请求 AI
         const historyForContext = appState.currentMovieHistoryFull.slice(0, -1);
         const prompt = promptManager.createMoviePrompt(appState.currentMovieSession, historyForContext, userInput);
         const aiResponse = await apiHelper.getChatCompletion(prompt);
         
-        // 4. 【核心修复】创建状态底片
-        // 先深度复制当前的全局状态作为“底片”，防止引用污染
-        // 这里的 JSON.parse(JSON.stringify(...)) 是关键
-        let currentSnapshot = JSON.parse(JSON.stringify(appState.currentGoblinState));
+        // 4. 【核心修复】智能拆箱与解析
         let contentToRender = aiResponse; 
+        
+        // 先深度复制上一轮的状态作为底板 (Safe Merge)
+        let nextState = JSON.parse(JSON.stringify(appState.currentGoblinState));
 
         try {
-            // 尝试提取 JSON
-            const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
+            // === 🧹 步骤 A: 暴力净化字符串 ===
+            let jsonString = aiResponse.trim();
+
+            // 1. 找到第一个 '{' 和最后一个 '}'
+            const firstBrace = jsonString.indexOf('{');
+            const lastBrace = jsonString.lastIndexOf('}');
+
+            if (firstBrace !== -1 && lastBrace !== -1) {
+                // 2. 只提取大括号中间的部分，扔掉外面所有的 ```json, ```, 以及废话
+                jsonString = jsonString.substring(firstBrace, lastBrace + 1);
                 
+                // 3. 尝试解析
+                const parsed = JSON.parse(jsonString);
+                
+                // === 🧹 步骤 B: 提取数据 ===
+                
+                // 提取剧情文本
                 if (parsed.story_content) {
-                    contentToRender = parsed.story_content; // 提取纯剧情文本
+                    contentToRender = parsed.story_content;
                 }
                 
+                // 提取并合并状态栏数据
                 if (parsed.widget_update) {
-                    // 【关键逻辑】增量更新
-                    // 1. 更新全局状态 (appState)，供下一轮对话继承
-                    appState.currentGoblinState = {
-                        ...appState.currentGoblinState, // 保留旧值
-                        ...parsed.widget_update         // 覆盖新值
-                    };
+                    const newData = parsed.widget_update;
                     
-                    // 2. 更新本次底片 (Snapshot)，供本轮卡片显示
-                    // 这确保了这一楼显示的是更新后的状态
-                    currentSnapshot = JSON.parse(JSON.stringify(appState.currentGoblinState));
+                    // 遍历字段，非空覆盖
+                    const keys = ['weatherMode', 'themeText', 'korText', 'musicTitle', 'musicArtist', 
+                                  'promiseTitle', 'promiseDesc', 'newsTitle', 'newsDesc', 
+                                  'memoryTitle', 'memoryDesc', 'forecastTitle', 'forecastDesc'];
                     
-                    console.log("🎬 [导演指令] 状态栏已更新:", parsed.widget_update);
+                    keys.forEach(key => {
+                        if (newData[key] && newData[key].trim() !== "") {
+                            nextState[key] = newData[key];
+                        }
+                    });
+
+                    // 特殊处理 logData
+                    if (newData.logData) {
+                        if (!nextState.logData) nextState.logData = {};
+                        Object.keys(newData.logData).forEach(subKey => {
+                            if (newData.logData[subKey] && newData.logData[subKey].trim() !== "") {
+                                nextState.logData[subKey] = newData.logData[subKey];
+                            }
+                        });
+                    }
+                    console.log("🎬 [导演] 状态栏更新成功");
                 }
+            } else {
+                throw new Error("未找到 JSON 结构");
             }
+
         } catch (e) {
-            console.warn("AI未返回标准JSON，降级为纯文本模式", e);
+            console.warn("AI返回格式解析失败，启用降级显示:", e);
+            // 如果解析真的失败了（比如 AI 写了非法的 JSON），
+            // 这里 contentToRender 依然是 aiResponse (源代码)，
+            
+            contentToRender = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
         }
 
-        // 5. AI 回合上屏 (带着底片上屏)
+        // C. 更新全局状态
+        appState.currentGoblinState = nextState;
+
+        // 5. AI 回合上屏
         const aiTurn = { 
             dossierId, 
             author: 'ai', 
             content: contentToRender, 
-            widgetState: currentSnapshot, // 【新增】将底片永久封存在这条记录里
+            widgetState: JSON.parse(JSON.stringify(nextState)), 
             timestamp: Date.now() 
         };
         const aiTurnId = await dbHelper.add(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, aiTurn);
@@ -29441,7 +29760,7 @@ async function handleMovieSend() {
         
         appState.currentMovieHistoryFull.push(aiTurn);
         
-        // 渲染时传入 widgetData，不再读取全局变量
+        // 渲染
         renderMovieTurn(aiTurn, appState.currentMovieHistoryFull.length, false);
 
     } catch (error) {
@@ -37832,6 +38151,28 @@ async function handleUnblockReaction(dossier) {
     }
 }
 
+function addMessage() {
+    const text = inputField.value.trim();
+    if (text) {
+        const newSpan = document.createElement('span');
+        newSpan.classList.add('msg-item');
+        newSpan.innerText = text;
+        
+        // 插入到最前面
+        track.prepend(newSpan);
+        inputField.value = '';
+        
+        // --- 核心修改：重启动画逻辑 ---
+        track.style.animation = 'none';
+        track.offsetHeight; /* 触发重绘 */
+        
+        // 这里的 30s 要和 CSS 里保持一致，确保发布后也是慢速滚动
+        track.style.animation = 'scroll-left 30s linear infinite';
+        
+        closeInput();
+    }
+}
+
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -44270,6 +44611,56 @@ DOM.rsDetailModal.addEventListener('click', (e) => {
                 // 重置输入框，允许重复选择同一张图
                 e.target.value = '';
             });
+
+// === Ins 胶囊留言板逻辑 ===
+
+// 打开输入框
+DOM.openCapsuleInputBtn.addEventListener('click', () => {
+    DOM.insCapsule.classList.add('writing');
+    setTimeout(() => DOM.capsuleMsgInput.focus(), 100);
+});
+
+// 关闭输入框
+DOM.closeCapsuleInputBtn.addEventListener('click', () => {
+    DOM.insCapsule.classList.remove('writing');
+    DOM.capsuleMsgInput.blur();
+});
+
+// 发送留言核心函数
+const postCapsuleMessage = () => {
+    const text = DOM.capsuleMsgInput.value.trim();
+    if (text) {
+        const newSpan = document.createElement('span');
+        newSpan.className = 'msg-item';
+        newSpan.innerText = text;
+        
+        // 插入到最前面
+        DOM.insTrack.prepend(newSpan);
+        DOM.capsuleMsgInput.value = '';
+        
+        // 重启动画，确保新内容立即进入视线
+        DOM.insTrack.style.animation = 'none';
+        DOM.insTrack.offsetHeight; /* 触发重绘 */
+        DOM.insTrack.style.animation = 'scroll-left 20s linear infinite';
+        
+        // 关闭输入框
+        DOM.insCapsule.classList.remove('writing');
+        DOM.capsuleMsgInput.blur();
+        
+        // (可选) 保存到 localStorage，简单持久化
+        // saveCapsuleMessages(); 
+    }
+};
+
+// 发送按钮点击
+DOM.sendCapsuleMsgBtn.addEventListener('click', postCapsuleMessage);
+
+// 回车发送
+DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        postCapsuleMessage();
+    }
+});
 
 }
 
