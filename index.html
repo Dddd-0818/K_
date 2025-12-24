@@ -14393,6 +14393,101 @@ body.light-mode .capsule {
     justify-content: center;
 }
 .capsule-send-btn:hover { opacity: 0.8; }
+
+/* =========================================
+   ===   [V2.0] Ins风斜纹心情电池 (Striped Mood) ===
+   ========================================= */
+
+/* 0. 头部布局 (保持不变) */
+#chat-dialogue-header-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* 稍微拉开一点距离 */
+}
+
+/* 1. 电池外壳：极细边框，更精致 */
+.ins-battery-shell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 32px;  /*稍微加宽一点，展示纹理 */
+    height: 14px;
+    border: 1px solid currentColor; /* 1px 细边框更显高级 */
+    border-radius: 3px;
+    padding: 2px; /* 内部留白，像画框一样 */
+    box-sizing: border-box;
+    opacity: 0.9;
+}
+
+/* 2. 电池正极头 (右侧) */
+.ins-battery-shell::after {
+    content: "";
+    position: absolute;
+    right: -3px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 2px;
+    height: 6px;
+    background: currentColor;
+    border-radius: 0 2px 2px 0;
+}
+
+/* 3. 内部填充：斜纹纹理 (Washi Tape 效果) */
+.ins-battery-fill {
+    height: 100%;
+    width: 100%;
+    border-radius: 1px;
+    
+    /* 核心：黑白斜纹渐变 */
+    /* 在深色模式下，这是白条纹；在浅色模式下，这是黑条纹 */
+    background: repeating-linear-gradient(
+        45deg,
+        currentColor,
+        currentColor 2px,
+        transparent 2px,
+        transparent 4px
+    );
+    
+    /* 遮罩：控制进度的关键 */
+    /* 通过 mask-size 的变化来实现充电效果 */
+    -webkit-mask-image: linear-gradient(#000, #000);
+    -webkit-mask-size: 0% 100%; /* 初始宽度 0 */
+    -webkit-mask-repeat: no-repeat;
+    
+    animation: ins-charge 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.6; /* 纹理稍微淡一点，不抢眼 */
+}
+
+/* 4. 悬浮的实心爱心 (点睛之笔) */
+.ins-battery-heart {
+    position: absolute;
+    top: -6px;   /* 悬浮在电池右上角 */
+    right: -6px;
+    font-size: 10px;
+    color: currentColor; /* 跟随主题色 */
+    
+    /* 呼吸 + 摇摆动画 */
+    animation: ins-heart-beat 2s infinite ease-in-out;
+    text-shadow: 2px 2px 0 var(--background-color); /*以此模拟白色描边，防止和背景混在一起 */
+    z-index: 2;
+}
+
+/* --- 动画定义 --- */
+
+/* 充电：从左向右平滑填满 */
+@keyframes ins-charge {
+    0% { -webkit-mask-size: 0% 100%; }
+    50% { -webkit-mask-size: 100% 100%; }
+    80% { -webkit-mask-size: 100% 100%; opacity: 1; }
+    100% { -webkit-mask-size: 0% 100%; opacity: 0; } /* 闪烁一下消失，循环 */
+}
+
+/* 爱心：轻轻跳动 */
+@keyframes ins-heart-beat {
+    0%, 100% { transform: scale(1) rotate(10deg); }
+    50% { transform: scale(1.2) rotate(10deg); }
+}
     </style>
 </head>
 
@@ -23549,7 +23644,17 @@ async function openChatWindow(dossierId) {
     // 注入样式
     applyBubbleStyle(cssToApply, false);
     
-    DOM.dialogueHeaderTitle.textContent = dossier.character.name;
+    // --- 【修改】头部标题：名字 + Ins风斜纹电池 ---
+    // 注意：这里我们加了一个 ✨ 装饰，让它更像 Ins 贴纸
+    const batteryHTML = `
+        <div class="ins-battery-shell" title="Online">
+            <div class="ins-battery-fill"></div>
+            <i class="ri-heart-fill ins-battery-heart"></i>
+        </div>
+    `;
+    
+    // 组合：名字 + 电池
+    DOM.dialogueHeaderTitle.innerHTML = `${dossier.character.name} ${batteryHTML}`;
     DOM.chatDialoguePage.style.backgroundImage = 'none';
     if (dossier.wallpaperAssetId) {
         const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.wallpaperAssetId);
