@@ -17980,6 +17980,75 @@ body.light-mode .capsule {
         // =======================================================
         // ========= 1. 全局常量、状态和DOM引用 =================
         // =======================================================
+        // --- 0. 后台保活助手 (最终智能版：WAV + 音乐避让) ---
+const backgroundKeeper = {
+    audio: null,
+    
+    init() {
+        // 0.1秒标准静音 WAV (兼容性最强)
+        const silentWav = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==';
+        this.audio = new Audio(silentWav);
+        this.audio.loop = true; 
+        this.audio.volume = 0.01; // 防止爆音
+        // 挂载到全局防止被回收
+        window.kikiKeepAliveAudio = this.audio;
+    },
+
+    // 第一次点击时的“热身”
+    warmUp() {
+        if (!this.audio) this.init();
+        this.audio.play().then(() => {
+            this.audio.pause();
+        }).catch(e => console.log("音频热身略过:", e));
+    },
+
+    start() {
+        // 【核心优化】如果暮光播放器正在播放，说明后台已经是活的，
+        // 不需要启动静音，否则会打断音乐！
+        if (document.querySelector('.tw-pill-cover.playing')) {
+            console.log("🎶 音乐播放中，无需额外保活");
+            return;
+        }
+
+        if (!this.audio) this.init();
+        
+        // 播放静音
+        this.audio.play().catch(e => {
+            console.error("保活启动受阻 (请确保已点击屏幕):", e);
+        });
+
+        // 伪装锁屏信息
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'KiKi OS 在线中...',
+                artist: '等待回复',
+                album: 'System Keep-Alive',
+                artwork: [{ src: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', sizes: '96x96', type: 'image/jpeg' }]
+            });
+            navigator.mediaSession.playbackState = 'playing';
+        }
+        console.log("🛡️ 后台保活模式：已启动");
+    },
+
+    stop() {
+        // 停止静音
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+        }
+        
+        // 恢复锁屏状态
+        if ('mediaSession' in navigator) {
+            // 只有当【没有】在听歌时，才清除锁屏信息
+            // 否则会把正在听的歌的信息也清掉
+            if (!document.querySelector('.tw-pill-cover.playing')) {
+                navigator.mediaSession.playbackState = 'paused';
+                navigator.mediaSession.metadata = null;
+            }
+        }
+        console.log("🛡️ 后台保活模式：已结束");
+    }
+};
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
@@ -19326,20 +19395,34 @@ async getDuePendingActions() {
                 url = url.replace(/\/$/, "");
                 const apiUrl = url.endsWith('/v1') ? `${url}/chat/completions` : `${url}/v1/chat/completions`;
                 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${preset.key}` },
-                    body: JSON.stringify(requestBody)
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`API 请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
-                }
-                const result = await response.json();
-                const content = result.choices[0]?.message?.content;
-                if (!content) throw new Error("API 返回了无效的响应内容。");
-                return content;
-            },
+               backgroundKeeper.start(); 
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${preset.key}` },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`API 请求失败 (${response.status}): ${errorData.error?.message || response.statusText}`);
+        }
+        const result = await response.json();
+        const content = result.choices[0]?.message?.content;
+        if (!content) throw new Error("API 返回了无效的响应内容。");
+        
+        return content;
+
+    } catch (error) {
+        throw error;
+    } finally {
+        // ===================================
+        // 🚨 关键：请求结束后 -> 关闭保活
+        // ===================================
+        backgroundKeeper.stop();
+    }
+},
             async getChatCompletion(messages) { return this._callChatAPI(messages); },
             async generateDossierDetails(characterName, characterBackground) {
                 const prompt = `
@@ -38766,6 +38849,19 @@ async function importCharacterCard(file) {
         // =======================================================
         
         function initializeEventListeners() {
+ // 用户第一次点击屏幕的瞬间，立刻初始化并“热身”保活音频
+            // 这样稍后 AI 生成时，哪怕你在后台，音频也能顺利播放
+            const unlockAudioContext = () => {
+                backgroundKeeper.warmUp();
+                // 只要触发一次就够了，移除监听
+                document.body.removeEventListener('click', unlockAudioContext);
+                document.body.removeEventListener('touchstart', unlockAudioContext);
+                console.log("🔓 iOS 音频权限已解锁");
+            };
+            
+            document.body.addEventListener('click', unlockAudioContext);
+            document.body.addEventListener('touchstart', unlockAudioContext);
+
            // 【新代码 1/3】点击爱心图标，现在只负责“打开/关闭”浮窗
 DOM.themeToggle.addEventListener('click', (e) => {
     e.stopPropagation(); // 阻止事件冒泡，这是避免浮窗立即关闭的关键
