@@ -14905,6 +14905,14 @@ body.light-mode .capsule {
     <i class="ri-mic-line"></i> <!-- 用麦克风图标 -->
     <span>MiniMax 语音配置</span>
 </div>
+<!-- 在外观设置页添加这个按钮 -->
+<div id="enable-sys-notify-btn" class="settings-item">
+    <i class="ri-notification-badge-line"></i>
+    <div style="display:flex; flex-direction:column; align-items:flex-start;">
+        <span>开启真实手机通知</span>
+        <span style="font-size:10px; opacity:0.6; font-weight:normal;">需添加到主屏幕(iOS)并允许权限</span>
+    </div>
+</div>
                 <div id="goto-appearance-settings" class="settings-item"><i class="ri-palette-line"></i><span>外观设置</span></div>
                 
                 <div id="goto-data-settings" class="settings-item">
@@ -18982,6 +18990,7 @@ openCapsuleInputBtn: document.getElementById('open-capsule-input-btn'),
 closeCapsuleInputBtn: document.getElementById('close-capsule-input-btn'),
 sendCapsuleMsgBtn: document.getElementById('send-capsule-msg-btn'),
 capsuleMsgInput: document.getElementById('capsule-msg-input'),
+enableSysNotifyBtn: document.getElementById('enable-sys-notify-btn'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -19760,8 +19769,46 @@ const notificationManager = {
     _timeoutId: null,
     _clickHandler: null,
 
+    // 【新增】尝试发送真实系统通知
+    _sendSystemNotification(title, message, iconUrl) {
+        // 1. 检查浏览器是否支持
+        if (!("Notification" in window)) return;
+
+        // 2. 检查权限
+        if (Notification.permission === "granted") {
+            try {
+                // 3. 尝试使用 ServiceWorker 发送 (Android/PWA 标准做法)
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, {
+                            body: message,
+                            icon: iconUrl || 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', // 默认图标
+                            vibrate: [200, 100, 200], // 震动模式
+                            tag: 'kiki-os-msg' // 防止消息堆积
+                        });
+                    });
+                } else {
+                    // 4. 降级方案：直接发送 (PC/部分环境)
+                    const notification = new Notification(title, {
+                        body: message,
+                        icon: iconUrl || 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg',
+                        silent: false
+                    });
+                    
+                    // 点击通知回到页面
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+                }
+            } catch (e) {
+                console.error("系统通知发送失败:", e);
+            }
+        }
+    },
+
     show({ avatarUrl, title, message, duration = 4000, onClick }) {
-        // 如果当前有通知，先清除
+        // --- 1. 保持原有的 App 内横幅逻辑 ---
         if (this._timeoutId) {
             clearTimeout(this._timeoutId);
         }
@@ -19769,23 +19816,23 @@ const notificationManager = {
             DOM.notificationBanner.removeEventListener('click', this._clickHandler);
         }
 
-        // 更新内容
         DOM.notificationAvatar.style.backgroundImage = avatarUrl ? `url('${avatarUrl}')` : 'none';
         DOM.notificationTitle.textContent = title;
         DOM.notificationMessage.textContent = message;
 
-        // 绑定新的点击事件
         this._clickHandler = () => {
-            onClick();
+            if (onClick) onClick(); // 修复：增加非空判断
             this.hide();
         };
         DOM.notificationBanner.addEventListener('click', this._clickHandler);
-        
-        // 显示横幅
         DOM.notificationBanner.classList.add('visible');
 
-        // 设置自动隐藏
         this._timeoutId = setTimeout(() => this.hide(), duration);
+
+        // --- 2. 【新增】触发系统级通知 ---
+        // 只有当页面不可见（用户切后台了），或者用户即使在前台也想收到震动时触发
+        // 这里我们默认始终触发，手机系统会自动处理前台不弹窗的情况
+        this._sendSystemNotification(title, message, avatarUrl);
     },
 
     hide() {
@@ -44764,6 +44811,34 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
         postCapsuleMessage();
     }
 });
+
+// 监听“开启系统通知”按钮
+    DOM.enableSysNotifyBtn.addEventListener('click', () => {
+        // 1. 检查浏览器支持
+        if (!("Notification" in window)) {
+            return utils.showToast("当前环境不支持系统通知");
+        }
+
+        // 2. 申请权限
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                utils.showToast("✅ 系统通知已开启！");
+                // 发一条测试消息
+                try {
+                    new Notification("KikiPhone", { 
+                        body: "连接成功！以后我会在这里通知你。",
+                        icon: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg'
+                    });
+                } catch (e) {
+                    console.log("测试通知发送异常(可能是安卓/PWA限制):", e);
+                }
+            } else if (permission === "denied") {
+                alert("❌ 权限被拒绝。\n请在手机系统设置中找到浏览器/Kiki应用，手动开启“通知”权限。");
+            } else {
+                utils.showToast("未获得通知权限");
+            }
+        });
+    });
 
 }
 
