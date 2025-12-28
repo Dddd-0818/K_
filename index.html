@@ -17980,31 +17980,62 @@ body.light-mode .capsule {
         // =======================================================
         // ========= 1. 全局常量、状态和DOM引用 =================
         // =======================================================
-        // --- 0. 后台保活助手 (最终智能版：WAV + 音乐避让) ---
+        // --- 0. 后台保活助手 (iOS 强占坑版) ---
 const backgroundKeeper = {
     audio: null,
     
     init() {
-        // 0.1秒标准静音 WAV (兼容性最强)
-        const silentWav = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA==';
-        this.audio = new Audio(silentWav);
-        this.audio.loop = true; 
+        // 使用最通用的 MP3 静音文件 (兼容性王道)
+        const silentMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTY2UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeZVQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA';
+        
+        this.audio = new Audio(silentMp3);
+        this.audio.loop = true; // 必须循环
         this.audio.volume = 0.01; // 防止爆音
-        // 挂载到全局防止被回收
+        this.audio.preload = 'auto'; // 强制预加载
+        
+        // 挂载到全局，防止被垃圾回收
         window.kikiKeepAliveAudio = this.audio;
+    },
+
+    // 【辅助】设置锁屏媒体信息
+    setMetadata(state = 'playing') {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'KiKi OS 在线中...',
+                artist: '保持连接',
+                album: 'System Keep-Alive',
+                artwork: [
+                    { src: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', sizes: '96x96', type: 'image/jpeg' },
+                    { src: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', sizes: '128x128', type: 'image/jpeg' },
+                ]
+            });
+            navigator.mediaSession.playbackState = state;
+        }
     },
 
     // 第一次点击时的“热身”
     warmUp() {
         if (!this.audio) this.init();
-        this.audio.play().then(() => {
-            this.audio.pause();
-        }).catch(e => console.log("音频热身略过:", e));
+        
+        // 1. 尝试播放
+        const playPromise = this.audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // 2. 【核心】播放成功后，立即设置锁屏信息！
+                // 这样即使暂停了，系统也知道“这个网页有媒体能力”
+                this.setMetadata('paused');
+                
+                // 3. 稍微延迟一点点再暂停，确保系统注册成功
+                setTimeout(() => {
+                    this.audio.pause();
+                }, 100); 
+            }).catch(e => console.log("音频热身略过 (非致命):", e));
+        }
     },
 
     start() {
-        // 【核心优化】如果暮光播放器正在播放，说明后台已经是活的，
-        // 不需要启动静音，否则会打断音乐！
+        // 如果正在听歌，不要打断
         if (document.querySelector('.tw-pill-cover.playing')) {
             console.log("🎶 音乐播放中，无需额外保活");
             return;
@@ -18012,38 +18043,30 @@ const backgroundKeeper = {
 
         if (!this.audio) this.init();
         
-        // 播放静音
-        this.audio.play().catch(e => {
-            console.error("保活启动受阻 (请确保已点击屏幕):", e);
+        // 重置时间，防止从中间开始播
+        this.audio.currentTime = 0;
+        
+        this.audio.play().then(() => {
+            // 【核心】状态改为 playing，锁屏界面会出现播放器
+            this.setMetadata('playing');
+        }).catch(e => {
+            console.error("保活启动受阻:", e);
         });
 
-        // 伪装锁屏信息
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.metadata = new MediaMetadata({
-                title: 'KiKi OS 在线中...',
-                artist: '等待回复',
-                album: 'System Keep-Alive',
-                artwork: [{ src: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', sizes: '96x96', type: 'image/jpeg' }]
-            });
-            navigator.mediaSession.playbackState = 'playing';
-        }
-        console.log("🛡️ 后台保活模式：已启动");
+        console.log("🛡️ 后台保活模式：已启动 (锁屏可见)");
     },
 
     stop() {
-        // 停止静音
         if (this.audio) {
             this.audio.pause();
-            this.audio.currentTime = 0;
         }
         
-        // 恢复锁屏状态
         if ('mediaSession' in navigator) {
-            // 只有当【没有】在听歌时，才清除锁屏信息
-            // 否则会把正在听的歌的信息也清掉
+            // 只有当没有其他音乐在播放时，才清除状态
             if (!document.querySelector('.tw-pill-cover.playing')) {
                 navigator.mediaSession.playbackState = 'paused';
-                navigator.mediaSession.metadata = null;
+                // 注意：不清除 metadata，保留“KiKi OS 在线中”的显示，
+                // 这样下次启动更顺滑
             }
         }
         console.log("🛡️ 后台保活模式：已结束");
