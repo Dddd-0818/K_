@@ -17980,24 +17980,30 @@ body.light-mode .capsule {
         // =======================================================
         // ========= 1. 全局常量、状态和DOM引用 =================
         // =======================================================
-        // --- 0. 后台保活助手 (iOS 强占坑版) ---
+        // --- 0. 后台保活助手 (自定义音频版) ---
 const backgroundKeeper = {
     audio: null,
     
     init() {
-        // 使用最通用的 MP3 静音文件 (兼容性王道)
-        const silentMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTY2UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeZVQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA';
+        // 【修改】这里换成了你指定的链接
+        // 注意：因为是网络链接，第一次播放可能需要极短的加载时间
+        const silentMp3 = 'https://files.catbox.moe/6somrz.mp3';
         
         this.audio = new Audio(silentMp3);
-        this.audio.loop = true; // 必须循环
-        this.audio.volume = 0.01; // 防止爆音
+        this.audio.loop = true; // 必须循环，防止请求时间过长音频播完
+        
+        // 【注意】目前的音量是 1% (0.01)，几乎听不见。
+        // 如果你这个音频是有声音的(比如白噪音/等待音效)并且你想听到它，
+        // 请把下面这行改成 this.audio.volume = 1.0;
+        this.audio.volume = 0.01; 
+        
         this.audio.preload = 'auto'; // 强制预加载
         
-        // 挂载到全局，防止被垃圾回收
+        // 挂载到全局，防止被浏览器垃圾回收
         window.kikiKeepAliveAudio = this.audio;
     },
 
-    // 【辅助】设置锁屏媒体信息
+    // 【辅助】设置锁屏媒体信息 (保持不变)
     setMetadata(state = 'playing') {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -18013,60 +18019,43 @@ const backgroundKeeper = {
         }
     },
 
-    // 第一次点击时的“热身”
+    // 第一次点击时的“热身” (保持不变)
     warmUp() {
         if (!this.audio) this.init();
-        
-        // 1. 尝试播放
         const playPromise = this.audio.play();
-        
         if (playPromise !== undefined) {
             playPromise.then(() => {
-                // 2. 【核心】播放成功后，立即设置锁屏信息！
-                // 这样即使暂停了，系统也知道“这个网页有媒体能力”
                 this.setMetadata('paused');
-                
-                // 3. 稍微延迟一点点再暂停，确保系统注册成功
-                setTimeout(() => {
-                    this.audio.pause();
-                }, 100); 
-            }).catch(e => console.log("音频热身略过 (非致命):", e));
+                setTimeout(() => { this.audio.pause(); }, 100); 
+            }).catch(e => console.log("音频热身略过:", e));
         }
     },
 
+    // 开始保活 (保持不变)
     start() {
-        // 如果正在听歌，不要打断
         if (document.querySelector('.tw-pill-cover.playing')) {
             console.log("🎶 音乐播放中，无需额外保活");
             return;
         }
-
         if (!this.audio) this.init();
         
-        // 重置时间，防止从中间开始播
         this.audio.currentTime = 0;
-        
         this.audio.play().then(() => {
-            // 【核心】状态改为 playing，锁屏界面会出现播放器
             this.setMetadata('playing');
         }).catch(e => {
             console.error("保活启动受阻:", e);
         });
-
-        console.log("🛡️ 后台保活模式：已启动 (锁屏可见)");
+        console.log("🛡️ 后台保活模式：已启动");
     },
 
+    // 停止保活 (保持不变)
     stop() {
         if (this.audio) {
             this.audio.pause();
         }
-        
         if ('mediaSession' in navigator) {
-            // 只有当没有其他音乐在播放时，才清除状态
             if (!document.querySelector('.tw-pill-cover.playing')) {
                 navigator.mediaSession.playbackState = 'paused';
-                // 注意：不清除 metadata，保留“KiKi OS 在线中”的显示，
-                // 这样下次启动更顺滑
             }
         }
         console.log("🛡️ 后台保活模式：已结束");
@@ -19874,34 +19863,38 @@ DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight; },
 const notificationManager = {
     _timeoutId: null,
     _clickHandler: null,
+    // 【配置】默认兜底图标 (如果角色没头像就用这个)
+    DEFAULT_ICON: 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg',
 
-    // 【新增】尝试发送真实系统通知
+    // 发送真实系统通知 (锁屏/状态栏)
     _sendSystemNotification(title, message, iconUrl) {
-        // 1. 检查浏览器是否支持
+        // 1. 检查浏览器支持
         if (!("Notification" in window)) return;
+
+        // 【核心逻辑】优先用传进来的 iconUrl (角色头像)，没有则用默认图标
+        const finalIcon = iconUrl || this.DEFAULT_ICON;
 
         // 2. 检查权限
         if (Notification.permission === "granted") {
             try {
-                // 3. 尝试使用 ServiceWorker 发送 (Android/PWA 标准做法)
+                // 3. ServiceWorker 模式 (移动端/PWA 推荐)
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(registration => {
                         registration.showNotification(title, {
                             body: message,
-                            icon: iconUrl || 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg', // 默认图标
-                            vibrate: [200, 100, 200], // 震动模式
-                            tag: 'kiki-os-msg' // 防止消息堆积
+                            icon: finalIcon, // <--- 这里使用了最终图标
+                            vibrate: [200, 100, 200],
+                            tag: 'kiki-os-msg'
                         });
                     });
                 } else {
-                    // 4. 降级方案：直接发送 (PC/部分环境)
+                    // 4. 普通模式 (PC/部分浏览器)
                     const notification = new Notification(title, {
                         body: message,
-                        icon: iconUrl || 'https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg',
+                        icon: finalIcon, // <--- 这里使用了最终图标
                         silent: false
                     });
                     
-                    // 点击通知回到页面
                     notification.onclick = () => {
                         window.focus();
                         notification.close();
@@ -19913,8 +19906,9 @@ const notificationManager = {
         }
     },
 
+    // 显示 APP 内顶部横幅
     show({ avatarUrl, title, message, duration = 4000, onClick }) {
-        // --- 1. 保持原有的 App 内横幅逻辑 ---
+        // 1. 清理旧定时器和事件
         if (this._timeoutId) {
             clearTimeout(this._timeoutId);
         }
@@ -19922,22 +19916,28 @@ const notificationManager = {
             DOM.notificationBanner.removeEventListener('click', this._clickHandler);
         }
 
-        DOM.notificationAvatar.style.backgroundImage = avatarUrl ? `url('${avatarUrl}')` : 'none';
+        // 【核心逻辑】处理 APP 内横幅的头像显示
+        // 如果传了 avatarUrl 就用它，否则用默认图标
+        const displayUrl = avatarUrl || this.DEFAULT_ICON;
+        DOM.notificationAvatar.style.backgroundImage = `url('${displayUrl}')`;
+        
         DOM.notificationTitle.textContent = title;
         DOM.notificationMessage.textContent = message;
 
+        // 2. 绑定点击事件
         this._clickHandler = () => {
-            if (onClick) onClick(); // 修复：增加非空判断
+            if (onClick) onClick(); 
             this.hide();
         };
         DOM.notificationBanner.addEventListener('click', this._clickHandler);
+        
+        // 3. 显示横幅
         DOM.notificationBanner.classList.add('visible');
 
+        // 4. 设置自动消失
         this._timeoutId = setTimeout(() => this.hide(), duration);
 
-        // --- 2. 【新增】触发系统级通知 ---
-        // 只有当页面不可见（用户切后台了），或者用户即使在前台也想收到震动时触发
-        // 这里我们默认始终触发，手机系统会自动处理前台不弹窗的情况
+        // 5. 同时触发系统通知 (传入原始 avatarUrl，内部会自动处理 fallback)
         this._sendSystemNotification(title, message, avatarUrl);
     },
 
@@ -22968,7 +22968,7 @@ ${realTimeContext}
 - **纯粹对话：** 这是一个纯粹的线上聊天。你绝对禁止使用任何括号 \`()\` 或星号 \`*\` 来描述动作或心理活动。
 - **【核心】对话格式**: 
 - **单气泡:** 直接输出你的回复。
-- **多气泡:**为了模仿真实的聊天节奏，请将一个完整的想法，拆分成多个简短的句子，并用特殊分隔符 \`|||\` 来分隔不同的气泡。
+- **多气泡:**为了模仿真实的聊天节奏，你可以将一个完整的想法或一段较长的回复，拆分成多个句子，并用特殊分隔符 \`|||\` 来分隔不同的气泡。这是一种可选的高级技巧，可以让你表达更复杂的情感层次或进行连续的追问。
 
 - # 【新增高级能力】复杂行为指令 (Advanced Action Directives)
 - **核心理念：** “引用”和“撤回”是你展现角色灵魂深度的绝佳工具。它们是你将对话从简单的信息交换，升华为充满情感张力和个性魅力的互动的关键。
@@ -25225,160 +25225,210 @@ if (momentActionIndex !== -1) {
             
             // d. **第三优先级：** 在【最终净化】的 chatContent 上检测并处理【撤回/引用】指令
             const actionRegex = /\[AI_ACTION\]([\s\S]*?)\[\/AI_ACTION\]/s;
-            let match = chatContent.match(actionRegex); // 【关键修正】在这里声明 match
+            let match = chatContent.match(actionRegex); 
 
             if (match) {
-                // 情况1：AI 发送了一个特殊指令
                 const actionJson = JSON.parse(match[1]);
                 
                 if (actionJson.action === 'withdraw') {
-    // --- 【最终版】处理“实时撤回”指令 (包含动画和引用解析) ---
-    const { originalMessage, reason, newMessage } = actionJson;
+                    // --- 撤回指令 ---
+                    const { originalMessage, reason, newMessage } = actionJson;
 
-    // 1. 【模拟发送】: 先把那条“错误”的消息显示出来
-    const tempId = `temp_${Date.now()}`;
-    const mistakeMessage = { id: tempId, dossierId, sender: 'character', content: originalMessage, timestamp: Date.now() };
-    const lastMessageBeforeMistake = appState.currentChatHistory[appState.currentChatHistory.length - 1];
-    const mistakeMessageEl = await createMessageElement(mistakeMessage, lastMessageBeforeMistake);
-    DOM.messagesContainer.appendChild(mistakeMessageEl);
-    utils.autoScrollToBottom();
+                    // A. 先模拟发送“错误消息”
+                    // 只有用户在场时才演这一出动画，不在场直接略过动画
+                    let mistakeMessageEl = null;
+                    if (isUserPresent()) {
+                        const tempId = `temp_${Date.now()}`;
+                        const mistakeMessage = { id: tempId, dossierId, sender: 'character', content: originalMessage, timestamp: Date.now() };
+                        const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 1];
+                        mistakeMessageEl = await createMessageElement(mistakeMessage, lastMsg);
+                        DOM.messagesContainer.appendChild(mistakeMessageEl);
+                        utils.autoScrollToBottom();
+                        
+                        // 模拟反应时间
+                        const realisticDelay = Math.random() * 700 + 800;
+                        await new Promise(resolve => setTimeout(resolve, realisticDelay));
 
-    // 2. 【等待】: 模拟反应时间
-    const realisticDelay = Math.random() * 700 + 800;
-    await new Promise(resolve => setTimeout(resolve, realisticDelay));
+                        // 撤回动画
+                        if (mistakeMessageEl) {
+                            mistakeMessageEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                            mistakeMessageEl.style.opacity = '0';
+                            mistakeMessageEl.style.transform = 'scale(0.8)';
+                            await new Promise(resolve => setTimeout(() => { mistakeMessageEl.remove(); resolve(); }, 300));
+                        }
+                    }
 
-    // 3. 【执行撤回动画】
-    if (mistakeMessageEl) {
-        mistakeMessageEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        mistakeMessageEl.style.opacity = '0';
-        mistakeMessageEl.style.transform = 'scale(0.8)';
-        await new Promise(resolve => setTimeout(() => { mistakeMessageEl.remove(); resolve(); }, 300));
-    }
+                    // B. 保存“撤回记录”
+                    const withdrawnMessage = { dossierId, sender: 'character', content: originalMessage, status: 'withdrawn', innerThought: reason, timestamp: Date.now() };
+                    const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, withdrawnMessage);
+                    withdrawnMessage.id = savedId;
+                    appState.currentChatHistory.push(withdrawnMessage);
+                    
+                    // C. 渲染“撤回提示”或发送通知
+                    if (isUserPresent()) {
+                        const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
+                        await renderMessage(withdrawnMessage, lastMsg);
+                    } else {
+                        // 【新增】如果用户不在，发送一条撤回通知
+                        notificationManager.show({ avatarUrl, title: characterName, message: "撤回了一条消息", onClick: () => openChatWindow(dossierId) });
+                    }
 
-    // 4. 【保存真实记录】
-    const withdrawnMessage = { dossierId, sender: 'character', content: originalMessage, status: 'withdrawn', innerThought: reason, timestamp: Date.now() };
-    const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, withdrawnMessage);
-    withdrawnMessage.id = savedId;
-    appState.currentChatHistory.push(withdrawnMessage);
-    
-    // 5. 【渲染撤回提示】
-    const lastMessageBeforeNotice = appState.currentChatHistory[appState.currentChatHistory.length - 2];
-    await renderMessage(withdrawnMessage, lastMessageBeforeNotice);
+                    // D. 处理修正后的新消息
+                    if (newMessage) {
+                        if (isUserPresent()) await new Promise(resolve => setTimeout(resolve, 400));
+                        
+                        const newContent = newMessage;
+                        const isQuote = newContent.startsWith('> ') && newContent.includes('\n');
+                        const allNewMessages = []; 
 
-    // 6. 【发送新消息，并智能解析引用】
-    if (newMessage) {
-        await new Promise(resolve => setTimeout(resolve, 400)); // 为新消息增加延迟
-        
-        const newContent = newMessage;
-        const isNewMessageAQuote = newContent.startsWith('> ') && newContent.includes('\n');
-        const allNewMessages = []; // 存储所有新创建的消息对象
+                        if (isQuote) {
+                            // 解析引用
+                            const replyLines = newContent.split('\n').filter(line => line.trim() !== '');
+                            // 第一条带引用
+                            if (replyLines.length > 1) {
+                                const firstContent = `${replyLines[0]}\n${replyLines[1]}`;
+                                allNewMessages.push({ dossierId, sender: 'character', content: firstContent, timestamp: Date.now() });
+                                // 后续作为普通消息
+                                for (let i = 2; i < replyLines.length; i++) {
+                                    allNewMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
+                                }
+                            }
+                        } else {
+                            // 普通多气泡
+                            const splitMsgs = newContent.split('|||').filter(line => line.trim() !== ''); 
+                            splitMsgs.forEach(txt => {
+                                allNewMessages.push({ dossierId, sender: 'character', content: txt, timestamp: Date.now() });
+                            });
+                        }
 
-        if (isNewMessageAQuote) {
-            // 情况A: 新消息本身是一个引用回复（来自您的旧代码逻辑）
-            const replyLines = newContent.split('\n').filter(line => line.trim() !== '');
-            if (replyLines.length > 1) {
-                const firstMessageContent = `${replyLines[0]}\n${replyLines[1]}`;
-                const firstAiMessage = { dossierId, sender: 'character', content: firstMessageContent, timestamp: Date.now() };
-                const firstId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, firstAiMessage);
-                firstAiMessage.id = firstId;
-                appState.currentChatHistory.push(firstAiMessage);
-                allNewMessages.push(firstAiMessage);
+                        // E. 统一发送循环 (修复点：确保每一条都有通知)
+                        for (const msgObj of allNewMessages) {
+                            // 存库
+                            const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, msgObj);
+                            msgObj.id = sid;
+                            appState.currentChatHistory.push(msgObj);
+                            
+                            // 列表预览更新
+                            await updateChatSession(dossierId, msgObj.content, !isUserPresent());
 
-                for (let i = 2; i < replyLines.length; i++) {
-                    const subsequentAiMessage = { dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() };
-                    const subsequentId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, subsequentAiMessage);
-                    subsequentAiMessage.id = subsequentId;
-                    appState.currentChatHistory.push(subsequentAiMessage);
-                    allNewMessages.push(subsequentAiMessage);
-                }
-            }
-        } else {
-            // 情况B: 新消息是普通的、不含引用的多行回复
-           const newMessages = newContent.split('|||').filter(line => line.trim() !== ''); 
-            for (const reply of newMessages) {
-                const newAiMessage = { dossierId, sender: 'character', content: reply, timestamp: Date.now() };
-                const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, newAiMessage);
-                newAiMessage.id = savedId;
-                appState.currentChatHistory.push(newAiMessage);
-                allNewMessages.push(newAiMessage);
-            }
-        }
+                            if (isUserPresent()) {
+                                // 在场：渲染
+                                const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
+                                await renderMessage(msgObj, lastMsg);
+                                // 气泡间延迟
+                                if (allNewMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
+                            } else {
+                                // 不在场：发送通知
+                                notificationManager.show({ 
+                                    avatarUrl, 
+                                    title: characterName, 
+                                    message: msgObj.content.replace(/^> .*?\n/, '[回复] '), // 优化引用显示的通知文案
+                                    onClick: () => openChatWindow(dossierId) 
+                                });
+                                // 通知间延迟 (防止瞬间刷屏)
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                            }
+                        }
+                    }
 
-        // --- 统一的渲染和更新逻辑 ---
-        if (allNewMessages.length > 0) {
-            await updateChatSession(dossierId, allNewMessages[allNewMessages.length - 1].content);
-            if (isUserPresent()) {
-                let lastMessageForAvatarCheck = withdrawnMessage; // 新消息的前一条是“撤回提示”
-                for (const msg of allNewMessages) {
-                    await renderMessage(msg, lastMessageForAvatarCheck);
-                    lastMessageForAvatarCheck = msg;
-                    if (allNewMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 300));
-                }
-            }
-        }
-    }
-              } else if (actionJson.action === 'quote') {
-                // --- 【核心修正】处理“引用”指令，并支持多气泡回复 ---
-                const replyLines = actionJson.replyText.split('\n').filter(line => line.trim() !== '');
-                if (replyLines.length === 0) return; // AI返回了空的回复
+                } else if (actionJson.action === 'quote') {
+                    // --- 引用指令 ---
+                    const replyLines = actionJson.replyText.split('\n').filter(line => line.trim() !== '');
+                    if (replyLines.length === 0) return;
 
-                const newMessages = []; // 创建一个临时数组来存放所有新消息
+                    const newMessages = [];
+                    // 第一条
+                    const firstContent = `> ${actionJson.quoteText}\n${replyLines[0]}`;
+                    newMessages.push({ dossierId, sender: 'character', content: firstContent, timestamp: Date.now() });
+                    // 后续条
+                    for (let i = 1; i < replyLines.length; i++) {
+                        newMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
+                    }
 
-                // 1. 创建第一条特殊消息，它包含引用和回复的第一行
-                const firstMessageContent = `> ${actionJson.quoteText}\n${replyLines[0]}`;
-                const firstAiMessage = { dossierId, sender: 'character', content: firstMessageContent, timestamp: Date.now() };
-                const firstId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, firstAiMessage);
-                firstAiMessage.id = firstId;
-                appState.currentChatHistory.push(firstAiMessage);
-                newMessages.push(firstAiMessage);
+                    // 统一处理循环
+                    for (const msgObj of newMessages) {
+                        const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, msgObj);
+                        msgObj.id = sid;
+                        appState.currentChatHistory.push(msgObj);
+                        
+                        await updateChatSession(dossierId, msgObj.content, !isUserPresent());
 
-                // 2. 如果有多行回复，为后续的每一行创建常规消息
-                for (let i = 1; i < replyLines.length; i++) {
-                    const subsequentAiMessage = { dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() };
-                    const subsequentId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, subsequentAiMessage);
-                    subsequentAiMessage.id = subsequentId;
-                    appState.currentChatHistory.push(subsequentAiMessage);
-                    newMessages.push(subsequentAiMessage);
-                }
-
-                // 3. 更新会话列表，使用最后一条消息内容
-                await updateChatSession(dossierId, replyLines[replyLines.length - 1]);
-
-                // 4. 统一渲染所有新创建的消息
-                if (isUserPresent()) {
-                    let lastMessageForAvatarCheck = appState.currentChatHistory[appState.currentChatHistory.length - 1 - newMessages.length];
-                    for (const msg of newMessages) {
-                        await renderMessage(msg, lastMessageForAvatarCheck);
-                        lastMessageForAvatarCheck = msg;
-                        // 加一个小延迟，让多条消息看起来更自然
-                        if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 300));
+                        if (isUserPresent()) {
+                            const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
+                            await renderMessage(msgObj, lastMsg);
+                            if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
+                        } else {
+                            // 【新增】引用消息的通知
+                            notificationManager.show({ 
+                                avatarUrl, 
+                                title: characterName, 
+                                message: msgObj.content.replace(/^> .*?\n/, '[回复] '), 
+                                onClick: () => openChatWindow(dossierId) 
+                            });
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
                     }
                 }
-            }
 
-         } else if (chatContent) {
-                // 情况2：AI 发送的是普通聊天消息
-               const replies = chatContent.trim().split('|||').filter(line => line.trim() !== '');
+            } else if (chatContent) {
+                // === 普通文本消息 (含后台通知修复) ===
+                
+                // 1. 拆分气泡
+                const replies = chatContent.trim().split('|||').filter(line => line.trim() !== '');
                 if (replies.length === 0) throw new Error("AI 返回了空内容。");
 
-                for (const reply of replies) {
-                   const aiMessage = { dossierId, sender: 'character', content: reply.trim(), timestamp: Date.now() };
+                // 2. 遍历处理
+                for (let i = 0; i < replies.length; i++) {
+                    const replyText = replies[i].trim();
+                    
+                    const aiMessage = { 
+                        dossierId, 
+                        sender: 'character', 
+                        content: replyText, 
+                        timestamp: Date.now() 
+                    };
+                    
                     const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, aiMessage);
                     aiMessage.id = savedId;
                     appState.currentChatHistory.push(aiMessage);
-                }
-                await updateChatSession(dossierId, replies[replies.length - 1]);
-            
-                if (isUserPresent()) {
-                    let lastMessageForAvatarCheck = appState.currentChatHistory[appState.currentChatHistory.length - 1 - replies.length];
-                    for (let i = 0; i < replies.length; i++) {
-                        const currentMessage = appState.currentChatHistory[appState.currentChatHistory.length - replies.length + i];
-                        await renderMessage(currentMessage, lastMessageForAvatarCheck);
-                        lastMessageForAvatarCheck = currentMessage;
-                        if (i < replies.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // 如果是表情包代码，通知显示为“[表情包]”
+                    let displayContent = replyText;
+                    if (replyText.startsWith('[sticker:') && replyText.endsWith(']')) {
+                        displayContent = '[表情包]';
                     }
-                } else {
-                    notificationManager.show({ avatarUrl, title: characterName, message: replies[0], onClick: () => openChatWindow(dossierId) });
+
+                    await updateChatSession(dossierId, displayContent, !isUserPresent());
+
+                    if (isUserPresent()) {
+                        // 用户在聊天页：直接上屏
+                        const prevMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
+                        await renderMessage(aiMessage, prevMsg);
+                        
+                        // 【关键修复】如果在聊天页但切后台了，强制发通知！
+                        if (document.hidden) {
+                            notificationManager.show({ 
+                                avatarUrl, 
+                                title: characterName, 
+                                message: displayContent, 
+                                onClick: () => { window.focus(); }
+                            });
+                        }
+
+                        // 气泡间延迟
+                        if (i < replies.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
+                    } else {
+                        // 用户不在聊天页：发通知
+                        notificationManager.show({ 
+                            avatarUrl, 
+                            title: characterName, 
+                            message: displayContent, 
+                            onClick: () => openChatWindow(dossierId) 
+                        });
+                        
+                        // 通知的间隔稍微长一点，防止系统折叠
+                        if (i < replies.length - 1) await new Promise(resolve => setTimeout(resolve, 2500));
+                    }
                 }
             }
 // --- 【全新】处理动态指令部分 (如果存在) ---
