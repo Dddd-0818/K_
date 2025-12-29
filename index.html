@@ -13699,7 +13699,7 @@ body.light-mode .ins-avatar {
     padding: 25px 20px !important; 
     
     /* --- 文字体验 --- */
-    font-size: 13px;       /* 字号适中 */
+    font-size: 1rem;       /* 字号适中 */
     line-height: 1.85;     /* 宽松的行高，呼吸感强 */
     letter-spacing: 0.5px; /* 字间距 */
     color: inherit;        /* 跟随主题色 */
@@ -14905,6 +14905,11 @@ body.light-mode .capsule {
     <i class="ri-mic-line"></i> <!-- 用麦克风图标 -->
     <span>MiniMax 语音配置</span>
 </div>
+<!-- 新增：消息提示音设置入口 -->
+<div id="goto-sound-settings" class="settings-item">
+    <i class="ri-volume-up-line"></i>
+    <span>消息提示音</span>
+</div>
 <!-- 在外观设置页添加这个按钮 -->
 <div id="enable-sys-notify-btn" class="settings-item">
     <i class="ri-notification-badge-line"></i>
@@ -14994,6 +14999,46 @@ body.light-mode .capsule {
 
         <div class="action-buttons" style="margin-top: 20px;">
             <button id="save-minimax-settings-btn" style="width: 100%;">保存配置</button>
+        </div>
+    </div>
+</div>
+
+<!-- 新增：消息提示音设置页 -->
+<div id="sound-settings-page" class="settings-page">
+    <div class="page-header">
+        <i class="ri-arrow-left-s-line back-button" data-target="settings-main-page"></i>
+        <h2>提示音设置</h2>
+    </div>
+    <div class="settings-grid">
+        <div class="settings-item" style="cursor: default;">
+            <span>开启消息提示音</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="notif-sound-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label>自定义提示音</label>
+            <div style="background: var(--input-bg-color); padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span id="current-sound-name" style="font-size: 13px; opacity: 0.7;">当前: 默认</span>
+                    <button id="test-sound-btn" style="padding: 6px 12px; font-size: 12px; border-radius: 20px; background: var(--button-bg-color); border:none; color:var(--text-color);">
+                        <i class="ri-play-fill"></i> 试听
+                    </button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="upload-sound-btn" style="flex: 1; padding: 10px; background: var(--button-bg-color); border:none; border-radius:8px; color:var(--text-color); cursor:pointer;">
+                        <i class="ri-upload-2-line"></i> 上传
+                    </button>
+                    <input type="file" id="notif-sound-input" style="display: none;">
+                    
+                    <button id="reset-sound-btn" style="width: 50px; background: rgba(255,59,48,0.2); color: #ff4d4d; border:none; border-radius:8px; cursor:pointer;">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </div>
+            </div>
+            <p style="font-size: 10px; opacity: 0.4; margin-top: 5px;">支持 mp3, wav, ogg。建议 2秒 以内的短音频。</p>
         </div>
     </div>
 </div>
@@ -17980,24 +18025,28 @@ body.light-mode .capsule {
         // =======================================================
         // ========= 1. 全局常量、状态和DOM引用 =================
         // =======================================================
-        // --- 0. 后台保活助手 (iOS 强占坑版) ---
+        // --- 0. 后台保活助手 (自定义音频版) ---
 const backgroundKeeper = {
     audio: null,
     
     init() {
-        // 使用最通用的 MP3 静音文件 (兼容性王道)
-        const silentMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTY2UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//oeZVQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA//oeZRQAAB9iAAAAAAAAAAIkmRAAAAgAAAAAAAAAAAAAAA';
+        // 【修改】这里换成了你指定的链接
+        // 注意：因为是网络链接，第一次播放可能需要极短的加载时间
+        const silentMp3 = 'https://files.catbox.moe/b4vvtk.mp3';
         
         this.audio = new Audio(silentMp3);
-        this.audio.loop = true; // 必须循环
-        this.audio.volume = 0.01; // 防止爆音
+        this.audio.loop = true; // 必须循环，防止请求时间过长音频播完
+        
+        
+        this.audio.volume = 0; 
+        
         this.audio.preload = 'auto'; // 强制预加载
         
-        // 挂载到全局，防止被垃圾回收
+        // 挂载到全局，防止被浏览器垃圾回收
         window.kikiKeepAliveAudio = this.audio;
     },
 
-    // 【辅助】设置锁屏媒体信息
+    // 【辅助】设置锁屏媒体信息 (保持不变)
     setMetadata(state = 'playing') {
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
@@ -18013,60 +18062,43 @@ const backgroundKeeper = {
         }
     },
 
-    // 第一次点击时的“热身”
+    // 第一次点击时的“热身” (保持不变)
     warmUp() {
         if (!this.audio) this.init();
-        
-        // 1. 尝试播放
         const playPromise = this.audio.play();
-        
         if (playPromise !== undefined) {
             playPromise.then(() => {
-                // 2. 【核心】播放成功后，立即设置锁屏信息！
-                // 这样即使暂停了，系统也知道“这个网页有媒体能力”
                 this.setMetadata('paused');
-                
-                // 3. 稍微延迟一点点再暂停，确保系统注册成功
-                setTimeout(() => {
-                    this.audio.pause();
-                }, 100); 
-            }).catch(e => console.log("音频热身略过 (非致命):", e));
+                setTimeout(() => { this.audio.pause(); }, 100); 
+            }).catch(e => console.log("音频热身略过:", e));
         }
     },
 
+    // 开始保活 (保持不变)
     start() {
-        // 如果正在听歌，不要打断
         if (document.querySelector('.tw-pill-cover.playing')) {
             console.log("🎶 音乐播放中，无需额外保活");
             return;
         }
-
         if (!this.audio) this.init();
         
-        // 重置时间，防止从中间开始播
         this.audio.currentTime = 0;
-        
         this.audio.play().then(() => {
-            // 【核心】状态改为 playing，锁屏界面会出现播放器
             this.setMetadata('playing');
         }).catch(e => {
             console.error("保活启动受阻:", e);
         });
-
-        console.log("🛡️ 后台保活模式：已启动 (锁屏可见)");
+        console.log("🛡️ 后台保活模式：已启动");
     },
 
+    // 停止保活 (保持不变)
     stop() {
         if (this.audio) {
             this.audio.pause();
         }
-        
         if ('mediaSession' in navigator) {
-            // 只有当没有其他音乐在播放时，才清除状态
             if (!document.querySelector('.tw-pill-cover.playing')) {
                 navigator.mediaSession.playbackState = 'paused';
-                // 注意：不清除 metadata，保留“KiKi OS 在线中”的显示，
-                // 这样下次启动更顺滑
             }
         }
         console.log("🛡️ 后台保活模式：已结束");
@@ -19083,6 +19115,14 @@ closeCapsuleInputBtn: document.getElementById('close-capsule-input-btn'),
 sendCapsuleMsgBtn: document.getElementById('send-capsule-msg-btn'),
 capsuleMsgInput: document.getElementById('capsule-msg-input'),
 enableSysNotifyBtn: document.getElementById('enable-sys-notify-btn'),
+// ... 在 DOM 对象末尾添加 ...
+    gotoSoundSettings: document.getElementById('goto-sound-settings'),
+    notifSoundToggle: document.getElementById('notif-sound-toggle'),
+    testSoundBtn: document.getElementById('test-sound-btn'),
+    uploadSoundBtn: document.getElementById('upload-sound-btn'),
+    notifSoundInput: document.getElementById('notif-sound-input'),
+    resetSoundBtn: document.getElementById('reset-sound-btn'),
+    currentSoundName: document.getElementById('current-sound-name'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -19944,6 +19984,10 @@ const notificationManager = {
         
         // 3. 显示横幅
         DOM.notificationBanner.classList.add('visible');
+
+if (typeof playNotificationSound === 'function') {
+            playNotificationSound(); 
+        }
 
         // 4. 设置自动消失
         this._timeoutId = setTimeout(() => this.hide(), duration);
@@ -25241,6 +25285,8 @@ if (momentActionIndex !== -1) {
                         mistakeMessageEl = await createMessageElement(mistakeMessage, lastMsg);
                         DOM.messagesContainer.appendChild(mistakeMessageEl);
                         utils.autoScrollToBottom();
+
+playNotificationSound();
                         
                         const realisticDelay = Math.random() * 700 + 800;
                         await new Promise(resolve => setTimeout(resolve, realisticDelay));
@@ -25298,8 +25344,10 @@ if (momentActionIndex !== -1) {
                             if (isUserPresent()) {
                                 const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
                                 await renderMessage(msgObj, lastMsg);
+
+playNotificationSound();
                                 if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => window.focus() });
-                                if (allNewMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
+                                if (allNewMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
                             } else {
                                 notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => openChatWindow(dossierId) });
                                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -25327,7 +25375,7 @@ if (momentActionIndex !== -1) {
                                 const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
                                 await renderMessage(msgObj, lastMsg);
                                 if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => window.focus() });
-                                if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
+                                if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 1000));
                             } else {
                                 notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => openChatWindow(dossierId) });
                                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -25369,6 +25417,8 @@ if (momentActionIndex !== -1) {
                         // 用户在聊天页：直接上屏
                         const prevMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
                         await renderMessage(aiMessage, prevMsg);
+
+playNotificationSound();
                         
                         // 【关键修复】如果在聊天页但切后台了，强制发通知！
                         if (document.hidden) {
@@ -25381,7 +25431,7 @@ if (momentActionIndex !== -1) {
                         }
 
                         // 气泡间延迟
-                        if (i < replies.length - 1) await new Promise(resolve => setTimeout(resolve, 500));
+                        if (i < replies.length - 1) await new Promise(resolve => setTimeout(resolve, 1000));
                     } else {
                         // 用户不在聊天页：发通知
                         notificationManager.show({ 
@@ -30235,118 +30285,151 @@ setTimeout(() => {
         }
 
 /**
- * 【核心】处理电影模式的 Swipe (切卡/重生成) 逻辑
- * @param {number} turnId - 剧情ID
- * @param {string} direction - 'prev' (左) 或 'next' (右)
+ * 【终极修复 V2】电影模式 Swipe (原地无感刷新 + 箭头修复版)
+ * 修复：生成/切换时不跳动，且生成完成后箭头能正确恢复
  */
 async function handleMovieSwipe(turnId, direction) {
     if (!turnId) return;
 
-    // 1. 获取当前剧情对象
+    // 1. 获取数据
     const db = await dbHelper.dbPromise;
     const turn = await db.get(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turnId);
     
     if (!turn || turn.author !== 'ai') return;
 
-    // 2. 初始化 metadata (兼容旧数据)
+    // 2. 初始化元数据
     if (!turn.metadata) turn.metadata = {};
     if (!turn.metadata.candidates) {
-        // 如果之前没存过候选列表，把当前内容作为第一个候选
         turn.metadata.candidates = [turn.content];
         turn.metadata.currentIndex = 0;
     }
 
     let { candidates, currentIndex } = turn.metadata;
+    let hasChanged = false; // 标记数据是否变动
 
-    // === 向左滑 (查看旧结果) ===
+    // 3. 【关键】获取当前卡片的 DOM 引用及内部元素
+    const card = document.querySelector(`.story-card[data-turn-id="${turnId}"]`);
+    if (!card) return; 
+
+    // --- 提前获取所有控件引用，防止修改类名后找不到 ---
+    const nextArrow = card.querySelector('.swipe-arrow.next'); // 右箭头
+    const prevArrow = card.querySelector('.swipe-arrow.prev'); // 左箭头
+    const counter = card.querySelector('.swipe-counter');      // 计数器
+    const bodyEl = card.querySelector('.ins-card-body');       // 内容区
+
+    // === 逻辑分支：左滑 / 右滑 ===
+
     if (direction === 'prev') {
+        // <--- 查看旧结果
         if (currentIndex > 0) {
             currentIndex--;
-            // 更新数据
-            turn.content = candidates[currentIndex];
-            turn.metadata.currentIndex = currentIndex;
-            await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turn);
-            // 刷新屏幕
-            await rerenderMovieScreen(turn.dossierId);
+            hasChanged = true;
         }
-        return;
+    } else if (direction === 'next') {
+        // ---> 查看新结果 或 生成
+        if (currentIndex < candidates.length - 1) {
+            // A. 有存货，直接切
+            currentIndex++;
+            hasChanged = true;
+        } else {
+            // B. 没存货，请求 AI 生成 (Reroll)
+            
+            // 改变图标为加载中 (保留引用，直接操作)
+            if (nextArrow) {
+                // 临时保存旧类名，虽然后面会重置，但是个好习惯
+                // 这里直接设为转圈样式
+                nextArrow.className = 'ri-loader-4-line swipe-loading'; 
+                nextArrow.style.pointerEvents = 'none';
+            }
+
+            try {
+                // 准备上下文
+                const fullHistory = appState.currentMovieHistoryFull || [];
+                const thisTurnIndex = fullHistory.findIndex(t => t.id === turnId);
+                const contextHistory = fullHistory.slice(0, thisTurnIndex);
+                const lastUserTurn = contextHistory.length > 0 ? contextHistory[contextHistory.length - 1].content : null;
+
+                const prompt = promptManager.createMoviePrompt(
+                    appState.currentMovieSession, 
+                    contextHistory, 
+                    lastUserTurn 
+                );
+                
+                let newContent = await apiHelper.getChatCompletion(prompt);
+                
+                // 简单的 JSON 清洗
+                try {
+                    const jsonMatch = newContent.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        if (parsed.story_content) newContent = parsed.story_content;
+                    }
+                } catch(e) {}
+
+                // 存入候选列表
+                candidates.push(newContent);
+                currentIndex++;
+                hasChanged = true;
+
+            } catch (error) {
+                console.error("Swipe生成失败:", error);
+                utils.showToast("生成失败");
+                // 失败时，手动恢复箭头
+                if (nextArrow) {
+                    nextArrow.className = 'ri-arrow-right-s-line swipe-arrow next';
+                    nextArrow.style.pointerEvents = 'auto';
+                }
+                return; // 退出
+            }
+        }
     }
 
-    // === 向右滑 (查看新结果 或 生成新结果) ===
-    if (direction === 'next') {
-        // A. 如果后面还有已生成的结果，直接切换
-        if (currentIndex < candidates.length - 1) {
-            currentIndex++;
-            turn.content = candidates[currentIndex];
-            turn.metadata.currentIndex = currentIndex;
-            await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turn);
-            await rerenderMovieScreen(turn.dossierId);
-            return;
+    // === 4. 执行原地更新 (如果数据变了) ===
+    if (hasChanged) {
+        // A. 更新数据对象
+        turn.content = candidates[currentIndex];
+        turn.metadata.candidates = candidates;
+        turn.metadata.currentIndex = currentIndex;
+
+        // B. 写入数据库 & 内存
+        await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turn);
+        // 同步全局内存
+        const memIndex = appState.currentMovieHistoryFull.findIndex(t => t.id === turnId);
+        if (memIndex > -1) {
+            appState.currentMovieHistoryFull[memIndex] = turn;
         }
 
-        // B. 如果已经是最新一条，触发 AI 生成新的 (Reroll)
-        // ------------------------------------------------
+        // C. 【核心】操作 DOM 更新内容
         
-        // UI 反馈：找到箭头变成加载动画
-        const card = document.querySelector(`.story-card[data-turn-id="${turnId}"]`);
-        const nextArrow = card.querySelector('.swipe-arrow.next');
-        const counter = card.querySelector('.swipe-counter');
+        // C1. 格式化文本
+        let processedContent = turn.content.replace(/\n/g, '<br>');
+        processedContent = processedContent.replace(/\*([^*]+)\*/g, '<span class="thought">$1</span>');
+        processedContent = processedContent.replace(/“([^”]+)”/g, '<span class="dialogue">“$1”</span>');
+
+        // C2. 更新 Body 内容 (直接使用之前获取的 bodyEl)
+        if (bodyEl) {
+            bodyEl.innerHTML = processedContent;
+
+            // C3. 重新挂载鬼怪组件
+            const uniqueId = `${turn.id}-${Date.now()}`; 
+            const widgetData = turn.widgetState || appState.currentGoblinState;
+            const goblinWidget = createGoblinWidget(uniqueId, widgetData);
+            bodyEl.appendChild(goblinWidget);
+        }
+
+        // C4. 更新底部计数器 & 恢复箭头状态 (直接使用之前的引用)
+        if (counter) counter.textContent = `${currentIndex + 1}/${candidates.length}`;
         
+        // 恢复右箭头 (无论之前有没有变成loading，现在都要变回箭头)
         if (nextArrow) {
-            nextArrow.className = 'ri-loader-4-line swipe-loading'; // 变成转圈圈
-            nextArrow.style.pointerEvents = 'none';
+            nextArrow.className = 'ri-arrow-right-s-line swipe-arrow next';
+            nextArrow.style.pointerEvents = 'auto';
         }
         
-        try {
-            // 1. 获取上下文 (Context)
-            // 注意：上下文应该是 "这条消息之前" 的所有历史
-            // 我们从全量历史中截取
-            const fullHistory = appState.currentMovieHistoryFull || [];
-            const thisTurnIndex = fullHistory.findIndex(t => t.id === turnId);
-            
-            if (thisTurnIndex === -1) throw new Error("历史记录定位失败");
-            
-            // 上下文 = 开头 到 这条消息的前一条
-            const contextHistory = fullHistory.slice(0, thisTurnIndex);
-            
-            // 获取上一条消息作为 Prompt 的触发器 (通常是 User 的话)
-            // 如果这是第一条(开场白)，lastUserContent 为空，PromptManager 会处理
-            const lastUserTurn = contextHistory.length > 0 ? contextHistory[contextHistory.length - 1].content : null;
-
-            // 2. 调用 AI
-            const prompt = promptManager.createMoviePrompt(
-                appState.currentMovieSession, 
-                contextHistory, 
-                lastUserTurn // 这里的 userInput 实际上是上一轮的输入
-            );
-            
-            const newContent = await apiHelper.getChatCompletion(prompt);
-            
-            // 3. 保存新结果
-            // 将新内容推入候选列表
-            turn.metadata.candidates.push(newContent);
-            // 指针移到最新
-            turn.metadata.currentIndex = turn.metadata.candidates.length - 1;
-            // 更新当前显示内容
-            turn.content = newContent;
-            
-            // 4. 写入数据库
-            await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turn);
-            
-            // 5. 更新内存中的全量历史 (这对后续的上下文很重要)
-            appState.currentMovieHistoryFull[thisTurnIndex] = turn;
-
-            // 6. 刷新屏幕
-            await rerenderMovieScreen(turn.dossierId);
-
-        } catch (error) {
-            console.error("Swipe生成失败:", error);
-            utils.showToast("新剧情生成失败");
-            // 恢复图标
-            if (nextArrow) {
-                nextArrow.className = 'ri-arrow-right-s-line swipe-arrow next';
-                nextArrow.style.pointerEvents = 'auto';
-            }
+        // 处理左箭头禁用状态
+        if (prevArrow) {
+            if (currentIndex === 0) prevArrow.classList.add('disabled');
+            else prevArrow.classList.remove('disabled');
         }
     }
 }
@@ -38444,6 +38527,72 @@ function addMessage() {
     }
 }
 
+// --- 核心逻辑：消息提示音 ---
+
+// 1. 播放提示音的核心函数 (防堆叠优化版)
+async function playNotificationSound() {
+    // 读取设置
+    let config = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'notification_sound_config');
+    if (!config) config = { enabled: true };
+    if (!config.enabled) return;
+
+    let audioSrc = 'https://files.catbox.moe/266050.mp3'; // 默认音效
+    
+    if (config.assetId) {
+        try {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, config.assetId);
+            if (asset && asset.file) {
+                audioSrc = URL.createObjectURL(asset.file);
+            }
+        } catch (e) {
+            console.error("读取音频失败", e);
+        }
+    }
+
+    // === 【核心优化】防止声音堆叠 ===
+    // 如果上一个声音还在响，先把它停掉，并重置进度
+    if (window.currentNotifAudio) {
+        try {
+            window.currentNotifAudio.pause();
+            window.currentNotifAudio.currentTime = 0;
+        } catch(e) {} // 忽略可能的错误
+    }
+
+    const audio = new Audio(audioSrc);
+    audio.volume = 1.0;
+    
+    // 把当前这个音频挂载到全局变量上，方便下一次打断它
+    window.currentNotifAudio = audio;
+
+    audio.play().catch(e => {
+        // 忽略自动播放限制的报错
+    });
+}
+
+// 2. 初始化设置页 UI
+async function initSoundSettings() {
+    const config = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'notification_sound_config') || {};
+    DOM.notifSoundToggle.checked = !!config.enabled;
+    DOM.currentSoundName.textContent = config.filename ? `当前: ${config.filename}` : "当前: 默认";
+}
+
+// 3. 保存提示音配置
+async function saveSoundConfig(enabled, assetId = null, filename = null) {
+    let config = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'notification_sound_config') || {};
+    config.enabled = enabled;
+    if (assetId !== null) config.assetId = assetId;
+    if (filename !== null) config.filename = filename;
+    
+    // 如果 assetId 显式传 undefined (重置操作)，则删除字段
+    if (assetId === undefined) {
+        delete config.assetId;
+        delete config.filename;
+    }
+
+    await dbHelper.set(CONSTANTS.STORE_NAMES.USER_SETTINGS, config, 'notification_sound_config');
+    return config;
+}
+
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -42703,7 +42852,8 @@ document.getElementById('save-forum-profile-modal-btn').addEventListener('click'
 /* 6. 电影-输入框文字 */
 #movie-input {
     color: #fff !important;
-    font-size: 16px !important;
+    /* 跟随全局字体大小 */
+    font-size: 1rem !important;
 }
 #movie-input::placeholder {
     color: rgba(255, 255, 255, 0.3) !important;
@@ -44974,6 +45124,61 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
         });
     });
 
+// --- 消息提示音监听 ---
+    
+    // 1. 跳转入口
+    DOM.gotoSoundSettings.addEventListener('click', () => {
+        initSoundSettings();
+        navigateToPage(DOM.settingsNavigator, 'sound-settings-page');
+    });
+
+    // 2. 开关切换
+    DOM.notifSoundToggle.addEventListener('change', async () => {
+        await saveSoundConfig(DOM.notifSoundToggle.checked);
+    });
+
+    // 3. 试听按钮
+    DOM.testSoundBtn.addEventListener('click', async () => {
+        // 强制播放一次，无视开关状态
+        const config = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'notification_sound_config') || {};
+        let audioSrc = 'https://files.catbox.moe/266050.mp3';
+        if (config.assetId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, config.assetId);
+            if (asset?.file) audioSrc = URL.createObjectURL(asset.file);
+        }
+        new Audio(audioSrc).play();
+    });
+
+    // 4. 上传按钮 (触发 input)
+    DOM.uploadSoundBtn.addEventListener('click', () => DOM.notifSoundInput.click());
+
+    // 5. 文件选择处理
+    DOM.notifSoundInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const assetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: file });
+            await saveSoundConfig(true, assetId, file.name); // 上传后自动开启
+            
+            DOM.notifSoundToggle.checked = true;
+            DOM.currentSoundName.textContent = `当前: ${file.name}`;
+            utils.showToast("提示音已更换");
+        } catch (err) {
+            console.error(err);
+            utils.showToast("上传失败");
+        }
+        e.target.value = '';
+    });
+
+    // 6. 重置/删除按钮
+    DOM.resetSoundBtn.addEventListener('click', async () => {
+        // 传 undefined 代表删除字段，保留开关状态
+        await saveSoundConfig(DOM.notifSoundToggle.checked, undefined, undefined);
+        DOM.currentSoundName.textContent = "当前: 默认";
+        utils.showToast("已恢复默认提示音");
+    });
+
 }
 
         async function initializeApp() {
@@ -45042,4 +45247,4 @@ TwilightPlayer.init();
     });
     </script>
 </body>
-</html>.
+</html>
