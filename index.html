@@ -17992,10 +17992,8 @@ const backgroundKeeper = {
         this.audio = new Audio(silentMp3);
         this.audio.loop = true; // 必须循环，防止请求时间过长音频播完
         
-        // 【注意】目前的音量是 1% (0.01)，几乎听不见。
-        // 如果你这个音频是有声音的(比如白噪音/等待音效)并且你想听到它，
-        // 请把下面这行改成 this.audio.volume = 1.0;
-        this.audio.volume = 0.01; 
+        
+        this.audio.volume = 0; 
         
         this.audio.preload = 'auto'; // 强制预加载
         
@@ -25016,29 +25014,22 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                     try {
                         const htmlAction = JSON.parse(htmlJsonString);
                         if (htmlAction.action === 'render_html' && htmlAction.html) {
-                            
-                            const htmlMessage = {
-                                dossierId: dossier.id,
-                                sender: 'character',
-                                type: 'html_module',
-                                content: htmlAction.html,
-                                timestamp: Date.now()
-                            };
-
-                            const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
+                            const htmlMessage = { dossierId: dossier.id, sender: 'character', type: 'html_module', content: htmlAction.html, timestamp: Date.now() };
+                            const prevMsg = appState.currentChatHistory[appState.currentChatHistory.length - 1];
                             const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, htmlMessage);
                             htmlMessage.id = savedId;
                             appState.currentChatHistory.push(htmlMessage);
                             
+                            await updateChatSession(dossierId, '[HTML模块消息]', !isUserPresent());
+
                             if (isUserPresent()) {
-                                await renderMessage(htmlMessage, prevMessage);
+                                await renderMessage(htmlMessage, prevMsg);
+                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: '[发来一张卡片]', onClick: () => window.focus() });
+                            } else {
+                                notificationManager.show({ avatarUrl, title: characterName, message: '[发来一张卡片]', onClick: () => openChatWindow(dossierId) });
                             }
-                            
-                            await updateChatSession(dossierId, '[HTML模块消息]');
                         }
-                    } catch (e) {
-                        console.error("解析HTML模块指令失败:", e);
-                    }
+                    } catch (e) { console.error("解析HTML失败", e); }
                 }
             }
     
@@ -25103,17 +25094,13 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                             appState.currentChatHistory.push(voiceMessage);
                             
                             if (isUserPresent()) {
-                                await renderMessage(voiceMessage, prevMessage);
+                                await renderMessage(voiceMessage, prevMsg);
+                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => window.focus() });
+                            } else {
+                                notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => openChatWindow(dossierId) });
                             }
-                            
-                            // 2. 更新会话列表
-                            await updateChatSession(dossierId, '[语音消息]');
                         }
-                    } catch (e) {
-                        console.error("解析语音消息指令失败:", e);
-                        // 如果解析失败，把剥离掉的文本内容还回去，以防万一
-                        chatContent += ` ${voiceActionTag}${voiceJsonString}`;
-                    }
+                    } catch (e) { console.error("解析Voice失败", e); chatContent += ` ${voiceActionTag}${voiceJsonString}`; }
                 }
             }
 
@@ -25153,14 +25140,13 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                             appState.currentChatHistory.push(transferMessage);
                             
                             if (isUserPresent()) {
-                                await renderMessage(transferMessage, prevMessage);
+                                await renderMessage(transferMessage, prevMsg);
+                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: `[转账] ${transferAction.amount}`, onClick: () => window.focus() });
+                            } else {
+                                notificationManager.show({ avatarUrl, title: characterName, message: `[转账] ${transferAction.amount}`, onClick: () => openChatWindow(dossierId) });
                             }
-                            
-                            await updateChatSession(dossierId, `[转账] ${transferAction.amount} ${transferAction.currency || '信用点'}`);
                         }
-                    } catch (e) {
-                        console.error("解析转账指令失败:", e);
-                    }
+                    } catch (e) { console.error("解析Transfer失败", e); }
                 }
             }
 // **新增优先级：** 检测并处理【回应转账】指令
@@ -25231,11 +25217,9 @@ if (momentActionIndex !== -1) {
                 const actionJson = JSON.parse(match[1]);
                 
                 if (actionJson.action === 'withdraw') {
-                    // --- 撤回指令 ---
                     const { originalMessage, reason, newMessage } = actionJson;
 
-                    // A. 先模拟发送“错误消息”
-                    // 只有用户在场时才演这一出动画，不在场直接略过动画
+                    // A. 模拟发送
                     let mistakeMessageEl = null;
                     if (isUserPresent()) {
                         const tempId = `temp_${Date.now()}`;
@@ -25245,11 +25229,9 @@ if (momentActionIndex !== -1) {
                         DOM.messagesContainer.appendChild(mistakeMessageEl);
                         utils.autoScrollToBottom();
                         
-                        // 模拟反应时间
                         const realisticDelay = Math.random() * 700 + 800;
                         await new Promise(resolve => setTimeout(resolve, realisticDelay));
 
-                        // 撤回动画
                         if (mistakeMessageEl) {
                             mistakeMessageEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                             mistakeMessageEl.style.opacity = '0';
@@ -25258,74 +25240,55 @@ if (momentActionIndex !== -1) {
                         }
                     }
 
-                    // B. 保存“撤回记录”
+                    // B. 保存撤回记录
                     const withdrawnMessage = { dossierId, sender: 'character', content: originalMessage, status: 'withdrawn', innerThought: reason, timestamp: Date.now() };
                     const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, withdrawnMessage);
                     withdrawnMessage.id = savedId;
                     appState.currentChatHistory.push(withdrawnMessage);
                     
-                    // C. 渲染“撤回提示”或发送通知
                     if (isUserPresent()) {
                         const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
                         await renderMessage(withdrawnMessage, lastMsg);
                     } else {
-                        // 【新增】如果用户不在，发送一条撤回通知
                         notificationManager.show({ avatarUrl, title: characterName, message: "撤回了一条消息", onClick: () => openChatWindow(dossierId) });
                     }
 
-                    // D. 处理修正后的新消息
+                    // C. 发送新消息
                     if (newMessage) {
                         if (isUserPresent()) await new Promise(resolve => setTimeout(resolve, 400));
-                        
                         const newContent = newMessage;
                         const isQuote = newContent.startsWith('> ') && newContent.includes('\n');
                         const allNewMessages = []; 
 
                         if (isQuote) {
-                            // 解析引用
                             const replyLines = newContent.split('\n').filter(line => line.trim() !== '');
-                            // 第一条带引用
                             if (replyLines.length > 1) {
-                                const firstContent = `${replyLines[0]}\n${replyLines[1]}`;
-                                allNewMessages.push({ dossierId, sender: 'character', content: firstContent, timestamp: Date.now() });
-                                // 后续作为普通消息
+                                allNewMessages.push({ dossierId, sender: 'character', content: `${replyLines[0]}\n${replyLines[1]}`, timestamp: Date.now() });
                                 for (let i = 2; i < replyLines.length; i++) {
                                     allNewMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
                                 }
                             }
                         } else {
-                            // 普通多气泡
                             const splitMsgs = newContent.split('|||').filter(line => line.trim() !== ''); 
                             splitMsgs.forEach(txt => {
                                 allNewMessages.push({ dossierId, sender: 'character', content: txt, timestamp: Date.now() });
                             });
                         }
 
-                        // E. 统一发送循环 (修复点：确保每一条都有通知)
+                        // 统一循环处理 (通知逻辑)
                         for (const msgObj of allNewMessages) {
-                            // 存库
                             const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, msgObj);
                             msgObj.id = sid;
                             appState.currentChatHistory.push(msgObj);
-                            
-                            // 列表预览更新
                             await updateChatSession(dossierId, msgObj.content, !isUserPresent());
 
                             if (isUserPresent()) {
-                                // 在场：渲染
                                 const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
                                 await renderMessage(msgObj, lastMsg);
-                                // 气泡间延迟
+                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => window.focus() });
                                 if (allNewMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
                             } else {
-                                // 不在场：发送通知
-                                notificationManager.show({ 
-                                    avatarUrl, 
-                                    title: characterName, 
-                                    message: msgObj.content.replace(/^> .*?\n/, '[回复] '), // 优化引用显示的通知文案
-                                    onClick: () => openChatWindow(dossierId) 
-                                });
-                                // 通知间延迟 (防止瞬间刷屏)
+                                notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => openChatWindow(dossierId) });
                                 await new Promise(resolve => setTimeout(resolve, 2000));
                             }
                         }
@@ -25334,43 +25297,32 @@ if (momentActionIndex !== -1) {
                 } else if (actionJson.action === 'quote') {
                     // --- 引用指令 ---
                     const replyLines = actionJson.replyText.split('\n').filter(line => line.trim() !== '');
-                    if (replyLines.length === 0) return;
+                    if (replyLines.length > 0) {
+                        const newMessages = [];
+                        newMessages.push({ dossierId, sender: 'character', content: `> ${actionJson.quoteText}\n${replyLines[0]}`, timestamp: Date.now() });
+                        for (let i = 1; i < replyLines.length; i++) {
+                            newMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
+                        }
 
-                    const newMessages = [];
-                    // 第一条
-                    const firstContent = `> ${actionJson.quoteText}\n${replyLines[0]}`;
-                    newMessages.push({ dossierId, sender: 'character', content: firstContent, timestamp: Date.now() });
-                    // 后续条
-                    for (let i = 1; i < replyLines.length; i++) {
-                        newMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
-                    }
+                        for (const msgObj of newMessages) {
+                            const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, msgObj);
+                            msgObj.id = sid;
+                            appState.currentChatHistory.push(msgObj);
+                            await updateChatSession(dossierId, msgObj.content, !isUserPresent());
 
-                    // 统一处理循环
-                    for (const msgObj of newMessages) {
-                        const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, msgObj);
-                        msgObj.id = sid;
-                        appState.currentChatHistory.push(msgObj);
-                        
-                        await updateChatSession(dossierId, msgObj.content, !isUserPresent());
-
-                        if (isUserPresent()) {
-                            const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
-                            await renderMessage(msgObj, lastMsg);
-                            if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
-                        } else {
-                            // 【新增】引用消息的通知
-                            notificationManager.show({ 
-                                avatarUrl, 
-                                title: characterName, 
-                                message: msgObj.content.replace(/^> .*?\n/, '[回复] '), 
-                                onClick: () => openChatWindow(dossierId) 
-                            });
-                            await new Promise(resolve => setTimeout(resolve, 2000));
+                            if (isUserPresent()) {
+                                const lastMsg = appState.currentChatHistory[appState.currentChatHistory.length - 2];
+                                await renderMessage(msgObj, lastMsg);
+                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => window.focus() });
+                                if (newMessages.length > 1) await new Promise(resolve => setTimeout(resolve, 500));
+                            } else {
+                                notificationManager.show({ avatarUrl, title: characterName, message: msgObj.content.replace(/^> .*?\n/, '[回复] '), onClick: () => openChatWindow(dossierId) });
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                            }
                         }
                     }
                 }
-
-            } else if (chatContent) {
+ }else if (chatContent) {
                 // === 普通文本消息 (含后台通知修复) ===
                 
                 // 1. 拆分气泡
