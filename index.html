@@ -14488,6 +14488,50 @@ body.light-mode .capsule {
     0%, 100% { transform: scale(1) rotate(10deg); }
     50% { transform: scale(1.2) rotate(10deg); }
 }
+
+/* === 电影模式：回底按钮 (常驻版) === */
+.scroll-bottom-btn {
+    position: absolute;
+    bottom: 100px; /* 位于输入栏上方 */
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    z-index: 99;
+    
+    /* 样式 */
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    color: #fff;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    
+    /* 【常驻显示】半透明，鼠标放上去变亮 */
+    opacity: 0.4; 
+    transform: translateY(0);
+    pointer-events: auto; 
+    transition: all 0.3s ease;
+}
+
+/* 悬停高亮 */
+.scroll-bottom-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* 浅色适配 */
+body.light-mode .scroll-bottom-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+}
     </style>
 </head>
 
@@ -15669,6 +15713,11 @@ body.light-mode .capsule {
                     </button>
                 </div>
             </div>
+ <!-- ▼▼▼ 【新增】回到底部按钮 (加在这里) ▼▼▼ -->
+            <div id="movie-scroll-bottom-btn" class="scroll-bottom-btn">
+                <i class="ri-arrow-down-double-line"></i>
+            </div>
+            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
         </div>
     </div>
 
@@ -19136,6 +19185,7 @@ enableSysNotifyBtn: document.getElementById('enable-sys-notify-btn'),
     notifSoundInput: document.getElementById('notif-sound-input'),
     resetSoundBtn: document.getElementById('reset-sound-btn'),
     currentSoundName: document.getElementById('current-sound-name'),
+movieScrollBottomBtn: document.getElementById('movie-scroll-bottom-btn'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -30169,48 +30219,56 @@ async function clearMovieHistory() {
  * 并同步内存状态，防止 AI 产生记忆幻觉
  * @param {number} dossierId 
  */
+/**
+ * 【新增辅助 - 修复版】重新渲染整个电影屏幕
+ * 修复：使用 for...of 循环等待异步渲染，防止高度塌陷导致滚动条跳动
+ * @param {number} dossierId 
+ */
 async function rerenderMovieScreen(dossierId) {
     DOM.movieScreenContainer.innerHTML = ''; // 清空屏幕
     
     // 1. 重新从数据库获取最新的、完整的历史记录
     const history = await dbHelper.dbPromise.then(db => db.getAllFromIndex(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, 'by_dossierId', dossierId));
     
-    // ============================================================
-    // === 🚨【核心修复点】🚨 ===
-    // 强制将内存中的历史记录与数据库同步！
-    // 这样下次发消息给 AI 时，它看到的就是修改后/删除后的新剧情了。
+    // 强制将内存中的历史记录与数据库同步
     appState.currentMovieHistoryFull = history; 
-    // ============================================================
 
-    // 2. 按照正确的顺序和楼层号重新渲染每一张卡片
-    history.forEach((turn, index) => {
-        renderMovieTurn(turn, index + 1);
-    });
+    // 2. 【核心修复】使用 for...of 循环代替 forEach
+    // 这样可以使用 await，确保上一张卡片渲染完、插入DOM撑开高度后，再处理下一张
+    for (let i = 0; i < history.length; i++) {
+        await renderMovieTurn(history[i], i + 1);
+    }
 }
         /**
-         * 【新增逻辑】处理删除一个剧情回合
-         * @param {number} turnId - 要删除的回合ID
-         */
-        async function handleMovieDelete(turnId) {
-            if (!turnId || !confirm("您确定要删除这个剧情片段吗？")) return;
+ * 【修复版】处理删除一个剧情回合 (带滚动位置记忆)
+ * @param {number} turnId - 要删除的回合ID
+ */
+async function handleMovieDelete(turnId) {
+    if (!turnId || !confirm("您确定要删除这个剧情片段吗？")) return;
 
-            try {
-                // 1. 从数据库删除
-                await dbHelper.delete(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turnId);
-                
-                // 2. 重新渲染整个屏幕以更新楼层号和内容
-                await rerenderMovieScreen(appState.currentMovieSession.dossierId);
+    // 1. 【核心】在清空屏幕前，记录当前的滚动位置
+    const container = DOM.movieScreenContainer;
+    const savedScrollTop = container.scrollTop;
 
-setTimeout(() => {
-            DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
-        }, 50);
-                
-                utils.showToast('剧情片段已删除');
-            } catch (error) {
-                console.error("删除剧情失败:", error);
-                utils.showToast('删除失败');
-            }
-        }
+    try {
+        // 2. 从数据库删除
+        await dbHelper.delete(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turnId);
+        
+        // 3. 重新渲染整个屏幕 (现在它是可等待的了)
+        await rerenderMovieScreen(appState.currentMovieSession.dossierId);
+
+        // 4. 【核心】恢复之前的滚动位置
+        // 稍微加一点点延迟，确保浏览器完成了布局计算
+        requestAnimationFrame(() => {
+            container.scrollTop = savedScrollTop;
+        });
+        
+        utils.showToast('剧情片段已删除');
+    } catch (error) {
+        console.error("删除剧情失败:", error);
+        utils.showToast('删除失败');
+    }
+}
 
         /**
          * 【V2 - 浮窗版】处理编辑一个剧情回合
@@ -41935,21 +41993,28 @@ DOM.movieClearHistoryBtn.addEventListener('click', clearMovieHistory);
             if (!turnId) return;
             if (newContent === '') return utils.showToast('剧情内容不能为空！');
 
+            // 1. 【新增】记录滚动位置
+            const container = DOM.movieScreenContainer;
+            const currentScrollTop = container.scrollTop;
+
             try {
                 const turnToUpdate = await dbHelper.get(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turnId);
                 if (!turnToUpdate) throw new Error('在数据库中找不到该剧情回合');
 
-                // 1. 更新内容
+                // 更新内容
                 turnToUpdate.content = newContent;
                 
-                // 2. 保存回数据库
+                // 保存回数据库
                 await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turnToUpdate);
 
-                // 3. 重新渲染整个屏幕
+                // 重新渲染整个屏幕
                 await rerenderMovieScreen(appState.currentMovieSession.dossierId);
 
+                // 2. 【新增】恢复滚动位置
+                container.scrollTop = currentScrollTop;
+
                 utils.showToast('剧情已更新');
-                closeMovieEditModal(); // 操作成功后关闭浮窗
+                closeMovieEditModal(); 
 
             } catch (error) {
                 console.error("保存编辑失败:", error);
@@ -45223,6 +45288,20 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
         DOM.currentSoundName.textContent = "当前: 默认";
         utils.showToast("已恢复默认提示音");
     });
+
+// --- 电影模式：强制回到底部 ---
+            DOM.movieScrollBottomBtn.addEventListener('click', () => {
+                // 1. 平滑滚动
+                DOM.movieScreenContainer.scrollTo({
+                    top: DOM.movieScreenContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+                
+                // 2. 强制瞬移 (双保险，防止图片加载导致的滚动不到位)
+                setTimeout(() => {
+                    DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
+                }, 500);
+            });
 
 }
 
