@@ -14,7 +14,7 @@
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   
+   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=La+Belle+Aurore&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Noto+Serif+KR:wght@300;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Pirata+One&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -14532,6 +14532,362 @@ body.light-mode .scroll-bottom-btn {
     border-color: rgba(0, 0, 0, 0.1);
     color: #333;
 }
+
+/* ============================================================
+   ===   Memory Dive (Couture Edition) 专属样式   ===
+   ============================================================ */
+
+/* 1. 局部变量定义 (Scope) */
+#memory-dive-app {
+    --bg-deep: #080808;
+    --text-bone: #dcdcdc;
+    --text-muted: #555555;
+    --accent-blood: #b91c1c; 
+    --accent-silk: #f0e6d2;  
+    --overlay-vellum: rgba(240, 230, 210, 0.95);
+    --font-display: 'Cinzel', 'CustomGlobalFont', serif;
+    --font-body: 'Cormorant Garamond', 'CustomGlobalFont', serif;
+    --font-hand: 'La Belle Aurore', 'CustomGlobalFont', cursive;
+    --font-type: 'IM Fell English SC', 'CustomGlobalFont', serif;    
+    --ease-elegant: cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* 继承全屏应用属性 */
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 100;
+    
+    /* 核心背景复刻 */
+    background-color: var(--bg-deep);
+    color: var(--text-bone);
+    font-family: var(--font-body);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    
+    /* 默认隐藏，由导航控制显示 */
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* 激活状态 */
+#memory-dive-app.active {
+    transform: translateX(0);
+}
+
+/* 2. 内部容器 (App Frame) */
+.couture-frame {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: linear-gradient(to bottom, #080808, #0c0c0c);
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    
+    /* 【关键】避开系统状态栏 */
+    padding-top: 50px; 
+}
+
+/* 3. 装饰性红线 */
+.red-thread-deco {
+    position: absolute;
+    top: 0;
+    left: 20px;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--accent-blood), transparent);
+    opacity: 0.5;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* 4. 内部页面系统 (Couture Page) */
+.couture-page {
+    position: absolute;
+    top: 50px; /* 同样避开顶部 */
+    left: 0; width: 100%; bottom: 0; /* 占满剩余空间 */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s var(--ease-elegant), transform 1.2s var(--ease-elegant);
+    transform: translateY(20px) scale(0.98);
+    z-index: 1;
+    padding: 20px 30px 40px 30px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-deep);
+}
+
+.couture-page.active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+    z-index: 10;
+}
+
+/* 5. UI 组件复刻 */
+.btn-couture {
+    background: none;
+    border: none;
+    font-family: var(--font-type);
+    color: var(--text-muted);
+    font-size: 14px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    padding: 10px 0;
+    transition: color 0.5s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.btn-couture:hover, .btn-couture.active { color: var(--text-bone); }
+.btn-couture i { font-size: 16px; }
+
+/* 封面 Cover */
+#couture-cover { justify-content: center; align-items: center; text-align: center; }
+.cover-title {
+    font-family: var(--font-display);
+    font-size: 42px;
+    letter-spacing: 12px;
+    margin-bottom: 20px;
+    color: var(--text-bone);
+    text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    background: linear-gradient(45deg, #fff, #999);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.cover-sub {
+    font-family: var(--font-hand);
+    font-size: 24px;
+    color: var(--accent-blood);
+    transform: rotate(-5deg);
+    opacity: 0.8;
+    margin-bottom: 60px;
+}
+
+/* 角色列表 Char Item (带头像适配) */
+.char-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 35px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    padding-bottom: 20px;
+    transition: opacity 0.3s;
+}
+.char-item:hover { opacity: 0.8; }
+
+.char-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #111;
+    border: 1px solid #333;
+    margin-right: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    background-size: cover;
+    background-position: center;
+}
+/* 列表样式 */
+.char-info { flex: 1; min-width: 0; }
+.char-name {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text-bone);
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+.char-desc {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.3;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 记忆列表 Memory List */
+.memory-list-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+    padding-left: 20px;
+    scrollbar-width: none;
+}
+.memory-entry {
+    padding: 20px 0;
+    border-left: 1px solid var(--text-muted);
+    padding-left: 20px;
+    margin-left: 5px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.memory-entry::before {
+    content: ''; position: absolute; left: -4px; top: 26px;
+    width: 7px; height: 7px; background: var(--bg-deep);
+    border: 1px solid var(--text-muted); border-radius: 50%;
+}
+.memory-entry:hover { border-left-color: var(--accent-silk); }
+.memory-entry:hover::before { background: var(--accent-blood); border-color: var(--accent-blood); }
+
+.mem-date { font-family: var(--font-type); font-size: 10px; color: var(--accent-blood); letter-spacing: 2px; }
+.mem-title { font-family: var(--font-display); font-size: 18px; color: var(--text-bone); margin-top: 5px; }
+
+/* 底部栏 */
+.bottom-bar {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-deep);
+}
+
+/* 阅读器 Reader */
+.reader-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #333;
+}
+.story-content {
+    flex: 1; font-size: 20px; line-height: 2.0; text-align: justify;
+    color: #ccc; overflow-y: auto; padding-right: 5px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+    padding-top: 20px; padding-bottom: 20px; scrollbar-width: none;
+}
+
+/* 批注红线 (Stitched Scar) */
+.scar-word {
+    color: var(--text-bone); cursor: pointer; position: relative;
+    white-space: nowrap; border-bottom: none; padding-bottom: 2px; transition: all 0.3s;
+}
+.scar-word::after {
+    content: ''; position: absolute; bottom: 0px; left: 0; width: 100%; height: 3px;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 3 L5 0 L10 3 L5 6 Z' fill='none' stroke='%23b91c1c' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: repeat-x; background-size: 10px 6px; opacity: 0.8; transition: opacity 0.3s;
+}
+.scar-word:hover { color: var(--accent-silk); }
+.scar-word:hover::after { opacity: 1; filter: drop-shadow(0 0 2px var(--accent-blood)); }
+
+/* 批注浮窗 (Vellum Note) */
+.vellum-note {
+    position: absolute; background: var(--overlay-vellum); color: #1a1a1a;
+    padding: 20px; width: 250px; font-family: var(--font-hand);
+    font-size: 22px; line-height: 1.2; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    z-index: 100; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    clip-path: polygon(3% 0%, 100% 1%, 98% 100%, 0% 97%);
+}
+.vellum-note.active { opacity: 1; pointer-events: auto; transform: scale(1) rotate(-1deg); }
+.vellum-pin {
+    position: absolute; top: -6px; left: 50%; width: 30px; height: 10px;
+    background: rgba(0,0,0,0.2); transform: rotate(-5deg);
+}
+
+/* Context Modal */
+.context-modal {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.92); z-index: 200; display: flex; flex-direction: column;
+    justify-content: center; padding: 40px; opacity: 0; pointer-events: none; transition: opacity 0.5s;
+}
+.context-modal.active { opacity: 1; pointer-events: auto; }
+.context-area {
+    background: transparent; border: none; border-bottom: 1px solid var(--text-muted);
+    color: var(--text-bone); font-family: var(--font-body); font-size: 18px;
+    width: 100%; height: 150px; resize: none; outline: none; margin: 30px 0;
+}
+
+/* Collection Grid */
+.collection-grid { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 15px; }
+.collect-item { border: 1px dashed var(--text-muted); padding: 15px; cursor: pointer; }
+.collect-item:hover { border-color: var(--accent-silk); }
+/* ==================== 修复补丁开始 ==================== */
+
+
+
+/* 2. 修复页面右侧被剪裁/偏移问题 */
+#memory-dive-app {
+    /* 改用 100% 避免 100vw 在某些手机上包含滚动条宽度导致溢出 */
+    width: 100% !important; 
+    overflow-x: hidden; /* 双重保险，禁止横向滚动 */
+}
+
+.couture-page {
+    /* 【核心修复】让 padding 包含在 width 内，不再撑大盒子 */
+    box-sizing: border-box !important; 
+    
+    /* 确保宽度对齐 */
+    width: 100% !important;
+    left: 0 !important;
+    
+    /* 稍微调整一下内边距，让手机端看起来更舒服 */
+    padding: 20px 20px 80px 20px !important; 
+}
+
+/* 3. 修复底部栏可能被系统手势条遮挡的问题 */
+.bottom-bar {
+    padding-bottom: env(safe-area-inset-bottom); /* 适配 iPhone 底部黑条 */
+    padding-left: 20px;
+    padding-right: 20px;
+    box-sizing: border-box; /* 同样防止底部栏撑爆宽度 */
+    width: 100%;
+}
+
+/* 4. 确保内部容器也不会溢出 */
+.couture-frame {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ==================== 修复补丁结束 ==================== */
+/* ==================== 浮窗修复补丁 ==================== */
+
+.context-modal {
+    /* 【核心修复】加上这个，padding 就不会撑爆宽度了 */
+    box-sizing: border-box !important; 
+    
+    /* 建议改为 fixed，保证锁死全屏 */
+    position: fixed !important; 
+    top: 0; 
+    left: 0; 
+    width: 100% !important; 
+    height: 100% !important;
+    
+    /* 稍微减小一点内边距，适配手机窄屏 */
+    padding: 30px !important; 
+    
+    /* 确保层级正确 */
+    background: rgba(0,0,0,0.95);
+    z-index: 1200 !important; /* 比系统栏高一点或者低一点看你需求，目前是全屏遮罩 */
+    
+    /* 布局保持不变 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+}
+
+.context-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 修复输入框可能溢出的问题 */
+.context-area {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* ==================== 修复结束 ==================== */
     </style>
 </head>
 
@@ -14855,11 +15211,11 @@ body.light-mode .scroll-bottom-btn {
                 <span>CP博主</span>
             </div>
 
-            <!-- 2. 占位符 -->
-            <div class="app-icon icon-with-text customizable-icon" style="opacity: 0.6; cursor: default;">
-                <i class="ri-question-mark"></i>
-                <span>待定</span>
-            </div>
+            <!-- 3. 记忆潜渊 (Couture) -->
+<div id="icon-memory-dive" class="app-icon icon-with-text customizable-icon" style="cursor: pointer;">
+    <i class="fa-solid fa-hourglass-half" style="color: #dcdcdc;"></i>
+    <span style="color: #dcdcdc; opacity: 0.8;">记忆潜渊</span>
+</div>
 
             <!-- 3. 占位符 -->
             <div class="app-icon icon-with-text customizable-icon" style="opacity: 0.6; cursor: default;">
@@ -16700,6 +17056,119 @@ body.light-mode .scroll-bottom-btn {
         </div>
     </div>
 </div>
+
+<!-- Memory Dive 应用 (Couture Edition) -->
+<div id="memory-dive-app" class="app-navigator">
+    <div class="couture-frame">
+        
+        <!-- 装饰红线 -->
+        <div class="red-thread-deco"></div>
+
+        <!-- 组件: 批注浮窗 -->
+        <div id="vellum-note" class="vellum-note">
+            <div class="vellum-pin"></div>
+            <div id="vellum-text"></div>
+        </div>
+
+        <!-- 0. 封面 -->
+        <div id="couture-cover" class="couture-page active">
+            <div class="cover-title">MNEMOSYNE</div>
+            <div class="cover-sub">The Couture Edition</div>
+            
+            <!-- 返回桌面按钮 -->
+            <button id="couture-exit-btn" class="btn-couture back-button" style="position: absolute; top: 60px; left: 20px;">
+                 <i class="fa-solid fa-xmark"></i> EXIT
+            </button>
+
+            <button id="btn-enter-archive" class="btn-couture" style="margin-top:40px; justify-content:center;">
+                ENTER ARCHIVE
+            </button>
+        </div>
+
+        <!-- 1. 角色列表页 -->
+        <div id="couture-index" class="couture-page">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button id="btn-back-to-cover" class="btn-couture"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                <span style="font-family:var(--font-type); font-size:12px; color:var(--text-muted);">SUBJECTS</span>
+            </div>
+            
+            <div style="flex:1; overflow-y:auto; padding-right:10px;">
+                <div id="couture-char-list">
+                    <!-- JS 生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 记忆碎片列表页 -->
+        <div id="couture-memory-list" class="couture-page">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <button id="btn-back-to-index" class="btn-couture"><i class="fa-solid fa-arrow-left"></i> LIST</button>
+                <button id="btn-toggle-context" class="btn-couture"><i class="fa-solid fa-gear"></i> CTX</button>
+            </div>
+            
+            <div style="text-align:center; margin-bottom:20px;">
+                <span id="couture-char-name-display" style="font-family:var(--font-display); font-size:24px; color:var(--text-bone);">NAME</span>
+                <div style="width:50px; height:1px; background:var(--accent-blood); margin:10px auto;"></div>
+            </div>
+
+            <div class="memory-list-container" id="couture-memory-container">
+                <!-- JS 生成 -->
+                <div style="text-align:center; color:#555; margin-top:50px; font-style:italic;">
+                    No threads found.<br>Click refresh to weave memory.
+                </div>
+            </div>
+
+            <div class="bottom-bar">
+                <button id="btn-refresh-memories" class="btn-couture"><i class="fa-solid fa-arrows-rotate"></i> REFRESH</button>
+                <button id="btn-goto-collection" class="btn-couture"><i class="fa-regular fa-bookmark"></i> SAVED</button>
+            </div>
+        </div>
+
+        <!-- 3. 阅读页 -->
+        <div id="couture-reader" class="couture-page">
+            <div class="reader-header">
+                <button id="btn-close-reader" class="btn-couture"><i class="fa-solid fa-xmark"></i> CLOSE</button>
+                <button id="btn-favorite-toggle" class="btn-couture">
+                    <i class="fa-regular fa-heart"></i>
+                </button>
+            </div>
+
+            <div class="story-content" id="couture-reader-content">
+                <!-- JS Inject Content -->
+            </div>
+
+            <div style="margin-top:auto; padding-top:10px; border-top:1px solid #222; display:flex; justify-content:space-between;">
+                <button id="btn-page-prev" class="btn-couture">PREV</button>
+                <span id="couture-page-indicator" style="font-family:var(--font-type); font-size:12px; color:#555; align-self:center;">I / III</span>
+                <button id="btn-page-next" class="btn-couture">NEXT</button>
+            </div>
+        </div>
+
+        <!-- 4. 收藏夹页面 -->
+        <div id="couture-collection" class="couture-page">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <button id="btn-back-from-coll" class="btn-couture"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                <span style="font-family:var(--font-type); font-size:12px; color:var(--text-muted);">COLLECTION</span>
+            </div>
+            <div style="flex:1; overflow-y:auto;" id="couture-collection-grid">
+                <!-- JS -->
+            </div>
+        </div>
+
+        <!-- 5. 设置浮窗 -->
+        <div id="couture-modal-context" class="context-modal">
+            <div style="font-family:var(--font-display); font-size:20px; color:var(--accent-silk);">World Context</div>
+            <div style="font-family:var(--font-body); font-size:14px; color:var(--text-muted); margin-top:5px;">
+                Private notes regarding this subject's reality.
+            </div>
+            <textarea id="couture-context-input" class="context-area" placeholder="Write with invisible ink..."></textarea>
+            <div style="display:flex; gap:20px; justify-content:flex-end;">
+                <button id="btn-discard-context" class="btn-couture">DISCARD</button>
+                <button id="btn-save-context" class="btn-couture" style="color:var(--accent-silk);">SAVE</button>
+            </div>
+        </div>
+    </div>
+</div>
     
     <!-- 动态发布应用 -->
     <div id="moment-creator-app" class="app-navigator">
@@ -18169,7 +18638,7 @@ const backgroundKeeper = {
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
-    DB_VERSION: 22, // <-- 【核心改动】版本号提升
+    DB_VERSION: 23, // <-- 【核心改动】版本号提升
        MESSAGES_PER_PAGE: 30,
     STORE_NAMES: {
         API_PRESETS: 'api_presets',
@@ -18201,6 +18670,7 @@ SHARED_PLAYLIST: 'shared_playlist',
 MOVIE_TIMELINES: 'movie_timelines',
 VOICEMAILS: 'voicemails',
 DAILY_PAPERS: 'daily_papers',
+COUTURE_MEMORIES: 'couture_memories',
     },
 
     // vvvv 【新增】NPC 档案注册表 vvvv
@@ -19177,7 +19647,6 @@ closeCapsuleInputBtn: document.getElementById('close-capsule-input-btn'),
 sendCapsuleMsgBtn: document.getElementById('send-capsule-msg-btn'),
 capsuleMsgInput: document.getElementById('capsule-msg-input'),
 enableSysNotifyBtn: document.getElementById('enable-sys-notify-btn'),
-// ... 在 DOM 对象末尾添加 ...
     gotoSoundSettings: document.getElementById('goto-sound-settings'),
     notifSoundToggle: document.getElementById('notif-sound-toggle'),
     testSoundBtn: document.getElementById('test-sound-btn'),
@@ -19186,6 +19655,46 @@ enableSysNotifyBtn: document.getElementById('enable-sys-notify-btn'),
     resetSoundBtn: document.getElementById('reset-sound-btn'),
     currentSoundName: document.getElementById('current-sound-name'),
 movieScrollBottomBtn: document.getElementById('movie-scroll-bottom-btn'),
+// --- Memory Dive (Couture) ---
+    memoryDiveApp: document.getElementById('memory-dive-app'),
+    iconMemoryDive: document.getElementById('icon-memory-dive'),
+    
+    // Pages
+    coutureCover: document.getElementById('couture-cover'),
+    coutureIndex: document.getElementById('couture-index'),
+    coutureMemoryList: document.getElementById('couture-memory-list'),
+    coutureReader: document.getElementById('couture-reader'),
+    coutureCollection: document.getElementById('couture-collection'),
+    
+    // Components
+    coutureCharList: document.getElementById('couture-char-list'),
+    coutureCharNameDisplay: document.getElementById('couture-char-name-display'),
+    coutureMemoryContainer: document.getElementById('couture-memory-container'),
+    coutureReaderContent: document.getElementById('couture-reader-content'),
+    couturePageIndicator: document.getElementById('couture-page-indicator'),
+    coutureCollectionGrid: document.getElementById('couture-collection-grid'),
+    
+    // Modal & Note
+    coutureModalContext: document.getElementById('couture-modal-context'),
+    coutureContextInput: document.getElementById('couture-context-input'),
+    vellumNote: document.getElementById('vellum-note'),
+    vellumText: document.getElementById('vellum-text'),
+    
+    // Buttons
+    btnCoutureExit: document.getElementById('couture-exit-btn'),
+    btnEnterArchive: document.getElementById('btn-enter-archive'),
+    btnBackToCover: document.getElementById('btn-back-to-cover'),
+    btnBackToIndex: document.getElementById('btn-back-to-index'),
+    btnToggleContext: document.getElementById('btn-toggle-context'),
+    btnRefreshMemories: document.getElementById('btn-refresh-memories'),
+    btnGotoCollection: document.getElementById('btn-goto-collection'),
+    btnCloseReader: document.getElementById('btn-close-reader'),
+    btnFavoriteToggle: document.getElementById('btn-favorite-toggle'),
+    btnPagePrev: document.getElementById('btn-page-prev'),
+    btnPageNext: document.getElementById('btn-page-next'),
+    btnBackFromColl: document.getElementById('btn-back-from-coll'),
+    btnDiscardContext: document.getElementById('btn-discard-context'),
+    btnSaveContext: document.getElementById('btn-save-context'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -19291,6 +19800,10 @@ const allStores = {
     options: { keyPath: 'id' }, 
     indexes: { 'by_dossier': 'dossierId' } 
    },
+[CONSTANTS.STORE_NAMES.COUTURE_MEMORIES]: { 
+            options: { keyPath: 'id', autoIncrement: true }, 
+            indexes: { 'by_dossierId': 'dossierId' } 
+        },
 };
 
 for (const storeName in allStores) {
@@ -22918,6 +23431,97 @@ ${preBlockHistory}
             { role: "user", content: "连接已恢复。请根据刚才发生的“事故”，做出最真实的反应。" }
         ];
     },
+
+// 在 promptManager 内部替换这个函数：
+
+createCoutureBackstoryPrompt(dossier, worldContext) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background;
+
+    // --- 1. 复用日记的高级文风库 (Literary Style Library) ---
+    const styles = [
+        "鲁迅 (冷峻犀利, 白描, 看客视角)",
+        "张爱玲 (苍凉华丽, 细节精准, 色彩浓烈)",
+        "村上春树 (孤独, 爵士乐质感, 疏离)",
+        "白先勇 (繁华落尽, 宿命感, 今昔对照)",
+        "杜拉斯 (破碎呓语, 极致感性, 时间停滞)",
+        "卡尔维诺 (轻盈想象, 寓言诗意)",
+        "川端康成 (物哀, 空灵, 自然意象)",
+        "茨威格 (心理极写, 激情澎湃)",
+        "王家卫 (电影独白, 碎片化, 暧昧)",
+        "马尔克斯 (魔幻现实, 孤独的宿命)",
+        "纳兰性德 (清冷, 贵族式的哀愁)",
+        "海明威 (冰山理论, 极简, 硬汉柔情)"
+    ];
+    // 随机抽取 3 个风格供 AI 参考，让它混合或选择最适合的一个
+    const selectedStyles = styles.sort(() => 0.5 - Math.random()).slice(0, 3).join(" / ");
+
+    const systemPrompt = `
+# 核心使命：织造【${charName}】的前传记忆 (The Pre-User Archives)
+你是一位精通心理侧写的**传记作家**。
+你需要基于用户提供的“世界观”，追溯时光，撰写 **5 段** 这个角色**在遇见“我”（用户）之前**的深刻经历。
+那时的TA还不认识“我”，那是TA独自面对这个世界的时刻。
+
+# 1. 角色档案 (The Subject)
+- **姓名:** ${charName}
+- **核心人设:** ${charPersona}
+
+# 2. 世界观锚点 (World Context)
+"${worldContext}"
+*(请将这段背景设定，化作故事中的空气、光影和具体的生存法则)*
+
+# 3. 🚫 绝对禁令 (Forbidden Words - 强制执行)
+**为了保持极致的文学质感，严禁出现以下理科/AI词汇：**
+【系统、变量、量化、精准、轨迹、频率、机制、程序、运算、载体、维度、参数、逻辑闭环、数据分析、修正、阈值、NPC、玩家】
+**你的世界是由情绪、感官（光影、气味、声音）、具体的物品和瞬间的冲动构成的。**
+
+# 4. 写作法则 (Writing Rules)
+1.  **视角 (Perspective):** **强制第三人称**。使用“他/她”或“${charName}”。像镜头一样冷静地记录，不要出现“我”。
+2.  **时间点 (Timeline):** **Pre-encounter (初遇前)**。故事里绝对不能出现用户的影子。这是属于TA一个人的史诗或琐碎。
+3.  **风格 (Style):** 请参考【${selectedStyles}】的笔触。文字要细腻、有画面感，重在氛围营造而非流水账。
+4.  **篇幅:** 每段记忆总字数约 **600-800字**。
+
+# 4.5 【特例豁免：非人/长生者的宿命 (The Immortal Exception)】
+**如果角色设定包含“非人”、“长生”、“神明”或“古老存在”的属性：**
+- **允许前世羁绊：** 虽然故事发生在“今生初遇前”，但**允许**包含对 User **前世/灵魂**的模糊记忆、寻找或宿命般的等待。
+- **表现形式：** 不要直接写“我和用户谈恋爱”，而是写“*那个灵魂的熟悉感*”、“*在不同世纪寻找同一双眼睛*”或“*一种无法解释的缺失感*”。
+- **核心张力：** 将这段“遇见之前”的经历，升华为一场**漫长的、跨越时间的重逢前奏**。
+
+# 5. 【核心机制】心痕批注 (Scars & Annotations)
+这是“记忆潜渊”的灵魂。在客观的第三人称叙述中，隐藏着角色当时主观的、不为人知的痛楚或秘密。
+请在正文中使用特殊的 HTML 标签：
+\`<span class="scar-word" data-note="[潜台词/真相]">[表象关键词]</span>\`
+
+- **[表象关键词]:** 正文中出现的名词或动作（如“那杯冷掉的茶”、“转身离开”）。
+- **[潜台词/真相]:** 点击后浮现的**第一人称**内心独白或残酷真相（如“*其实我一直在等那个永远不会响起的电话*” 或 “*这是我最后一次流泪*”）。
+- **要求:** 每页必须埋藏 2-3 处批注。
+
+# 6. 分页结构 (Structure)
+为了适应阅读器，请将每段记忆在逻辑上拆分为 3 页：
+- **Page 1 (The Scene):** 场景铺陈，氛围营造。
+- **Page 2 (The Conflict):** 事件发生，内心的波澜。
+- **Page 3 (The Echo):** 结局，留白，或一声叹息。
+
+# 7. 输出格式 (JSON Array Only)
+你必须严格返回一个包含 5 个对象的 JSON 数组。
+[
+  {
+    "title": "[极具文学性的标题，如'第三种孤独']",
+    "date": "[模糊的时间戳，如'1924年·冬', '流亡的第17天']",
+    "pages": [
+       "[第一页内容，含HTML批注]",
+       "[第二页内容，含HTML批注]",
+       "[第三页内容，含HTML批注]"
+    ]
+  },
+  ... (共5段)
+]
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "开始织造。带我回到TA独自一人的过去。" }
+    ];
+},
             
     async createChatPrompt(dossier, chatHistory, finalUserInput, quotedMessage = null) {
     
@@ -38668,6 +39272,428 @@ async function saveSoundConfig(enabled, assetId = null, filename = null) {
     return config;
 }
 
+// ============================================================
+// ===  Memory Dive (Couture Edition) 核心逻辑全集       ===
+// ============================================================
+
+// 1. 独立状态管理
+const diveState = {
+    currentDossierId: null, // 当前选中的角色ID
+    currentMemory: null,    // 当前正在阅读的记忆对象
+    pageIndex: 0            // 阅读器当前页码 (0-2)
+};
+
+// 2. 页面导航系统 (专属)
+function navToCouture(pageId) {
+    // 获取所有页面 DOM
+    const pages = [
+        DOM.coutureCover, 
+        DOM.coutureIndex, 
+        DOM.coutureMemoryList, 
+        DOM.coutureReader, 
+        DOM.coutureCollection
+    ];
+    
+    // 全部隐藏
+    pages.forEach(p => p.classList.remove('active'));
+    
+    // 显示目标
+    document.getElementById(pageId).classList.add('active');
+    
+    // 顺手关闭浮窗和批注，防止残留
+    DOM.coutureModalContext.classList.remove('active');
+    DOM.vellumNote.classList.remove('active');
+}
+
+// 3. 渲染角色列表 (带头像 + 语录)
+async function renderCoutureCharList() {
+    const container = DOM.coutureCharList;
+    container.innerHTML = '';
+    
+    if (appState.dossiers.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#555;">暂无角色档案</div>';
+        return;
+    }
+
+    for (const dossier of appState.dossiers) {
+        const div = document.createElement('div');
+        div.className = 'char-item';
+        
+        // A. 头像处理
+        let avatarStyle = '';
+        if (dossier.character.avatarAssetId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+            if (asset?.file) {
+                avatarStyle = `background-image: url('${URL.createObjectURL(asset.file)}'); background-size:cover; background-position:center;`;
+            }
+        }
+        
+        // B. 语录处理 (去掉引号)
+        let descText = dossier.aiGenerated?.quote || dossier.character.background.substring(0, 30) + '...';
+        descText = descText.replace(/^["“]|["”]$/g, ''); 
+        
+        div.innerHTML = `
+            <div class="char-avatar" style="${avatarStyle}">
+                ${avatarStyle ? '' : '<i class="fa-solid fa-user" style="color:#444"></i>'}
+            </div>
+            <div class="char-info">
+                <div class="char-name">${dossier.character.name}</div>
+                <div class="char-desc">${descText}</div>
+            </div>
+        `;
+        
+        // 点击进入角色记忆列表
+        div.addEventListener('click', () => {
+            diveState.currentDossierId = dossier.id;
+            
+            // 更新标题
+            DOM.coutureCharNameDisplay.innerText = dossier.character.name.toUpperCase();
+            
+            // 恢复上次填写的 Context 草稿 (如果有)
+            const savedContext = localStorage.getItem(`ctx_${dossier.id}`);
+            DOM.coutureContextInput.value = savedContext || "";
+            
+            // 渲染记忆列表并跳转
+            renderCoutureMemories(dossier.id);
+            navToCouture('couture-memory-list');
+        });
+        
+        container.appendChild(div);
+    }
+}
+
+// 4. 生成与保存逻辑 (Save Context -> Generate)
+async function handleSaveCoutureContext() {
+    const dossierId = diveState.currentDossierId;
+    if (!dossierId) return;
+
+    const contextVal = DOM.coutureContextInput.value.trim();
+    if (!contextVal) return utils.showToast("背景设定不能为空");
+
+    // 保存草稿
+    localStorage.setItem(`ctx_${dossierId}`, contextVal);
+    
+    // 关闭浮窗
+    DOM.coutureModalContext.classList.remove('active');
+    
+    // 显示生成动画 (直接覆盖列表容器)
+    const listContainer = DOM.coutureMemoryContainer;
+    listContainer.innerHTML = `
+        <div style="text-align:center; padding:60px 20px; animation: fadeIn 1s;">
+            <i class="ri-loader-line spin" style="font-size:32px; color:var(--accent-silk); margin-bottom:20px; display:inline-block;"></i>
+            <div style="font-family:var(--font-display); letter-spacing:4px; font-size:14px; color:var(--text-bone);">WEAVING MEMORIES</div>
+            <div style="font-family:var(--font-body); font-style:italic; color:var(--text-muted); margin-top:10px;">
+                正在回溯时间轴...<br>
+                (织造过去可能需要一点时间)
+            </div>
+        </div>
+    `;
+
+    try {
+        const dossier = appState.dossiers.find(d => d.id === dossierId);
+        
+        // A. 调用 AI 生成
+        const prompt = promptManager.createCoutureBackstoryPrompt(dossier, contextVal);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        // B. 解析 JSON
+        let jsonString = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/); // 匹配数组
+        if (jsonMatch) jsonString = jsonMatch[0];
+        
+        const memoriesData = JSON.parse(jsonString);
+
+        // C. 存入数据库
+        const db = await dbHelper.dbPromise;
+        const tx = db.transaction(CONSTANTS.STORE_NAMES.COUTURE_MEMORIES, 'readwrite');
+        
+        for (const mem of memoriesData) {
+            await tx.store.add({
+                dossierId: dossierId,
+                title: mem.title,
+                date: mem.date,
+                pages: mem.pages, // 这是一个包含3个字符串的数组
+                timestamp: Date.now()
+            });
+        }
+        await tx.done;
+
+        utils.showToast("记忆织造完成");
+        
+        // D. 重新渲染列表
+        renderCoutureMemories(dossierId);
+
+    } catch (e) {
+        console.error("生成回忆失败", e);
+        utils.showToast("织造中断 (Generation Failed)");
+        listContainer.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#b91c1c; opacity:0.8;">
+                <i class="ri-error-warning-line" style="font-size:24px; margin-bottom:10px;"></i><br>
+                Generation Failed.<br>
+                <span style="font-size:12px; opacity:0.6;">请检查网络或重试</span>
+            </div>
+        `;
+    }
+}
+
+// 5. 渲染记忆列表
+async function renderCoutureMemories(dossierId) {
+    const container = DOM.coutureMemoryContainer;
+    container.innerHTML = '';
+
+    const db = await dbHelper.dbPromise;
+    const memories = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.COUTURE_MEMORIES, 'by_dossierId', dossierId);
+    
+    // 按时间倒序（最新的生成在最上面）
+    memories.sort((a, b) => b.timestamp - a.timestamp);
+
+    if (memories.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; color:#555; margin-top:50px; font-style:italic; font-family:var(--font-body);">
+                暂无回溯记录<br>
+                点击 <i class="fa-solid fa-gear"></i> CTX 设定世界观以开始织造
+            </div>`;
+        return;
+    }
+
+    memories.forEach(mem => {
+        const div = document.createElement('div');
+        div.className = 'memory-entry';
+        div.innerHTML = `
+            <div class="mem-date">${mem.date}</div>
+            <div class="mem-title">${mem.title}</div>
+        `;
+        div.addEventListener('click', () => {
+            openCoutureReader(mem);
+        });
+        container.appendChild(div);
+    });
+}
+
+// 6. 阅读器初始化
+function openCoutureReader(memory) {
+    diveState.currentMemory = memory;
+    diveState.pageIndex = 0; // 重置到第一页
+    
+    renderCouturePage();
+    navToCouture('couture-reader');
+}
+
+// 7. 阅读器页面渲染
+function renderCouturePage() {
+    const mem = diveState.currentMemory;
+    const pageIndex = diveState.pageIndex;
+    const contentArea = DOM.coutureReaderContent;
+    
+    // 淡出动画
+    contentArea.style.opacity = 0;
+    
+    setTimeout(() => {
+        // 组装内容
+        const pageContent = mem.pages[pageIndex];
+        const chapterNum = ["I", "II", "III", "IV", "V"][pageIndex] || (pageIndex + 1);
+        
+        contentArea.innerHTML = `
+            <div style="margin-bottom:30px; font-family:var(--font-type); color:var(--accent-blood); text-align:center; font-size:12px; letter-spacing:3px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+                ${mem.title} &middot; PART ${chapterNum}
+            </div>
+            <div class="story-text-body">
+                ${pageContent}
+            </div>
+            <div style="text-align:center; margin-top:40px; font-size:20px; color:#333;">❧</div>
+        `;
+        
+        // 重新绑定批注点击事件
+        bindScars();
+        
+        // 淡入
+        contentArea.style.opacity = 1;
+        contentArea.scrollTop = 0;
+        
+    }, 300);
+
+    // 更新页码指示器
+    DOM.couturePageIndicator.innerText = `${pageIndex + 1} / ${mem.pages.length}`;
+    
+    // 控制翻页按钮状态
+    const btnPrev = DOM.btnPagePrev;
+    const btnNext = DOM.btnPageNext;
+    
+    btnPrev.style.visibility = pageIndex === 0 ? 'hidden' : 'visible';
+    
+    if (pageIndex === mem.pages.length - 1) {
+        btnNext.innerText = 'END';
+        btnNext.style.opacity = '0.5';
+    } else {
+        btnNext.innerText = 'NEXT';
+        btnNext.style.opacity = '1';
+    }
+}
+
+// 8. 翻页逻辑
+function handleCouturePageChange(delta) {
+    const mem = diveState.currentMemory;
+    if (!mem) return;
+    
+    const newIndex = diveState.pageIndex + delta;
+    
+    if (newIndex >= 0 && newIndex < mem.pages.length) {
+        diveState.pageIndex = newIndex;
+        renderCouturePage();
+        // 翻页时自动关闭之前的批注
+        DOM.vellumNote.classList.remove('active');
+    }
+}
+
+// 9. 批注 (Scars) 交互逻辑
+function bindScars() {
+    document.querySelectorAll('.scar-word').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止冒泡
+            showVellumNote(el);
+        });
+    });
+}
+
+// 显示批注浮窗 (去星号修复版)
+function showVellumNote(target) {
+    const note = DOM.vellumNote;
+    const text = DOM.vellumText;
+    
+    // 1. 获取原始内容
+    let rawContent = target.getAttribute('data-note') || '';
+    
+    // 2. 【核心修复】使用正则去掉开头和结尾的星号 (* 或 **) 以及多余空格
+   
+    let cleanContent = rawContent.replace(/^[\s*]+|[\s*]+$/g, '');
+
+    text.innerHTML = cleanContent;
+    note.classList.add('active');
+    
+    // 3. 智能计算位置 (防止溢出屏幕)
+    const rect = target.getBoundingClientRect();
+    const noteWidth = 250; // CSS里定义的宽度
+    
+    let left = rect.left;
+    if (left + noteWidth > window.innerWidth) {
+        left = window.innerWidth - noteWidth - 20;
+    }
+    
+    // 默认显示在下方
+    let top = rect.bottom + 15;
+    
+    note.style.top = `${top}px`;
+    note.style.left = `${left}px`;
+}
+
+// ==========================================
+// ===  Couture: 收藏与喜欢 (Collection)  ===
+// ==========================================
+
+// 1. 更新阅读器右上角的爱心 UI
+function updateCoutureHeartUI(isFavorite) {
+    const btn = DOM.btnFavoriteToggle;
+    if (isFavorite) {
+        // 实心红心 (已收藏)
+        btn.innerHTML = '<i class="fa-solid fa-heart" style="color:var(--accent-blood)"></i>';
+        btn.classList.add('active');
+    } else {
+        // 空心心 (未收藏)
+        btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+        btn.classList.remove('active');
+    }
+}
+
+// 2. 点击爱心：切换收藏状态并存库
+async function handleCoutureFavoriteToggle() {
+    const memory = diveState.currentMemory;
+    if (!memory) return;
+
+    // 切换状态
+    memory.isFavorite = !memory.isFavorite;
+
+    // 更新 UI (即时反馈)
+    updateCoutureHeartUI(memory.isFavorite);
+
+    try {
+        // 更新数据库 (持久化)
+        // 注意：这里直接把修改后的 memory 对象存回去，ID不变，所以是更新
+        await dbHelper.set(CONSTANTS.STORE_NAMES.COUTURE_MEMORIES, memory);
+        
+        if (memory.isFavorite) {
+            utils.showToast("Thread collected. (已收藏)");
+        } else {
+            utils.showToast("Thread severed. (已取消)");
+        }
+    } catch (e) {
+        console.error("收藏失败", e);
+        // 回滚状态
+        memory.isFavorite = !memory.isFavorite;
+        updateCoutureHeartUI(memory.isFavorite);
+        utils.showToast("Save failed.");
+    }
+}
+
+// 3. 渲染收藏夹页面 (跨角色聚合)
+async function renderCoutureCollection() {
+    const container = DOM.coutureCollectionGrid;
+    container.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.5;">Gathering threads...</div>';
+
+    try {
+        const db = await dbHelper.dbPromise;
+        // 获取所有记忆
+        const allMemories = await db.getAll(CONSTANTS.STORE_NAMES.COUTURE_MEMORIES);
+        
+        // 筛选出已收藏的 (isFavorite === true)
+        const favorites = allMemories.filter(m => m.isFavorite);
+        
+        // 按时间倒序
+        favorites.sort((a, b) => b.timestamp - a.timestamp);
+
+        container.innerHTML = '';
+        if (favorites.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; color:#555; margin-top:50px; font-style:italic; font-family:var(--font-body);">
+                    Your collection is empty.<br>
+                    Mark a memory with <i class="fa-regular fa-heart"></i> to keep it.
+                </div>`;
+            return;
+        }
+
+        // 渲染列表
+        favorites.forEach(mem => {
+            // 查找对应的角色名 (因为收藏夹是混合的)
+            const dossier = appState.dossiers.find(d => d.id === mem.dossierId);
+            const charName = dossier ? dossier.character.name.toUpperCase() : "UNKNOWN";
+
+            const div = document.createElement('div');
+            div.className = 'collect-item';
+            div.innerHTML = `
+                <div style="font-size:10px; color:var(--text-muted); font-family:var(--font-type); letter-spacing:1px;">
+                    ${charName} &middot; ${mem.date}
+                </div>
+                <div style="font-size:16px; color:var(--text-bone); margin-top:5px; font-family:var(--font-display);">
+                    ${mem.title}
+                </div>
+            `;
+            
+            // 点击直接跳转阅读
+            div.addEventListener('click', () => {
+                // 1. 设置当前上下文 ID (为了返回列表时能回到正确的人)
+                diveState.currentDossierId = mem.dossierId;
+                // 2. 打开阅读器
+                openCoutureReader(mem);
+            });
+            
+            container.appendChild(div);
+        });
+
+    } catch (e) {
+        console.error("加载收藏夹失败", e);
+        container.innerHTML = '<div style="text-align:center; color:#b91c1c;">Failed to load collection.</div>';
+    }
+}
+
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -45303,6 +46329,99 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
                 }, 500);
             });
 
+// ==========================================
+    // ===  Memory Dive (Couture) 监听器   ===
+    // ==========================================
+
+    // 1. 桌面入口 (进入封面)
+    DOM.iconMemoryDive.addEventListener('click', () => {
+        navigateToPage(DOM.memoryDiveApp, 'couture-cover');
+        navToCouture('couture-cover');
+    });
+
+    // 2. 封面 -> 退出 (回到桌面)
+    DOM.btnCoutureExit.addEventListener('click', () => {
+        closeNavigator(DOM.memoryDiveApp);
+    });
+
+    // 3. 封面 -> 进入档案列表
+    DOM.btnEnterArchive.addEventListener('click', () => {
+        renderCoutureCharList();
+        navToCouture('couture-index');
+    });
+
+    // 4. 列表页 -> 返回封面
+    DOM.btnBackToCover.addEventListener('click', () => {
+        navToCouture('couture-cover');
+    });
+
+    // 5. 记忆列表页 -> 返回角色列表
+    DOM.btnBackToIndex.addEventListener('click', () => {
+        navToCouture('couture-index');
+    });
+
+    // 6. 打开世界观设置 (CTX)
+    DOM.btnToggleContext.addEventListener('click', () => {
+        if (diveState.currentDossierId) {
+            DOM.coutureContextInput.value = localStorage.getItem(`ctx_${diveState.currentDossierId}`) || "";
+        }
+        DOM.coutureModalContext.classList.add('active');
+    });
+
+    // 7. 关闭世界观设置 (Discard)
+    DOM.btnDiscardContext.addEventListener('click', () => {
+        DOM.coutureModalContext.classList.remove('active');
+    });
+
+    // 8. 保存并生成 (SAVE) - 核心逻辑
+    DOM.btnSaveContext.addEventListener('click', handleSaveCoutureContext);
+
+    // 9. 刷新按钮 (Refresh)
+    DOM.btnRefreshMemories.addEventListener('click', () => {
+        if (diveState.currentDossierId) {
+            renderCoutureMemories(diveState.currentDossierId);
+            utils.showToast("List refreshed.");
+        }
+    });
+
+    // 10. 进入收藏夹
+    DOM.btnGotoCollection.addEventListener('click', () => {
+        // 渲染收藏数据
+        renderCoutureCollection(); 
+        // 跳转页面
+        navToCouture('couture-collection');
+    });
+
+    // 11. 收藏夹 -> 返回记忆列表 (BACK)
+    DOM.btnBackFromColl.addEventListener('click', () => {
+        navToCouture('couture-memory-list');
+    });
+
+    // 12. 阅读器 -> 关闭 (CLOSE)
+    DOM.btnCloseReader.addEventListener('click', () => {
+        navToCouture('couture-memory-list');
+    });
+
+    // 13. 阅读器 -> 点击爱心 (Toggle Favorite) - 【新增】
+    DOM.btnFavoriteToggle.addEventListener('click', handleCoutureFavoriteToggle);
+
+    // 14. 阅读器 -> 上一页
+    DOM.btnPagePrev.addEventListener('click', () => {
+        handleCouturePageChange(-1);
+    });
+
+    // 15. 阅读器 -> 下一页
+    DOM.btnPageNext.addEventListener('click', () => {
+        handleCouturePageChange(1);
+    });
+
+    // 16. 点击空白处 -> 关闭批注
+    DOM.memoryDiveApp.addEventListener('click', (e) => {
+        // 如果点击的不是批注词，也不是批注浮窗本身，就关闭浮窗
+        if (!e.target.classList.contains('scar-word') && !e.target.closest('.vellum-note')) {
+            DOM.vellumNote.classList.remove('active');
+        }
+    });
 }
 
         async function initializeApp() {
