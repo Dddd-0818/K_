@@ -14697,7 +14697,7 @@ body.light-mode .scroll-bottom-btn {
 .char-info { flex: 1; min-width: 0; }
 .char-name {
     font-family: var(--font-display);
-    font-size: 20px;
+    font-size: 1.5rem !important; 
     color: var(--text-bone);
     letter-spacing: 1px;
     margin-bottom: 5px;
@@ -14706,7 +14706,7 @@ body.light-mode .scroll-bottom-btn {
     font-family: var(--font-body);
     font-style: italic;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 1rem !important;
     line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -14756,7 +14756,7 @@ body.light-mode .scroll-bottom-btn {
     margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px dashed #333;
 }
 .story-content {
-    flex: 1; font-size: 20px; line-height: 2.0; text-align: justify;
+    flex: 1; font-size: 1.4rem !important; line-height: 1.8; text-align: justify;
     color: #ccc; overflow-y: auto; padding-right: 5px;
     mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
     padding-top: 20px; padding-bottom: 20px; scrollbar-width: none;
@@ -14779,7 +14779,7 @@ body.light-mode .scroll-bottom-btn {
 .vellum-note {
     position: absolute; background: var(--overlay-vellum); color: #1a1a1a;
     padding: 20px; width: 250px; font-family: var(--font-hand);
-    font-size: 22px; line-height: 1.2; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    font-size: 1.5rem !important; line-height: 1.2; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
     z-index: 100; opacity: 0; pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
     clip-path: polygon(3% 0%, 100% 1%, 98% 100%, 0% 97%);
@@ -25791,40 +25791,60 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                 }
             }
     // **新增优先级：** 检测并处理【语音】指令
-                       const voiceActionTag = '[AI_VOICE_ACTION]';
-            const voiceActionIndex = chatContent.indexOf(voiceActionTag);
-            if (voiceActionIndex !== -1) {
-                const jsonStartIndex = chatContent.indexOf('{', voiceActionIndex);
-                const jsonEndIndex = chatContent.lastIndexOf('}');
-                
-                if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
-                    const voiceJsonString = chatContent.substring(jsonStartIndex, jsonEndIndex + 1);
-                    // 【核心修正】只剥离指令，把剩下的文本留在 chatContent 中
-                    chatContent = chatContent.substring(0, voiceActionIndex).trim(); 
+                       // --- A. 优先处理语音指令 (Voice Action) [修复版] ---
+            // 使用正则匹配整个块，不仅能精准提取，还能精准删除，防止残留
+            const voiceRegex = /\[AI_VOICE_ACTION\]([\s\S]*?)\[\/AI_VOICE_ACTION\]/;
+            const voiceMatch = chatContent.match(voiceRegex);
 
-                    try {
-                        const voiceAction = JSON.parse(voiceJsonString);
-                        if (voiceAction.action === 'send_voice_message' && voiceAction.content) {
+            if (voiceMatch) {
+                try {
+                    const voiceJsonString = voiceMatch[1];
+                    const voiceAction = JSON.parse(voiceJsonString);
+                    
+                    if (voiceAction.action === 'send_voice_message' && voiceAction.content) {
+                        
+                        // 1. 构建消息对象
+                        const duration = Math.max(1, Math.ceil(voiceAction.content.length / 3));
+                        const voiceMessage = {
+                            dossierId: dossier.id, 
+                            sender: 'character', 
+                            type: 'voice',
+                            content: voiceAction.content, 
+                            metadata: { duration }, 
+                            timestamp: Date.now()
+                        };
+                        
+                        // 2. 存入数据库
+                        const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, voiceMessage);
+                        voiceMessage.id = savedId;
+                        
+                        // 3. 【修复头像】获取正确的上一条消息
+                        // 注意：必须在 push 之前获取，这才是“上一条”
+                        const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
+                        
+                        // 4. 更新内存状态
+                        appState.currentChatHistory.push(voiceMessage);
+                        
+                        // 5. 渲染上屏
+                        if (isUserPresent()) {
+                            // 【核心修复】这里之前写成了 prevMsg，导致报错进入 catch 块
+                            await renderMessage(voiceMessage, prevMessage); 
                             
-                            // 1. 处理语音消息本身
-                            const duration = Math.max(1, Math.ceil(voiceAction.content.length / 3));
-                            const voiceMessage = {
-                                dossierId: dossier.id, sender: 'character', type: 'voice',
-                                content: voiceAction.content, metadata: { duration }, timestamp: Date.now()
-                            };
-                            const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
-                            const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, voiceMessage);
-                            voiceMessage.id = savedId;
-                            appState.currentChatHistory.push(voiceMessage);
-                            
-                            if (isUserPresent()) {
-                                await renderMessage(voiceMessage, prevMsg);
-                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => window.focus() });
-                            } else {
-                                notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => openChatWindow(dossierId) });
+                            if (document.hidden) {
+                                notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => window.focus() });
                             }
+                        } else {
+                            notificationManager.show({ avatarUrl, title: characterName, message: '[语音消息]', onClick: () => openChatWindow(dossierId) });
                         }
-                    } catch (e) { console.error("解析Voice失败", e); chatContent += ` ${voiceActionTag}${voiceJsonString}`; }
+                    }
+                    
+                    // 6. 【核心修复】将指令从 chatContent 中彻底移除
+                    // 这样它就不会掉落到下面的文本处理逻辑里，变成“掉格式”的乱码消息
+                    chatContent = chatContent.replace(voiceMatch[0], '').trim();
+
+                } catch (e) {
+                    console.error("解析语音指令失败:", e);
+                    // 解析失败时，不要把乱码加回去，直接忽略该指令，防止破坏聊天体验
                 }
             }
 
