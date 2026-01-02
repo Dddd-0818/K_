@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>KiKiPhone</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" id="android-manifest">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg">
@@ -18537,7 +18540,56 @@ body.light-mode .scroll-bottom-btn {
     <div id="pet-bubble" class="pet-bubble">...</div>
     <div id="pet-avatar" class="pet-avatar-ball"></div>
 </div>
+
 <script>
+// ===  安卓单文件 PWA 注入脚本 (无外链版)  === //
+
+(function() {
+    // 1. 定义你的应用信息 (图标用了你现有的那张图)
+    const manifest = {
+        "name": "KiKiPhone",
+        "short_name": "KiKi",
+        "start_url": window.location.href, // 自动锁定当前网址
+        "display": "standalone",           // 隐藏浏览器地址栏
+        "background_color": "#000000",
+        "theme_color": "#000000",
+        "orientation": "portrait",         // 锁定竖屏
+        "icons": [
+            {
+                "src": "https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg",
+                "sizes": "192x192",
+                "type": "image/jpeg"
+            },
+            {
+                "src": "https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg",
+                "sizes": "512x512",
+                "type": "image/jpeg"
+            }
+        ]
+    };
+
+    // 2. 将 JSON 转换为 Data URI 并注入到 <link> 标签
+    const stringManifest = JSON.stringify(manifest);
+    const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blobManifest);
+    document.getElementById('android-manifest').setAttribute('href', manifestURL);
+
+    // 3. 注册一个“虚假”的 Service Worker (这是安卓识别 PWA 的硬性要求)
+    if ('serviceWorker' in navigator) {
+        // 创建一个空的 SW 脚本，什么都不做，只是为了骗过浏览器
+        const swCode = `
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', (e) => {}); // 即使离线也不报错
+        `;
+        const blobSw = new Blob([swCode], {type: 'text/javascript'});
+        const swUrl = URL.createObjectURL(blobSw);
+
+        navigator.serviceWorker.register(swUrl)
+            .then(() => console.log('伪装 Service Worker 注册成功'))
+            .catch(err => console.error('SW 注册失败', err));
+    }
+})();
     document.addEventListener('DOMContentLoaded', async () => {
 
         // =======================================================
