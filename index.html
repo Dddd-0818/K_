@@ -23257,35 +23257,44 @@ ${chatContext}
         ];
     },
 
-// --- 【新增】头像更换检测 Prompt ---
-    createAvatarCheckPrompt(dossier, imageUrls) {
+// --- 【升级版】头像更换检测 Prompt (防误触版) ---
+    createAvatarCheckPrompt(dossier, imageUrls, userTextContext) {
         const charName = dossier.character.name;
         const charDesc = dossier.character.background;
 
         const systemPrompt = `
-# 核心使命：视觉识别与头像决策 (Avatar Decision)
-你将扮演【${charName}】。用户刚刚发送了一些图片给你。
-你需要判断：**这些图片中，是否有适合作为你新头像的照片？**
+# 核心使命：头像更换意图识别 (Avatar Update Gatekeeper)
+你将扮演【${charName}】。用户刚刚发送了图片给你。
+你需要判断：**这是否是用户【强烈建议】你更换的新头像？**
 
-# 你的外貌设定
+# 你的外貌与设定
 ${charDesc}
 
-# 决策逻辑
-1. **相关性：** 图片里的人是你吗？或者是你喜欢的、符合你人设风格的图片吗？
-2. **意图判断：** 结合语境（虽然这里只有图），这看起来像是用户专门为你画的、或者为你找的照片吗？
-3. **多图筛选：** 如果有多张图，请挑选**最清晰、最符合你审美、最像“头像”**的一张。
+# 用户附带的文字 (Context)
+"${userTextContext || '(用户未发送文字，仅发送了图片)'}"
+
+# ⚖️ 判决法则 (Strict Criteria) - 【保守策略】
+**默认选择 false，除非满足以下极端条件之一：**
+
+1.  **明确指令 (Explicit Command):** 用户在文字中明确说了“换个头像”、“这张适合你做头像”、“给你画了新立绘”等。
+2.  **极高匹配度 (Perfect Match):** 图片极其符合你的人设（发色、瞳色、气质），且看起来就像是一张专门为你准备的 ID Photo 或精美立绘。
+
+# 🚫 绝对禁止更换的情况 (Automatic Rejection)
+- **分享生活:** 用户只是分享美食、风景、宠物、搞笑梗图。
+- **无关图片:** 图片里的人显然不是你（性别不符、特征不符）。
+- **模棱两可:** 如果你觉得“这张图挺好看，但不一定是让我换”，请选择 **false**。
 
 # 输出格式 (JSON Only)
 你必须严格返回一个 JSON 对象：
 {
   "shouldUpdate": [布尔值, true/false],
   "imageIndex": [数字, 如果shouldUpdate为true，请填入选定图片的索引(0代表第一张)，否则填-1],
-  "reason": "[字符串, 简短的内心独白，解释为什么选这张，或者为什么都不选]"
+  "reason": "[字符串, 简短的内心独白。例如：'只是风景照，不需要换头像。' 或 '他说这张很像我，确实不错，换上吧。']"
 }
 `;
         // 构建多模态消息
         const contentParts = [
-            { type: "text", text: "请看这些图片，选一张做头像，或者都不选。" }
+            { type: "text", text: "基于上述法则，判断我是否应该更换头像。" }
         ];
 
         // 将所有图片加入 content
@@ -25701,9 +25710,15 @@ msg.content.forEach(part => {
             finalUserContentParts.push({ type: 'text', text: '' });
         }
 
-if (imagePartsForAvatarCheck.length > 0) {
-                // 不使用 await，让它在后台默默跑，不卡顿聊天
-                tryAutoUpdateAvatar(dossier, imagePartsForAvatarCheck);
+// --- 【核心修复】提取用户发送的纯文本，作为判断依据 ---
+            let userTextContext = "";
+            finalUserContentParts.forEach(part => {
+                if (part.type === 'text') userTextContext += part.text + " ";
+            });
+
+            if (imagePartsForAvatarCheck.length > 0) {
+                // 将文字上下文也传进去
+                tryAutoUpdateAvatar(dossier, imagePartsForAvatarCheck, userTextContext.trim());
             }
 
             // 【关键】我们不再使用全局的 appState.quotedMessage
@@ -31486,16 +31501,67 @@ async function openTimelineManager() {
     DOM.monopolyCharModal.classList.add('visible');
 }
 
-// --- 电影模式：杀青存档逻辑 (图标适配版) ---
+/**
+ * 【新增辅助】剧本智能压缩器
+ * 原理：保留开头和结尾的完整性，中间部分进行均匀抽样，并剔除无关数据
+ */
+function compressMovieHistory(fullHistory) {
+    const TOTAL_LIMIT = 80; // 限制发送给 AI 的最大楼层数 (可根据模型能力调整，80条通常很安全)
+    
+    // 1. 数据清洗：只保留作者和内容，剔除巨大的 widgetState 和 metadata，并截断单条过长内容
+    const cleanHistory = fullHistory.map(turn => ({
+        author: turn.author,
+        // 如果单条内容超过 300 字，截断它 (摘要不需要那么多细节)
+        content: turn.content.length > 300 ? turn.content.substring(0, 300) + "..." : turn.content
+    }));
+
+    // 如果总数未超标，直接返回清洗后的数据
+    if (cleanHistory.length <= TOTAL_LIMIT) {
+        return cleanHistory;
+    }
+
+    console.log(`[剧本压缩] 原文 ${cleanHistory.length} 层 -> 压缩至 ${TOTAL_LIMIT} 层`);
+
+    // 2. 智能切片策略
+    // 保留开头 15 层 (铺垫)
+    const start = cleanHistory.slice(0, 15);
+    // 保留结尾 15 层 (高潮/结局)
+    const end = cleanHistory.slice(-15);
+    
+    // 中间剩余的配额
+    const middleCount = TOTAL_LIMIT - 30;
+    const middleSource = cleanHistory.slice(15, -15);
+    
+    // 3. 均匀抽样算法 (Step Sampling)
+    const middle = [];
+    const step = Math.floor(middleSource.length / middleCount);
+    
+    for (let i = 0; i < middleCount; i++) {
+        const index = Math.floor(i * step);
+        if (middleSource[index]) {
+            middle.push(middleSource[index]);
+        }
+    }
+
+    // 4. 插入“省略号”标记，告诉 AI 这里有跳过的内容
+    if (middle.length > 0) {
+        start.push({ author: 'system', content: '...(时光流逝，剧情推进)...' });
+        middle.push({ author: 'system', content: '...(剧情继续)...' });
+    }
+
+    return [...start, ...middle, ...end];
+}
+
+// --- 电影模式：杀青存档逻辑 (修复长剧情报错版) ---
 async function handleMovieWrapUp() {
     if (!appState.currentMovieSession?.dossierId) return;
     const dossierId = appState.currentMovieSession.dossierId;
     const dossier = appState.dossiers.find(d => d.id === dossierId);
 
     // 1. 获取全量剧本
-    const history = await dbHelper.dbPromise.then(db => db.getAllFromIndex(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, 'by_dossierId', dossierId));
+    const fullHistory = await dbHelper.dbPromise.then(db => db.getAllFromIndex(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, 'by_dossierId', dossierId));
 
-    if (history.length === 0) {
+    if (fullHistory.length === 0) {
         utils.showToast("还没开始演呢，没东西可存。");
         return;
     }
@@ -31504,28 +31570,35 @@ async function handleMovieWrapUp() {
         return;
     }
 
-    utils.showToast("正在整理片场记忆...");
+    utils.showToast("正在整理片场记忆 (这可能需要几秒)...");
     
-    // --- 【UI 优化】让图标变成加载状态 ---
-    // 临时把场记板变成转圈圈
+    // UI 优化
     const originalClass = DOM.movieWrapUpIcon.className;
-    DOM.movieWrapUpIcon.className = 'ri-loader-4-line spin'; // spin 类我们之前在典当行CSS里加过
-    DOM.movieWrapUpIcon.style.pointerEvents = 'none'; // 禁止重复点击
+    DOM.movieWrapUpIcon.className = 'ri-loader-4-line spin';
+    DOM.movieWrapUpIcon.style.pointerEvents = 'none';
 
     try {
-        // 2. 调用 AI 生成深度总结 (Director's Cut)
-        const prompt = promptManager.createMovieSummaryPrompt(dossier, history);
+        // ============================================================
+        // === 【核心修复】智能压缩剧本，防止 Token 溢出 ===
+        // ============================================================
+        const compressedHistory = compressMovieHistory(fullHistory);
+
+        // 2. 调用 AI 生成深度总结 (使用压缩后的剧本)
+        const prompt = promptManager.createMovieSummaryPrompt(dossier, compressedHistory);
+        
+        // 这一步比较慢，因为总结需要大量计算
         const aiResponse = await apiHelper.getChatCompletion(prompt);
         
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("剧本解析失败");
+        if (!jsonMatch) throw new Error("AI未返回有效的总结格式");
         const result = JSON.parse(jsonMatch[0]);
 
         // 3. 存入 MEMORIES 表
         const newMemory = {
             dossierId: dossierId,
             type: 'movie_archive', 
-            title: `🎬 ${result.title}`, 
+            // 自动加上总楼层数标记，更有成就感
+            title: `🎬 ${result.title} (全${fullHistory.length}幕)`, 
             summary: result.summary,
             timestamp: Date.now()
         };
@@ -31534,16 +31607,21 @@ async function handleMovieWrapUp() {
 
         utils.showToast(`杀青成功！《${result.title}》已归档。`);
         
-        // 4. 询问是否清空 (直接调用之前的清空逻辑)
+        // 4. 询问是否清空
         if (confirm("回忆已保存。\n\n是否【清空】当前的屏幕和剧本，准备开始下一场戏？\n(点击取消则保留当前画面)")) {
             await clearMovieHistory(); 
         }
 
     } catch (error) {
         console.error("杀青失败:", error);
-        utils.showToast("存档失败，导演发火了");
+        // 给用户更明确的提示
+        if (error.message.includes("context_length_exceeded") || error.message.includes("token")) {
+            utils.showToast("剧情实在太长了，AI读不完！建议先手动删除一些旧剧情。");
+        } else {
+            utils.showToast("存档失败，导演发火了");
+        }
     } finally {
-        // --- 【UI 恢复】还原图标 ---
+        // UI 恢复
         DOM.movieWrapUpIcon.className = originalClass;
         DOM.movieWrapUpIcon.style.pointerEvents = 'auto';
     }
@@ -38640,21 +38718,19 @@ async function forceRefreshTodayPaper() {
 }
 
 /**
- * 【新增】尝试自动更新头像逻辑
- * @param {object} dossier - 角色档案
- * @param {Array} imageContentParts - 包含 {type:'image_url', ...} 的数组
+ * 【升级版】尝试自动更新头像逻辑 (带文字上下文)
  */
-async function tryAutoUpdateAvatar(dossier, imageContentParts) {
+async function tryAutoUpdateAvatar(dossier, imageContentParts, userTextContext = "") {
     // 1. 提取所有图片的 URL
     const imageUrls = imageContentParts.map(part => part.image_url.url);
     if (imageUrls.length === 0) return;
 
-    console.log(`[头像引擎] 正在分析 ${imageUrls.length} 张图片...`);
+    console.log(`[头像引擎] 正在分析 ${imageUrls.length} 张图片，附带语境: "${userTextContext}"...`);
 
     try {
-        // 2. 调用 AI 进行视觉判断
-        const prompt = promptManager.createAvatarCheckPrompt(dossier, imageUrls);
-        // 注意：这里为了不阻塞聊天，我们另起一个 API 请求，不使用 handleSendMessage 的回复
+        // 2. 调用 AI 进行视觉判断 (传入文字上下文)
+        const prompt = promptManager.createAvatarCheckPrompt(dossier, imageUrls, userTextContext);
+        
         const aiResponse = await apiHelper.getChatCompletion(prompt);
         
         // 3. 解析 JSON
@@ -38669,7 +38745,6 @@ async function tryAutoUpdateAvatar(dossier, imageContentParts) {
             const targetUrl = imageUrls[result.imageIndex];
             
             // 5. 将 Base64 URL 转回 Blob 文件并存入 ASSETS 表
-            // (因为我们数据库存的是 Blob，且为了性能和导出，必须转存)
             const blob = utils.base64ToBlob(targetUrl);
             if (!blob) throw new Error("图片转换失败");
 
@@ -38680,31 +38755,30 @@ async function tryAutoUpdateAvatar(dossier, imageContentParts) {
             dossier.character.avatarAssetId = newAssetId;
             await dbHelper.set(CONSTANTS.STORE_NAMES.DOSSIERS, dossier);
 
-            // 8. 同步更新内存中的 dossiers 数组
+            // 8. 同步更新内存
             const idx = appState.dossiers.findIndex(d => d.id === dossier.id);
             if (idx > -1) appState.dossiers[idx] = dossier;
 
-            // 9. 实时刷新 UI (如果当前正在聊天界面)
+            // 9. 刷新 UI
             updateChatInterfaceAvatar(dossier.id, blob);
 
-            // 10. 给用户一个惊喜提示
             utils.showToast(`✨ ${dossier.character.name} 换上了新头像！`);
             
-            // (可选) 发送一条系统通知消息到聊天记录
-            
+            // 发送系统通知
             const sysMsg = {
                 dossierId: dossier.id,
                 sender: 'system',
-                content: `${dossier.character.name} 似乎很喜欢这张照片，并把它设为了头像。`,
+                content: `${dossier.character.name} 换了新头像。`, // 稍微改短一点，简洁
                 timestamp: Date.now()
             };
             appState.currentChatHistory.push(sysMsg);
             renderMessage(sysMsg); 
-            
+        } else {
+             console.log("[头像引擎] 保持原样。理由:", result.reason);
         }
 
     } catch (error) {
-        console.error("[头像引擎] 自动更换失败:", error);
+        console.error("[头像引擎] 分析失败:", error);
     }
 }
 
@@ -46510,4 +46584,4 @@ TwilightPlayer.init();
     });
     </script>
 </body>
-</html>
+</html>ni
