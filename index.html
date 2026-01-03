@@ -5,9 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>KiKiPhone</title>
-    <meta name="theme-color" content="#000000">
-    <meta name="mobile-web-app-capable" content="yes">
-    <link rel="manifest" id="android-manifest">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg">
@@ -14891,10 +14888,83 @@ body.light-mode .scroll-bottom-btn {
 }
 
 /* ==================== 修复结束 ==================== */
+
+/* === 身份验证锁屏样式 === */
+#auth-lock-screen {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: #000; /* 纯黑背景防止偷看 */
+    z-index: 100000; /* 最高层级 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(20px);
+}
+
+.auth-card {
+    width: 85%;
+    max-width: 350px;
+    background: rgba(30, 30, 30, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    color: #fff;
+}
+
+.auth-icon {
+    font-size: 40px;
+    color: #FFD700;
+    margin-bottom: 10px;
+}
+
+.machine-id-box {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 14px;
+    color: #fde68a;
+    cursor: pointer;
+    word-break: break-all;
+    border: 1px dashed rgba(255, 215, 0, 0.3);
+    transition: all 0.2s;
+}
+.machine-id-box:active {
+    background: rgba(255, 215, 0, 0.2);
+    transform: scale(0.98);
+}
+
     </style>
 </head>
 
 <body>
+
+<!-- 身份验证锁屏 -->
+<div id="auth-lock-screen" style="display:none;">
+    <div class="auth-card">
+        <div class="auth-icon"><i class="ri-shield-keyhole-line"></i></div>
+        <h2>KiKi OS 安全锁</h2>
+        <p style="font-size:12px; opacity:0.7; margin-bottom:20px;">此设备尚未授权，请输入邀请码激活。</p>
+        
+        <div class="form-group">
+            <label>设备机器码 (点击复制发给管理员)</label>
+            <div class="machine-id-box" id="device-machine-id" title="点击复制">加载中...</div>
+        </div>
+
+        <div class="form-group">
+            <label>激活邀请码</label>
+            <input type="text" id="auth-code-input" placeholder="在此输入激活码..." style="text-align:center; letter-spacing:2px; font-weight:bold;">
+        </div>
+
+        <button id="auth-unlock-btn" class="action-buttons" style="width:100%; justify-content:center; background:var(--text-color); color:var(--background-color);">
+            解 锁 终 端
+        </button>
+        <p id="auth-error-msg" style="color:#ff4d4d; font-size:12px; margin-top:10px; display:none;"></p>
+    </div>
+</div>
+
 <!-- =========================================== -->
     <!-- ===   开屏加载动画 (Splash Screen)      === -->
     <!-- =========================================== -->
@@ -18540,56 +18610,7 @@ body.light-mode .scroll-bottom-btn {
     <div id="pet-bubble" class="pet-bubble">...</div>
     <div id="pet-avatar" class="pet-avatar-ball"></div>
 </div>
-
 <script>
-// ===  安卓单文件 PWA 注入脚本 (无外链版)  === //
-
-(function() {
-    // 1. 定义你的应用信息 (图标用了你现有的那张图)
-    const manifest = {
-        "name": "KiKiPhone",
-        "short_name": "KiKi",
-        "start_url": window.location.href, // 自动锁定当前网址
-        "display": "standalone",           // 隐藏浏览器地址栏
-        "background_color": "#000000",
-        "theme_color": "#000000",
-        "orientation": "portrait",         // 锁定竖屏
-        "icons": [
-            {
-                "src": "https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg",
-                "sizes": "192x192",
-                "type": "image/jpeg"
-            },
-            {
-                "src": "https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg",
-                "sizes": "512x512",
-                "type": "image/jpeg"
-            }
-        ]
-    };
-
-    // 2. 将 JSON 转换为 Data URI 并注入到 <link> 标签
-    const stringManifest = JSON.stringify(manifest);
-    const blobManifest = new Blob([stringManifest], {type: 'application/json'});
-    const manifestURL = URL.createObjectURL(blobManifest);
-    document.getElementById('android-manifest').setAttribute('href', manifestURL);
-
-    // 3. 注册一个“虚假”的 Service Worker (这是安卓识别 PWA 的硬性要求)
-    if ('serviceWorker' in navigator) {
-        // 创建一个空的 SW 脚本，什么都不做，只是为了骗过浏览器
-        const swCode = `
-            self.addEventListener('install', (e) => self.skipWaiting());
-            self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
-            self.addEventListener('fetch', (e) => {}); // 即使离线也不报错
-        `;
-        const blobSw = new Blob([swCode], {type: 'text/javascript'});
-        const swUrl = URL.createObjectURL(blobSw);
-
-        navigator.serviceWorker.register(swUrl)
-            .then(() => console.log('伪装 Service Worker 注册成功'))
-            .catch(err => console.error('SW 注册失败', err));
-    }
-})();
     document.addEventListener('DOMContentLoaded', async () => {
 
         // =======================================================
@@ -18916,6 +18937,106 @@ isGeneratingVoicemails: false,
     },
 
         };
+        
+        // ==========================================
+// ===  安全验证管理器 (Security Manager) ===
+// ==========================================
+const SecurityManager = {
+    // 【私钥】只有你知道，用于生成激活码。请修改下面这串乱码！
+    SECRET_SALT: "KIKI_OS_PRIVATE_KEY_2024_CHANGE_THIS", 
+
+    // 获取或生成机器码
+    getMachineId() {
+        let id = localStorage.getItem('kiki_device_id');
+        if (!id) {
+            // 生成一个随机UUID作为机器码
+            id = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase() + 
+                 '-' + Date.now().toString(36).toUpperCase();
+            localStorage.setItem('kiki_device_id', id);
+        }
+        return id;
+    },
+
+    // 简单的哈希算法 (模拟签名)
+    // 原理：机器码 + 私钥 -> 进行数学运算 -> 得到激活码
+    async generateSignature(text) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text + this.SECRET_SALT);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        // 取哈希值的前8位作为激活码 (足够了，太长输入麻烦)
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 8).toUpperCase();
+        return hashHex;
+    },
+
+    // 检查是否已激活
+    async checkAccess() {
+        const isActivated = localStorage.getItem('kiki_is_activated');
+        if (isActivated === 'true') {
+            return true; // 已激活，放行
+        } else {
+            this.showLockScreen(); // 未激活，锁屏
+            return false;
+        }
+    },
+
+    // 显示锁屏并初始化交互
+    async showLockScreen() {
+        const screen = document.getElementById('auth-lock-screen');
+        const idBox = document.getElementById('device-machine-id');
+        const input = document.getElementById('auth-code-input');
+        const btn = document.getElementById('auth-unlock-btn');
+        const errMsg = document.getElementById('auth-error-msg');
+
+        if(!screen) return;
+
+        // 1. 显示界面
+        screen.style.display = 'flex';
+        
+        // 2. 显示机器码
+        const machineId = this.getMachineId();
+        idBox.textContent = machineId;
+
+        // 3. 点击复制机器码
+        idBox.onclick = () => {
+            navigator.clipboard.writeText(machineId);
+            const originalText = idBox.textContent;
+            idBox.textContent = "已复制！发给管理员";
+            setTimeout(() => idBox.textContent = originalText, 1500);
+        };
+
+        // 4. 计算正确的激活码 (在前端计算用于比对)
+        const correctCode = await this.generateSignature(machineId);
+        
+        // --- 开发者后门 (仅用于测试，正式发布请删除这行 console.log) ---
+        console.log(`[管理员调试] 本机正确激活码应为: ${correctCode}`);
+        // -----------------------------------------------------------
+
+        // 5. 绑定解锁点击
+        btn.onclick = () => {
+            const userCode = input.value.trim().toUpperCase();
+            
+            if (userCode === correctCode) {
+                // 验证成功
+                localStorage.setItem('kiki_is_activated', 'true');
+                screen.style.transition = 'opacity 0.5s';
+                screen.style.opacity = '0';
+                setTimeout(() => screen.remove(), 500);
+                
+                // 播放一个音效
+                if(typeof utils !== 'undefined') utils.showToast("身份验证通过");
+            } else {
+                // 验证失败
+                errMsg.style.display = 'block';
+                errMsg.textContent = "激活码错误，权限被拒绝";
+                
+                // 按钮抖动动画
+                btn.classList.add('shake'); // 假设你有shake动画，没有也没事
+                setTimeout(() => btn.classList.remove('shake'), 500);
+            }
+        };
+    }
+};
 
         const DOM = {
             body: document.body,
@@ -46571,6 +46692,12 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
 }
 
         async function initializeApp() {
+        
+        // vvv 【新增】安全检查 vvv
+            const isAllowed = await SecurityManager.checkAccess();
+            if (!isAllowed) {
+                console.log("等待身份验证...");
+            }
             try {
                 await dbHelper.init();
                 const [activePresetName, todos, dossiers, chatSessions] = await Promise.all([
