@@ -40035,8 +40035,8 @@ async function exportAllData() {
 }
 
 /**
- * 【修复版】从 ZIP 文件导入恢复数据
- * 兼容修复了 Key-Value 数据的导入逻辑
+ * 【修复版】从 ZIP 文件导入恢复数据 (保留本机激活状态)
+ * 无论备份文件来自哪台机器，导入后都保持当前机器的激活状态
  */
 async function importAllData(file) {
     try {
@@ -40051,53 +40051,52 @@ async function importAllData(file) {
 
         utils.showToast('正在恢复数据，请勿关闭页面...');
         
+        // 1. 【关键步骤】先备份当前机器的“身份证”和“通行证”
+        // 这一点非常重要！因为备份文件里可能存的是别人的机器码
+        // 我们必须强制保留当前机器的身份，否则验签会失败
+        const currentDeviceId = localStorage.getItem('kiki_device_id');
+        const currentActivation = localStorage.getItem('kiki_is_activated');
+
         const db = await dbHelper.dbPromise;
         const storeNames = Object.values(CONSTANTS.STORE_NAMES);
         const tx = db.transaction(storeNames, 'readwrite');
 
-        // 遍历清空并写入
+        // 2. 恢复数据库 (逻辑不变)
         for (const storeName of storeNames) {
             await tx.objectStore(storeName).clear();
-            
             if (backupData[storeName]) {
                 for (const record of backupData[storeName]) {
                     try {
-                        // --- 情况1：恢复 Key-Value 数据 (修复核心) ---
                         if (record.__isKV === true) {
                             await tx.objectStore(storeName).put(record.value, record.key);
-                        }
-                        // --- 情况2：恢复图片资源 ---
-                        else if (storeName === CONSTANTS.STORE_NAMES.ASSETS && record.isBlob) {
+                        } else if (storeName === CONSTANTS.STORE_NAMES.ASSETS && record.isBlob) {
                             record.file = utils.base64ToBlob(record.file);
                             delete record.isBlob;
                             await tx.objectStore(storeName).add(record);
-                        } 
-                        // --- 情况3：兼容旧坏数据的保护措施 ---
-                        // 如果是 KV 表但数据里没有 key (旧备份)，则跳过，防止报错崩溃
-                        else if ((storeName === CONSTANTS.STORE_NAMES.USER_SETTINGS || storeName === CONSTANTS.STORE_NAMES.PLAYER_STATE) && !record.key) {
-                            console.warn(`跳过无效的 ${storeName} 记录 (旧备份数据)`);
-                        }
-                        // --- 情况4：普通数据恢复 ---
-                        else {
+                        } else if ((storeName === CONSTANTS.STORE_NAMES.USER_SETTINGS || storeName === CONSTANTS.STORE_NAMES.PLAYER_STATE) && !record.key) {
+                            // 跳过坏数据
+                        } else {
                             await tx.objectStore(storeName).add(record);
                         }
-                    } catch (err) {
-                        console.error(`写入 ${storeName} 某条数据失败:`, err);
-                        // 继续执行，不因为一条数据坏了就全部停止
-                    }
+                    } catch (err) { }
                 }
             }
         }
-
         await tx.done;
 
-        // 恢复 LocalStorage
+        // 3. 恢复 LocalStorage
         if (backupData['localStorage']) {
-            localStorage.clear();
+            localStorage.clear(); // 先清空
             for (const [key, value] of Object.entries(backupData['localStorage'])) {
+                // 这里会把备份里的旧机器码也导进来，所以下一步很关键
                 localStorage.setItem(key, value);
             }
         }
+
+        // 4. 【关键步骤】强制覆盖回当前机器的“身份证”和“通行证”
+        // 这样即使你导入了别人的存档，也不会这就变成别人的机器码，导致需要重新激活
+        if (currentDeviceId) localStorage.setItem('kiki_device_id', currentDeviceId);
+        if (currentActivation) localStorage.setItem('kiki_is_activated', currentActivation);
 
         utils.showToast('恢复成功！页面即将刷新...');
         setTimeout(() => window.location.reload(), 1500);
@@ -40109,12 +40108,11 @@ async function importAllData(file) {
 }
 
 /**
- * 清除所有数据 (重置应用)
+ * 【修复版】清除所有数据 (保留激活状态)
  */
 async function clearAllData() {
     if (!confirm("【高能预警】\n这将彻底删除所有角色、聊天记录、设置和图片！\n\n此操作无法撤销！确定要重置吗？")) return;
     
-    // 二次确认，防止手滑
     const userInput = prompt("请输入 'DELETE' 以确认删除：");
     if (userInput !== 'DELETE') {
         utils.showToast("操作已取消");
@@ -40124,7 +40122,11 @@ async function clearAllData() {
     try {
         utils.showToast('正在重置系统...');
         
-        // 1. 清空 IndexedDB
+        // 1. 【关键步骤】先备份“身份证”和“通行证”
+        const savedDeviceId = localStorage.getItem('kiki_device_id');
+        const savedActivation = localStorage.getItem('kiki_is_activated');
+
+        // 2. 清空 IndexedDB (数据库)
         const db = await dbHelper.dbPromise;
         const storeNames = Object.values(CONSTANTS.STORE_NAMES);
         const tx = db.transaction(storeNames, 'readwrite');
@@ -40133,10 +40135,14 @@ async function clearAllData() {
         }
         await tx.done;
 
-        // 2. 清空 LocalStorage
+        // 3. 清空 LocalStorage (这会删掉所有设置)
         localStorage.clear();
 
-        utils.showToast('重置完成，再见！');
+        // 4. 【关键步骤】把备份的“身份证”和“通行证”塞回去
+        if (savedDeviceId) localStorage.setItem('kiki_device_id', savedDeviceId);
+        if (savedActivation) localStorage.setItem('kiki_is_activated', savedActivation);
+
+        utils.showToast('重置完成，系统依旧安全。');
         setTimeout(() => window.location.reload(), 1000);
 
     } catch (error) {
