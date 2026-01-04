@@ -26262,8 +26262,19 @@ playNotificationSound();
                 // === 普通文本消息 (含后台通知修复) ===
                 
                 // 1. 拆分气泡
-                const replies = chatContent.trim().split('|||').filter(line => line.trim() !== '');
-                if (replies.length === 0) throw new Error("AI 返回了空内容。");
+const splitRegex = /(\|\|\||\[sticker:[^\]]+\])/g;
+                
+                // split 之后，数组里会混杂着：["文本", "|||", "文本", "[sticker:xxx]", ""]
+                const rawParts = chatContent.split(splitRegex);
+                
+                const replies = [];
+                for (let part of rawParts) {
+                    const cleanPart = part.trim();
+                    // 过滤掉空字符串和无意义的分隔符 |||
+                    if (cleanPart && cleanPart !== '|||') {
+                        replies.push(cleanPart);
+                    }
+                }
 
                 // 2. 遍历处理
                 for (let i = 0; i < replies.length; i++) {
