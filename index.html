@@ -26037,48 +26037,79 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
             }
 
 // **新增优先级：** 检测并处理【转账】指令
-            const transferActionTag = '[AI_TRANSFER_ACTION]';
-            const transferActionIndex = chatContent.indexOf(transferActionTag);
-            if (transferActionIndex !== -1) {
-                const jsonStartIndex = chatContent.indexOf('{', transferActionIndex);
-                const jsonEndIndex = chatContent.lastIndexOf('}');
-                
-                if (jsonStartIndex !== -1 && jsonEndIndex > jsonStartIndex) {
-                    const transferJsonString = chatContent.substring(jsonStartIndex, jsonEndIndex + 1);
-                    chatContent = chatContent.substring(0, transferActionIndex).trim();
+            // --- D. 处理转账 (AI发起转账 - 修复即时显示) ---
+            const transferRegex = /\[AI_TRANSFER_ACTION\]([\s\S]*?)\[\/AI_TRANSFER_ACTION\]/;
+            const transferMatch = chatContent.match(transferRegex);
+            
+            if (transferMatch) {
+                try {
+                    const transferJsonString = transferMatch[1];
+                    const transferAction = JSON.parse(transferJsonString);
+                    
+                    if (transferAction.action === 'send_transfer' && transferAction.amount) {
+                        
+                        // 1. 构建转账消息对象
+                        const transferMessage = {
+                            dossierId: dossier.id,
+                            sender: 'character',
+                            type: 'transfer',
+                            content: {
+                                amount: transferAction.amount,
+                                currency: transferAction.currency || '信用点',
+                                memo: transferAction.memo || '转账'
+                            },
+                            metadata: {
+                                status: 'pending' // 初始状态为待接收
+                            },
+                            timestamp: Date.now()
+                        };
 
-                    try {
-                        const transferAction = JSON.parse(transferJsonString);
-                        if (transferAction.action === 'send_transfer' && transferAction.amount) {
-                            
-                            const transferMessage = {
-                                dossierId: dossier.id,
-                                sender: 'character',
-                                type: 'transfer', // <-- 新类型！
-                                content: {
-                                    amount: transferAction.amount,
-                                    currency: transferAction.currency || '信用点',
-                                    memo: transferAction.memo || '转账'
-                                },
-                                metadata: {
-                                    status: 'pending' // 初始状态为待接收
-                                },
-                                timestamp: Date.now()
-                            };
+                        // 2. 存入数据库
+                        const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, transferMessage);
+                        transferMessage.id = savedId;
+                        
+                        // 3. 【关键】获取上一条消息 (用于判断是否显示头像)
+                        // 必须在 push 之前获取
+                        const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
 
-                            const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
-                            const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, transferMessage);
-                            transferMessage.id = savedId;
-                            appState.currentChatHistory.push(transferMessage);
+                        // 4. 更新内存
+                        appState.currentChatHistory.push(transferMessage);
+                        
+                        // 5. 更新会话列表预览
+                        let previewText = `[转账] ${transferAction.amount}`;
+                        await updateChatSession(dossierId, previewText, !isUserPresent());
+                        
+                        // 6. 【核心修复】立即渲染到屏幕！
+                        if (isUserPresent()) {
+                            await renderMessage(transferMessage, prevMessage);
+                            playNotificationSound();
                             
-                            if (isUserPresent()) {
-                                await renderMessage(transferMessage, prevMsg);
-                                if (document.hidden) notificationManager.show({ avatarUrl, title: characterName, message: `[转账] ${transferAction.amount}`, onClick: () => window.focus() });
-                            } else {
-                                notificationManager.show({ avatarUrl, title: characterName, message: `[转账] ${transferAction.amount}`, onClick: () => openChatWindow(dossierId) });
+                            // 如果切后台了，补发通知
+                            if (document.hidden) {
+                                notificationManager.show({ 
+                                    avatarUrl, 
+                                    title: characterName, 
+                                    message: previewText, 
+                                    onClick: () => window.focus() 
+                                });
                             }
+                        } else {
+                            // 不在当前窗口，发通知
+                            notificationManager.show({ 
+                                avatarUrl, 
+                                title: characterName, 
+                                message: previewText, 
+                                onClick: () => openChatWindow(dossierId) 
+                            });
                         }
-                    } catch (e) { console.error("解析Transfer失败", e); }
+                    }
+                    
+                    // 7. 从文本中移除指令，防止乱码
+                    chatContent = chatContent.replace(transferMatch[0], '').trim();
+
+                } catch (e) { 
+                    console.error("解析Transfer失败", e); 
+                    // 解析失败时不移除指令，或者你可以选择静默失败
                 }
             }
 // **新增优先级：** 检测并处理【回应转账】指令
