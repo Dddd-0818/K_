@@ -46861,6 +46861,44 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
             DOM.vellumNote.classList.remove('active');
         }
     });
+
+// ===   全局手势返回系统 (Swipe Back)  === // 
+            
+            let touchStartX = 0;
+            let touchStartY = 0;
+            const SWIPE_THRESHOLD = 80;  // 滑动至少 80px 才触发
+            const EDGE_ZONE = 60;        // 只有从屏幕左侧 60px 内开始滑才算 (防误触)
+
+            document.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].clientX;
+                touchStartY = e.changedTouches[0].clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+
+                const diffX = touchEndX - touchStartX;
+                const diffY = touchEndY - touchStartY;
+
+                // 核心逻辑判断：
+                
+                if (touchStartX <= EDGE_ZONE && diffX > SWIPE_THRESHOLD && Math.abs(diffX) > Math.abs(diffY)) {
+                    
+                    const activePage = e.target.closest('.app-page.active, .settings-page.active');
+                    
+                    if (activePage) {
+                        // 在这个页面里找“返回按钮”
+                        const backBtn = activePage.querySelector('.back-button');
+                        
+                        // 如果找到了，就模拟点击它！
+                        if (backBtn) {
+                            console.log("👉 触发手势返回");
+                            backBtn.click();
+                        }
+                    }
+                }
+            });
 }
 
         async function initializeApp() {
