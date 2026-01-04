@@ -26261,16 +26261,14 @@ playNotificationSound();
  }else if (chatContent) {
                 // === 普通文本消息 (含后台通知修复) ===
                 
-                // 1. 拆分气泡
-const splitRegex = /(\|\|\||\[sticker:[^\]]+\])/g;
+                const splitRegex = /(\|\|\||\[sticker:[^\]]+\]|\n+)/g;
                 
-                // split 之后，数组里会混杂着：["文本", "|||", "文本", "[sticker:xxx]", ""]
                 const rawParts = chatContent.split(splitRegex);
                 
                 const replies = [];
                 for (let part of rawParts) {
                     const cleanPart = part.trim();
-                    // 过滤掉空字符串和无意义的分隔符 |||
+                    // 过滤掉空字符串、显式分隔符、以及单纯的换行符
                     if (cleanPart && cleanPart !== '|||') {
                         replies.push(cleanPart);
                     }
@@ -46780,4 +46778,4 @@ TwilightPlayer.init();
     });
     </script>
 </body>
-</html>ni
+</html>
