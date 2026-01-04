@@ -16074,6 +16074,7 @@ body.light-mode .scroll-bottom-btn {
                         <option value="writing_style">文风</option>
                         <option value="sticker_pack">表情包</option>
                         <option value="html_module">HTML模块</option>
+                        <option value="photo_album">相册/照片流</option>
                     </select>
                 </div>
                 <div class="form-group" style="flex-grow: 1; display: flex; flex-direction: column;">
@@ -17441,6 +17442,7 @@ body.light-mode .scroll-bottom-btn {
                         <option value="writing_style">文风</option>
                         <option value="sticker_pack">表情包</option>
                         <option value="html_module">HTML模块</option>
+                        <option value="photo_album">相册/照片流</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -18803,7 +18805,8 @@ COUTURE_MEMORIES: 'couture_memories',
         worldview: '世界观',
         writing_style: '文风',
         sticker_pack: '表情包',
-        html_module: 'HTML模块'
+        html_module: 'HTML模块',
+        photo_album: '相册/照片流'
     },
     DEFAULT_FONT_FAMILY: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
 
@@ -18882,6 +18885,7 @@ storyPauseTimestamp: null,
 storyTimeRemaining: null,
 callTimerIntervalId: null,
 activeStickerMap: new Map(), // 用于存储当前聊天会话所有可用的表情
+activePhotoMap: new Map(),
 userStickersForManager: new Map(), // 用于暂存管理面板中的表情状态
 pendingHoroscopeData: null, // <-- 新增这行
 currentViewingSecretId: null, // 用于记录当前打开的“心事主题帖”的ID
@@ -23725,6 +23729,7 @@ createCoutureBackstoryPrompt(dossier, worldContext) {
             // --- 1. 图书馆系统核心注入逻辑 (我们将在这里动手术) ---
             let libraryContextSection = '';
             let stickerGuideSection = ''; // <-- 【新增】专门存放表情包指南的变量
+                      let photoGuideSection = '';
 
             try {
                 const allBookIds = new Set();
@@ -23777,6 +23782,18 @@ createCoutureBackstoryPrompt(dossier, worldContext) {
 `;
                 }
                 // ^^^ 新增逻辑结束 ^^^
+            // vvv 【新增】构建相册使用指南 vvv
+            if (appState.activePhotoMap.size > 0) {
+                const photoDescriptions = Array.from(appState.activePhotoMap.keys()).join('、');
+                photoGuideSection = `
+## 【高级能力】发送照片 (Send Photo)
+除了文字和表情，你还可以发送**高清照片**来分享你的生活瞬间、环境或自拍。
+- **可用照片库 (Your Photo Album):** ${photoDescriptions}
+- **触发指令:** 当你想发送某张照片时，请在回复中单独一行输出：\`[send_photo:照片描述]\`。
+- **使用原则:** 请在对话逻辑自然、需要展示画面感时使用（例如用户问“你在干嘛”，或者你想展示某个物品时）。不要滥用。
+`;
+            }
+            // ^^^ 新增结束 ^^^
 
             } catch (error) {
                 console.error("加载或解析图书馆书籍失败:", error);
@@ -24095,6 +24112,7 @@ ${userQuoteSection}
 ${libraryContextSection} 
 
 ${timeContextSection}
+${photoGuideSection}
 ## 2. 角色核心档案 (Your Core Profile):
 ${dossier.character.background}
 ## 3. 我们之间的关系背景 (Our Relationship):
@@ -24677,6 +24695,32 @@ async function openChatWindow(dossierId) {
         console.error("构建表情包缓存失败:", error);
     }
     // --- 表情包缓存逻辑结束 ---
+
+        // --- 【新增】照片库缓存逻辑 ---
+        console.log("正在构建相册缓存...");
+        appState.activePhotoMap.clear();
+
+        try {
+            const applicableBookIds = new Set(dossier.libraryBookIds || []);
+            const allBooks = await dbHelper.getAll(CONSTANTS.STORE_NAMES.LIBRARY_BOOKS);
+            
+            // 加入全局书
+            allBooks.forEach(book => { if (book.isGlobal) applicableBookIds.add(book.id); });
+
+            for (const bookId of applicableBookIds) {
+                const book = allBooks.find(b => b.id === bookId);
+                // 只处理 category 为 'photo_album' 的书
+                if (book && book.category === 'photo_album') {
+                    // 复用表情包的解析器 (因为格式也是 描述:URL)
+                    const photos = utils.parseStickerText(book.content);
+                    photos.forEach((url, desc) => appState.activePhotoMap.set(desc, url));
+                }
+            }
+            console.log(`相册缓存构建完毕，共加载了 ${appState.activePhotoMap.size} 张照片。`);
+        } catch (error) {
+            console.error("构建相册缓存失败:", error);
+        }
+        // --- 新增结束 ---
     appState.currentChattingDossierId = dossierId;
 
  // vvvvvvvvvv 【新增】清空未读数 vvvvvvvvvv
@@ -25152,7 +25196,12 @@ if (message.status === 'intercepted') {
                     avatarEl.className = 'avatar';
                     let avatarAssetId = null;
                     const dossier = appState.dossiers.find(d => d.id === message.dossierId);
-                    avatarAssetId = dossier?.user.avatarAssetId; // 图片消息只可能是用户发的
+                    if (message.sender === 'character') {
+                        avatarAssetId = dossier?.character.avatarAssetId;
+                    } else {
+                        avatarAssetId = dossier?.user.avatarAssetId;
+                    }
+                    
                     if (avatarAssetId) {
                         const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, avatarAssetId);
                         if (asset?.file) avatarEl.style.backgroundImage = `url(${URL.createObjectURL(asset.file)})`;
@@ -25182,7 +25231,12 @@ if (message.status === 'intercepted') {
                     timestampEl.appendChild(timeSpan);
                     const statusSpan = document.createElement('span');
                     statusSpan.className = 'message-status';
-                    statusSpan.textContent = '送达';
+                    if (message.sender === 'character') {
+                         statusSpan.textContent = '已读'; // 或者是空的，看你喜好
+                    } else {
+                         statusSpan.textContent = '送达';
+                    }
+                    
                     timestampEl.appendChild(statusSpan);
                     imageWrapper.appendChild(timestampEl);
                 }
@@ -26027,7 +26081,7 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                     }
                     
                     // 6. 【核心修复】将指令从 chatContent 中彻底移除
-                    // 这样它就不会掉落到下面的文本处理逻辑里，变成“掉格式”的乱码消息
+                    
                     chatContent = chatContent.replace(voiceMatch[0], '').trim();
 
                 } catch (e) {
@@ -26036,6 +26090,78 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                 }
             }
 
+            // --- 【新增/修复】处理发送照片指令 (完善通知版) ---
+            const photoRegex = /\[send_photo:(.+?)\]/;
+            const photoMatch = chatContent.match(photoRegex);
+
+            if (photoMatch) {
+                const photoDesc = photoMatch[1].trim();
+                const photoUrl = appState.activePhotoMap.get(photoDesc);
+
+                // 只有当找到了对应的图片链接才执行
+                if (photoUrl) {
+                    try {
+                        // 1. 构建符合多模态标准的消息对象
+                        const photoMessage = {
+                            dossierId: dossier.id,
+                            sender: 'character',
+                            // 关键：content 是一个数组
+                            content: [{
+                                type: 'image_url',
+                                image_url: { url: photoUrl }
+                            }],
+                            timestamp: Date.now()
+                        };
+
+                        // 2. 存库
+                        const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, photoMessage);
+                        photoMessage.id = savedId;
+                        
+                        // 3. 更新内存
+                        // 必须获取正确的 prevMessage 用于头像显示判断
+                        const prevMessage = appState.currentChatHistory[appState.currentChatHistory.length - 1];
+                        appState.currentChatHistory.push(photoMessage);
+
+                        // 4. 【核心】更新会话列表预览 & 计算红点
+                        // 如果用户不在当前聊天页，incrementUnread 为 true
+                        await updateChatSession(dossierId, '[图片]', !isUserPresent());
+
+                        // 5. 渲染 & 通知逻辑
+                        if (isUserPresent()) {
+                            // A. 用户在当前界面：直接上屏
+                            await renderMessage(photoMessage, prevMessage);
+                            playNotificationSound();
+                            
+                            // B. 特殊情况：用户切后台了 (PWA/浏览器最小化)，补发系统通知
+                            if (document.hidden) {
+                                notificationManager.show({ 
+                                    avatarUrl: avatarUrl, // 使用之前获取的角色头像
+                                    title: characterName, 
+                                    message: '[发来一张照片]', 
+                                    onClick: () => window.focus() 
+                                });
+                            }
+                        } else {
+                            // C. 用户在应用内但不在该聊天，或完全在后台：发送全套通知
+                            notificationManager.show({ 
+                                avatarUrl: avatarUrl, 
+                                title: characterName, 
+                                message: '[发来一张照片]', 
+                                onClick: () => openChatWindow(dossierId) 
+                            });
+                        }
+
+                    } catch (e) {
+                        console.error("发送照片失败:", e);
+                    }
+                } else {
+                    console.warn(`AI 尝试发送不存在的照片描述: ${photoDesc}`);
+                }
+                
+                // 【关键】无论是否找到图片，都把指令从文本中移除，防止乱码显示
+                chatContent = chatContent.replace(photoMatch[0], '').trim();
+            }
+            
 // **新增优先级：** 检测并处理【转账】指令
             // --- D. 处理转账 (AI发起转账 - 修复即时显示) ---
             const transferRegex = /\[AI_TRANSFER_ACTION\]([\s\S]*?)\[\/AI_TRANSFER_ACTION\]/;
