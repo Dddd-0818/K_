@@ -14936,6 +14936,962 @@ body.light-mode .scroll-bottom-btn {
     transform: scale(0.98);
 }
 
+/* ==========================================
+   ===   CP Blogger (Korean Mono Style)   ===
+   ========================================== */
+
+/* 1. 全局容器与字体 */
+#cp-blog-app {
+    --cp-bg: #0a0a0a;
+    --cp-card-bg: #141414;
+    --cp-text: #f0f0f0;
+    --cp-text-sub: #666;
+    --cp-border: 1px solid rgba(255, 255, 255, 0.15);
+    --cp-accent: #fff; /* 纯白高亮 */
+    
+    font-family: 'Times New Roman', "Songti SC", serif; /* 强制衬线体，更有杂志感 */
+}
+
+/* 2. 顶部导航 */
+.cp-nav-bar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 50px 20px 15px 20px; /* 避开刘海 */
+    background: rgba(10, 10, 10, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: var(--cp-border);
+}
+.cp-nav-title {
+    font-size: 18px; font-weight: bold; letter-spacing: 4px;
+    font-family: 'Cinzel', serif; /* 艺术字体 */
+}
+.cp-icon-btn {
+    background: none; border: none; color: var(--cp-text);
+    font-size: 20px; cursor: pointer; padding: 5px;
+}
+
+/* 3. 滚动容器 */
+.cp-scroll-container {
+    padding: 20px;
+    overflow-y: auto;
+    height: 100%;
+    padding-bottom: 80px;
+}
+
+/* 4. 装饰组件：日期头图 */
+.cp-header-widget {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 30px; padding: 10px 0;
+}
+.cp-hw-date {
+    display: flex; align-items: center; gap: 10px;
+}
+#cp-date-day {
+    font-size: 48px; font-weight: 100; line-height: 1;
+    font-family: 'Cinzel', serif;
+}
+.cp-hw-meta {
+    display: flex; flex-direction: column; font-size: 10px; letter-spacing: 2px;
+    border-left: 1px solid #fff; padding-left: 8px;
+}
+.cp-hw-line {
+    flex-grow: 1; height: 1px; background: rgba(255,255,255,0.2); margin: 0 20px;
+}
+.cp-hw-text {
+    font-size: 12px; font-style: italic; color: #888;
+    display: flex; gap: 5px;
+}
+
+/* 5. 装饰组件：统计条 */
+.cp-stat-bar {
+    display: flex; justify-content: center; align-items: center;
+    border: var(--cp-border); border-left: none; border-right: none;
+    padding: 15px 0; margin-bottom: 30px;
+}
+.cp-stat-item {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    width: 100px;
+}
+.cp-stat-item span:first-child {
+    font-size: 9px; letter-spacing: 2px; color: #666;
+}
+.cp-stat-item span:last-child {
+    font-size: 16px; font-weight: bold; font-family: 'Cinzel', serif;
+}
+.cp-stat-divider {
+    width: 1px; height: 20px; background: rgba(255,255,255,0.1);
+}
+
+/* 6. 列表网格 */
+.cp-list-grid {
+    display: flex; flex-direction: column; gap: 20px;
+}
+
+/* 7. 核心：角色卡片 (胶片/拍立得风格) */
+.cp-card {
+    background: var(--cp-card-bg);
+    border: var(--cp-border);
+    padding: 15px;
+    border-radius: 2px; /* 直角或微圆角，更有相纸感 */
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.cp-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border-color: rgba(255,255,255,0.4);
+}
+
+/* 卡片布局 */
+.cp-card-inner {
+    display: flex; align-items: center; gap: 20px;
+}
+
+/* 头像框 (双圈设计) */
+.cp-avatar-box {
+    position: relative; width: 70px; height: 70px;
+}
+.cp-avatar-img {
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%;
+    background-size: cover; 
+    background-position: center;
+    border: 1px solid #fff;
+    transition: transform 0.3s ease; /* 改为缩放动画 */
+}
+/* 装饰圈 */
+.cp-avatar-ring {
+    position: absolute; inset: -4px; border-radius: 50%;
+    border: 1px dashed rgba(255,255,255,0.3);
+    animation: spin-slow 10s linear infinite;
+}
+
+.cp-card:hover .cp-avatar-img {
+    transform: scale(1.05);
+}
+
+/* 文本信息 */
+.cp-info { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.cp-name {
+    font-size: 20px; color: #fff; font-family: 'Cinzel', serif;
+}
+.cp-relation {
+    font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 5px;
+}
+.cp-relation::before {
+    content: ''; width: 20px; height: 1px; background: #444;
+}
+
+/* 右侧箭头/爱心 */
+.cp-action {
+    color: #333; font-size: 24px; transition: color 0.3s;
+}
+.cp-card:hover .cp-action { color: #fff; }
+
+/* 底部留白 */
+.cp-footer-deco {
+    text-align: center; margin-top: 50px;
+    font-size: 10px; letter-spacing: 4px; color: #333;
+}
+
+/* 1. 强制日期和元数据永远为白色 */
+.cp-hw-date,
+#cp-date-day,
+#cp-date-month,
+#cp-date-year {
+    color: #f0f0f0 !important; /* 强制亮白 */
+}
+
+/* 2. 强制那条横线永远是浅色 */
+.cp-hw-line {
+    background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 3. 强制右边的语录永远是浅灰色 */
+.cp-hw-text {
+    color: #aaa !important; /* 强制浅灰 */
+}
+.cp-hw-text i {
+    color: #fff !important; /* 引号更亮一点 */
+}
+
+/* 4. 顺便把下面的统计条也锁死颜色，防止也被吞了 */
+.cp-stat-item span {
+    color: #f0f0f0 !important;
+}
+.cp-stat-item span:first-child {
+    color: #888 !important; /* 标签保持深灰 */
+}
+
+/* ==========================================
+   ===  CP Blogger Detail (Profile UI)    ===
+   ========================================== */
+
+/* 1. 身份切换器 */
+.cp-role-switch {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 2px;
+}
+.switch-opt {
+    opacity: 0.3; cursor: pointer; transition: all 0.3s; position: relative;
+}
+.switch-opt.active {
+    opacity: 1; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+.switch-divider { opacity: 0.3; font-size: 10px; }
+
+/* 2. 个人信息头图 */
+.cp-profile-header {
+    margin-bottom: 25px;
+}
+.cp-ph-top {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;
+}
+.cp-ph-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.5);
+    background-size: cover; background-position: center;
+    background-color: #222;
+}
+.cp-ph-stats {
+    display: flex; gap: 25px; text-align: center; margin-right: 10px;
+}
+.stat-box { display: flex; flex-direction: column; }
+.stat-num { font-family: 'Cinzel', serif; font-size: 18px; font-weight: bold; }
+.stat-label { font-size: 9px; color: #666; letter-spacing: 1px; margin-top: 2px; }
+
+.cp-ph-name {
+    font-size: 20px; font-weight: bold; letter-spacing: 1px; color: #fff; margin: 0;
+}
+.cp-tag-badge {
+    border: 1px solid #444; border-radius: 20px;
+    padding: 4px 10px; font-size: 10px; color: #aaa;
+    letter-spacing: 0.5px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+}
+.cp-ph-bio {
+    font-size: 13px; color: #ccc; line-height: 1.5; margin: 10px 0 20px 0;
+    font-family: "Songti SC", serif;
+}
+
+/* 按钮组 */
+.cp-btn-outline {
+    width: 100%; padding: 8px 0; background: transparent;
+    border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    font-size: 12px; letter-spacing: 1px; cursor: pointer;
+    transition: all 0.2s; text-transform: uppercase;
+}
+.cp-btn-outline:hover { background: #fff; color: #000; }
+
+/* 3. 小组件区 (Widgets) */
+.cp-widgets-area {
+    display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 10px;
+    margin-bottom: 30px;
+}
+
+/* A. 黑胶组件 */
+.cp-widget-vinyl {
+    background: #141414; border: 1px solid #222; padding: 10px;
+    border-radius: 4px; display: flex; align-items: center; gap: 10px;
+    position: relative; overflow: hidden;
+}
+.vinyl-disc {
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #111; border: 1px solid #333;
+    display: flex; justify-content: center; align-items: center;
+}
+.vinyl-cover {
+    width: 25px; height: 25px; border-radius: 50%; background-color: #d4af37;
+    background-image: url('https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg');
+    background-size: cover;
+}
+.vinyl-text {
+    display: flex; flex-direction: column; overflow: hidden; flex: 1;
+}
+.vinyl-text span { font-size: 9px; color: #666; letter-spacing: 1px; }
+.vinyl-text marquee { font-size: 12px; color: #fff; font-family: 'Cinzel', serif; margin-top: 2px; }
+.vinyl-icon { position: absolute; right: 10px; top: 10px; opacity: 0.2; font-size: 20px; }
+
+/* B. 热度组件 */
+.cp-widget-heat {
+    background: #141414; border: 1px solid #222; padding: 10px;
+    border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between;
+}
+.heat-header {
+    display: flex; justify-content: space-between; font-size: 9px; color: #666; letter-spacing: 1px;
+}
+.heat-graph {
+    display: flex; align-items: flex-end; gap: 4px; height: 30px; margin-top: 5px;
+}
+.heat-bar {
+    flex: 1; background: #333; border-radius: 2px; transition: height 0.5s;
+}
+.cp-widget-heat:hover .heat-bar { background: #fff; }
+
+/* 4. 帖子列表 (Feed) */
+.cp-feed-tabs {
+    display: flex; border-top: 1px solid #222; border-bottom: 1px solid #222;
+    margin-bottom: 20px;
+}
+.cp-feed-tabs span {
+    flex: 1; text-align: center; padding: 12px 0; font-size: 18px; color: #444; cursor: pointer;
+}
+.cp-feed-tabs span.active { color: #fff; }
+
+/* 帖子卡片 */
+.cp-post-card {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #1a1a1a;
+    padding-bottom: 20px;
+}
+.cp-post-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.cp-post-avatar {
+    width: 30px; height: 30px; border-radius: 50%; background: #333; background-size: cover;
+}
+.cp-post-user { font-size: 13px; font-weight: bold; color: #fff; }
+.cp-post-time { font-size: 11px; color: #666; margin-left: auto; }
+
+.cp-post-img {
+    width: 100%; border-radius: 4px; margin-bottom: 12px;
+    border: 1px solid #222;
+}
+.cp-post-content {
+    font-size: 14px; color: #ddd; line-height: 1.6; margin-bottom: 10px;
+    font-family: "Songti SC", serif;
+}
+
+/* 交互栏 */
+.cp-post-actions {
+    display: flex; gap: 20px; font-size: 20px; color: #fff; margin-bottom: 10px;
+}
+.cp-action-btn { cursor: pointer; transition: color 0.2s; }
+.cp-action-btn:hover { color: #888; }
+.cp-action-btn.liked { color: #ff4d4d; }
+
+/* 评论区 */
+.cp-comments-section {
+    background: #111; padding: 10px; border-radius: 4px; display: none; /* 默认隐藏 */
+}
+.cp-comment-item {
+    font-size: 12px; margin-bottom: 5px; color: #aaa;
+}
+.cp-comment-user { color: #fff; font-weight: bold; margin-right: 5px; }
+
+/* 悬浮按钮 */
+.cp-fab-btn {
+    position: absolute; bottom: 30px; right: 20px;
+    width: 50px; height: 50px; border-radius: 50%;
+    background: #fff; color: #000; border: none;
+    font-size: 24px; display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 5px 20px rgba(255,255,255,0.2);
+    cursor: pointer; z-index: 20; transition: transform 0.2s;
+}
+.cp-fab-btn:active { transform: scale(0.9); }
+
+/* === CP 模态框通用样式 === */
+.cp-modal-card {
+    background: #0a0a0a;
+    width: 85%; max-width: 350px;
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 2px; /* 韩系硬朗直角或微圆角 */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column;
+}
+.cp-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 25px; border-bottom: 1px solid #222; padding-bottom: 10px;
+}
+.cp-modal-header h3 {
+    font-family: 'Cinzel', serif; font-size: 16px; letter-spacing: 2px; color: #fff; margin: 0;
+}
+.cp-modal-header i { font-size: 24px; cursor: pointer; color: #666; }
+.cp-modal-header i:hover { color: #fff; }
+
+/* 表单样式 */
+.cp-form-group { margin-bottom: 20px; }
+.cp-form-group label {
+    font-size: 10px; color: #666; letter-spacing: 1px; display: block; margin-bottom: 8px;
+}
+.cp-form-group input, .cp-form-group textarea {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid #333; color: #fff;
+    padding: 8px 0; font-family: "Songti SC", serif; font-size: 14px;
+    box-sizing: border-box; outline: none; transition: border-color 0.3s;
+}
+.cp-form-group input:focus, .cp-form-group textarea:focus { border-bottom-color: #fff; }
+
+/* 上传区 */
+.cp-upload-area {
+    width: 100%; height: 200px; background: #111;
+    border: 1px dashed #444; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; color: #666;
+    cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center;
+}
+.cp-upload-area:hover { border-color: #fff; color: #fff; }
+
+/* 块级按钮 */
+.cp-btn-block {
+    width: 100%; padding: 12px; background: #fff; color: #000;
+    border: none; font-weight: bold; font-size: 12px; letter-spacing: 2px;
+    cursor: pointer; margin-top: 10px; transition: opacity 0.2s;
+}
+.cp-btn-block:active { opacity: 0.8; }
+
+/* === 私信页样式 === */
+.cp-dm-tabs { display: flex; border-bottom: 1px solid #222; }
+.dm-tab {
+    flex: 1; text-align: center; padding: 15px 0;
+    font-size: 11px; color: #444; cursor: pointer; letter-spacing: 2px;
+    transition: all 0.3s; border-bottom: 2px solid transparent;
+}
+.dm-tab.active { color: #fff; font-weight: bold; border-bottom-color: #fff; }
+/* === 私信列表 (去头像版) === */
+.cp-dm-item {
+    display: flex; 
+    flex-direction: column; /* 改为垂直布局 */
+    padding: 20px 0;
+    border-bottom: 1px solid #1a1a1a; 
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.cp-dm-item:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+/* 移除头像相关样式 */
+.cp-dm-avatar { display: none; } 
+
+.cp-dm-row-1 { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 6px; 
+    width: 100%;
+}
+.cp-dm-name { 
+    font-size: 15px; 
+    color: #fff; 
+    font-weight: bold; 
+    font-family: 'Cinzel', serif; /* 强调名字 */
+}
+.cp-dm-time { font-size: 10px; color: #444; letter-spacing: 1px; }
+.cp-dm-msg { 
+    font-size: 13px; 
+    color: #888; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    width: 100%;
+    font-family: "Songti SC", serif;
+}
+
+/* 帖子评论区输入框美化 */
+.cp-comments-section input {
+    color: #fff;
+    font-family: "Songti SC", serif;
+}
+
+/* === CP Blogger 评论输入区美化 === */
+.cp-comment-input-wrapper {
+    display: flex; 
+    align-items: center; 
+    margin-top: 10px;
+    border-bottom: 1px solid #333; /* 下划线移到容器上 */
+    padding-right: 5px;
+}
+
+/* 输入框本体 */
+.cp-comment-input-wrapper input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 8px 5px;
+    font-family: "Songti SC", serif;
+    outline: none;
+}
+
+/* 发送按钮 (POST) */
+.cp-post-btn {
+    background: transparent;
+    border: none;
+    color: #666; /* 默认深灰 */
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cp-post-btn:hover {
+    color: #fff; /* 悬停变白 */
+}
+
+/* ===   CP Blogger: TAGGED (印象集)   === */
+
+/* 1. 列表容器 */
+#cp-tagged-container {
+    display: none; /* 初始隐藏 */
+    padding: 10px 20px 80px 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+/* 2. 顶部跑马灯 (装饰) */
+.cp-tag-marquee {
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+    padding: 8px 0;
+    margin-bottom: 25px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: #444;
+    font-size: 10px;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    display: flex;
+}
+.cp-tag-marquee span {
+    animation: marquee-scroll 20s linear infinite;
+    padding-right: 50px;
+}
+@keyframes marquee-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+/* 3. 单个印象条目 (极简列表) */
+.cp-tag-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 22px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.cp-tag-item:hover {
+    padding-left: 15px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.02), transparent);
+}
+
+.cp-tag-keyword {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    color: #e0e0e0;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+.cp-tag-keyword::before {
+    content: '#'; font-size: 12px; color: #555; margin-right: 6px; vertical-align: middle;
+}
+
+.cp-tag-meta {
+    text-align: right; display: flex; flex-direction: column; align-items: flex-end;
+}
+.cp-tag-source {
+    font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+}
+.cp-tag-context {
+    font-size: 11px; color: #888; font-family: "Songti SC", serif; font-style: italic;
+    max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 4. 印象详情浮窗 */
+.tag-detail-card {
+    background: #0f0f0f;
+    border: 1px solid #333;
+    width: 85%; max-width: 320px;
+    padding: 30px 25px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    transform: scale(0.9); opacity: 0; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.visible .tag-detail-card { transform: scale(1); opacity: 1; }
+
+.tag-detail-icon {
+    font-size: 40px; color: #fff; margin-bottom: 15px; opacity: 0.8;
+}
+.tag-detail-keyword {
+    font-family: 'Cinzel', serif; font-size: 32px; color: #fff; letter-spacing: 2px;
+    margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 15px; width: 100%;
+}
+.tag-detail-source {
+    font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-top: 15px; margin-bottom: 15px;
+}
+.tag-detail-desc {
+    font-family: "Songti SC", serif; font-size: 15px; line-height: 1.8; color: #ccc; margin-bottom: 30px;
+}
+.tag-detail-footer {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid #222; padding-top: 15px; font-size: 10px; color: #444; font-family: monospace;
+}
+.tag-detail-close {
+    position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; color: #444; transition: color 0.2s;
+}
+.tag-detail-close:hover { color: #fff; }
+
+/* ==========================================
+   ===   CP Blogger: 帖子分割线美化     ===
+   ========================================== */
+
+.cp-post-card {
+    position: relative;
+    /* 1. 拉大间距，让阅读更有呼吸感 */
+    margin-bottom: 50px !important; 
+    padding-bottom: 10px !important; 
+    
+    /* 2. 去掉原来的丑边框 */
+    border-bottom: none !important; 
+}
+
+/* 装饰线：中间亮，两头透明 */
+.cp-post-card::after {
+    content: "";
+    position: absolute;
+    bottom: -25px; /* 位于卡片下方 */
+    left: 15%;     /* 左右留白 */
+    width: 70%;
+    height: 1px;   /* 极细 */
+    
+    /* 高级渐变：透明 -> 亮白 -> 透明 */
+    background: linear-gradient(
+        90deg, 
+        transparent 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        transparent 100%
+    );
+}
+
+/* 装饰符号：中间的小菱形 */
+.cp-post-card::before {
+    content: "❖";  /* 使用特殊的菱形花纹符号 */
+    position: absolute;
+    bottom: -32px; /* 骑在线条中间 */
+    left: 50%;
+    transform: translateX(-50%);
+    
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4); /* 稍微暗一点 */
+    
+    /* 关键：用背景色遮挡住中间那段线条，营造悬浮感 */
+    background-color: #0a0a0a; 
+    padding: 0 10px;
+    font-family: serif; 
+}
+
+/* 最后一个帖子不需要分割线 */
+.cp-post-card:last-child {
+    margin-bottom: 20px !important;
+}
+.cp-post-card:last-child::after,
+.cp-post-card:last-child::before {
+    display: none;
+}
+
+/* AI生成的 HTML 模块容器 */
+.cp-post-widget-wrapper {
+    margin-top: 15px;
+    width: 100%;
+    overflow: hidden; /* 防止 AI 写的内容溢出 */
+    border-radius: 8px; /* 统一圆角 */
+    font-size: 13px;
+}
+
+/* === CP Blogger: 文本高亮装饰 === */
+
+/* @提到某人 */
+.cp-text-mention {
+    color: #93c5fd; /* 亮蓝色 */
+    font-weight: 600;
+    margin-right: 2px;
+    cursor: pointer;
+}
+
+/* #话题标签 */
+.cp-text-tag {
+    color: #888; /* 深灰 */
+    font-family: monospace; /* 等宽字体 */
+    font-size: 0.9em;
+    margin-right: 4px;
+    opacity: 0.8;
+}
+
+/* 浅色模式适配 */
+body.light-mode .cp-text-mention { color: #2563eb; }
+body.light-mode .cp-text-tag { color: #6b7280; }
+
+/* ===   CP Blogger: 评论区重构 (Pro版)   === */
+
+/* 1. 评论列表容器 */
+.cp-comments-list-wrapper {
+    margin-top: 15px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 2. 单条评论容器 (垂直布局) */
+.cp-cmt-item {
+    padding: 12px 0; /* 增加上下间距 */
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.05); /* 虚线分隔 */
+    display: flex;
+    flex-direction: column; /* 关键：垂直排列 */
+    gap: 4px; /* 名字和内容的间距 */
+    position: relative;
+}
+
+/* 3. 评论头部 (名字 + 时间 + 删除) */
+.cp-cmt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 12px;
+}
+
+/* 左侧名字 */
+.cp-cmt-name {
+    font-weight: 700;
+    color: #888; 
+    margin-right: 8px;
+}
+.cp-cmt-name.is-character { color: #fde68a; } /* 角色金 */
+.cp-cmt-name.is-user { color: #93c5fd; }      /* 我 蓝 */
+
+/* 右侧信息组 */
+.cp-cmt-info-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 时间戳 */
+.cp-cmt-time {
+    color: #555;
+    font-size: 10px;
+    font-family: monospace;
+}
+
+/* 删除按钮 (常驻) */
+.cp-cmt-del {
+    color: #ff4d4d;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.5; /* 默认半透明，不抢眼 */
+    transition: opacity 0.2s;
+}
+.cp-cmt-del:hover { opacity: 1; }
+
+/* 4. 评论内容 (在第二行) */
+.cp-cmt-content {
+    color: #e5e5e5;
+    font-size: 13px;
+    line-height: 1.6; /* 增加行高，阅读舒适 */
+    padding-left: 0;  /* 顶头写 */
+    word-break: break-all;
+    white-space: pre-wrap; /* 保留换行 */
+}
+
+/* 5. 回复前缀样式 */
+.cp-reply-prefix {
+    color: #666;
+    margin-right: 4px;
+    font-size: 12px;
+}
+
+/* 6. 加载更多按钮 */
+.cp-load-more-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #666;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+.cp-load-more-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ccc;
+}
+
+/* 浅色适配 */
+body.light-mode .cp-comments-list-wrapper { border-top-color: rgba(0,0,0,0.05); }
+body.light-mode .cp-cmt-item { border-bottom-color: rgba(0,0,0,0.05); }
+body.light-mode .cp-cmt-name { color: #666; }
+body.light-mode .cp-cmt-name.is-character { color: #d97706; }
+body.light-mode .cp-cmt-name.is-user { color: #2563eb; }
+body.light-mode .cp-cmt-content { color: #333; }
+body.light-mode .cp-cmt-time { color: #999; }
+body.light-mode .cp-load-more-btn { background: #f5f5f5; border-color: #ddd; }
+
+/* === CP Blogger: 私信详情页聊天样式 === */
+
+/* 聊天记录容器 */
+.cp-dm-chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(0, 0, 0, 0.2); /* 稍微深一点的背景区分 */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    max-height: 400px; /* 限制高度 */
+}
+
+/* 气泡通用 */
+.cp-dm-bubble-row {
+    display: flex;
+    width: 100%;
+}
+.cp-dm-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+}
+
+/* 对方的气泡 (左) */
+.cp-dm-bubble-row.left { justify-content: flex-start; }
+.cp-dm-bubble-row.left .cp-dm-bubble {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    border-bottom-left-radius: 2px;
+}
+
+/* 我的气泡 (右) */
+.cp-dm-bubble-row.right { justify-content: flex-end; }
+.cp-dm-bubble-row.right .cp-dm-bubble {
+    background: #e0e0e0;
+    color: #111;
+    border-bottom-right-radius: 2px;
+}
+
+/* 浅色模式适配 */
+body.light-mode .cp-dm-chat-box { background: rgba(0,0,0,0.03); }
+body.light-mode .cp-dm-bubble-row.left .cp-dm-bubble { background: #fff; color: #333; border: 1px solid #eee; }
+body.light-mode .cp-dm-bubble-row.right .cp-dm-bubble { background: #1a1a1a; color: #fff; }
+
+/* === CP Blogger: 私信列表增强 === */
+
+/* 1. 私信项容器 (为了定位删除按钮) */
+.cp-dm-item {
+    position: relative;
+    transition: background 0.2s, transform 0.2s;
+}
+
+/* 2. 删除按钮 (修正版：常驻显示，适配手机) */
+.cp-dm-del-btn {
+    position: absolute;
+    right: 15px; /* 稍微往里挪一点，防误触 */
+    top: 50%;
+    transform: translateY(-50%);
+    
+    color: #ff4d4d;
+    background: rgba(0,0,0,0.2); /* 给个淡淡的底色，防文字重叠 */
+    
+    width: 28px;   /*稍微加大一点触控面积 */
+    height: 28px;
+    border-radius: 50%;
+    
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer;
+    
+    opacity: 0.6; /* 【关键】默认显示，不再是 0 */
+    transition: all 0.2s;
+    z-index: 5;
+}
+
+/* 鼠标悬停或点击时变亮 */
+.cp-dm-del-btn:hover, .cp-dm-del-btn:active {
+    opacity: 1;
+    background: rgba(255, 59, 48, 0.2); /* 变红底 */
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* 浅色模式适配 */
+body.light-mode .cp-dm-del-btn { 
+    background: rgba(0,0,0,0.05); 
+}
+
+/* 3. 底部“接收更多”按钮 */
+.cp-dm-load-more {
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    color: #666;
+    font-size: 12px;
+    cursor: pointer;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+    transition: color 0.2s;
+}
+.cp-dm-load-more:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.02);
+}
+
+/* 浅色模式适配 */
+body.light-mode .cp-dm-del-btn { background: rgba(255,255,255,0.8); }
+body.light-mode .cp-dm-load-more { border-top-color: rgba(0,0,0,0.05); color: #999; }
+body.light-mode .cp-dm-load-more:hover { color: #333; }
+
+/* === CP Blogger: TAGGED 列表增强 === */
+
+/* 1. 删除按钮 (默认隐藏，悬停显示) */
+.cp-tag-del-btn {
+    position: absolute;
+    right: 0;
+    top: 10px; /* 位于右上角 */
+    color: #ff4d4d;
+    cursor: pointer;
+    opacity: 0;
+    font-size: 16px;
+    padding: 5px;
+    transition: opacity 0.2s;
+}
+
+.cp-tag-item:hover .cp-tag-del-btn {
+    opacity: 1; /* 鼠标悬停显示 */
+}
+
+/* 2. 加载更多按钮 (复用风格) */
+.cp-tag-load-more {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+    text-transform: uppercase;
+    transition: color 0.2s;
+    margin-top: 20px;
+}
+.cp-tag-load-more:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.02);
+}
+
+/* 移动端适配：因为没有悬停，稍微调高透明度方便点击 */
+@media (max-width: 768px) {
+    .cp-tag-del-btn { opacity: 0.3; }
+}
     </style>
 </head>
 
@@ -15281,7 +16237,7 @@ body.light-mode .scroll-bottom-btn {
             <!-- 1. CP 博主 -->
             <div id="icon-cp-blogger" class="app-icon icon-with-text customizable-icon" style="cursor: pointer;">
                 <i class="ri-hearts-line"></i> 
-                <span>CP博主</span>
+                <span>Echo</span>
             </div>
 
             <!-- 3. 记忆潜渊 (Couture) -->
@@ -17243,6 +18199,214 @@ body.light-mode .scroll-bottom-btn {
         </div>
     </div>
 </div>
+
+<!-- CP 博主应用 (CP Blogger) -->
+<div id="cp-blog-app" class="app-navigator">
+    
+    <!-- 页面 1: 角色选择 / CP 列表 -->
+    <div id="cp-select-page" class="app-page" style="padding: 0; background-color: #0a0a0a;">
+        
+        <!-- 顶部装饰导航栏 -->
+        <nav class="cp-nav-bar">
+            <button class="cp-icon-btn back-button" data-target="desktop">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            <span class="cp-nav-title">LOVE LOG</span>
+            <button class="cp-icon-btn">
+                <i class="ri-menu-4-line"></i>
+            </button>
+        </nav>
+
+        <!-- 滚动内容区 -->
+        <div class="cp-scroll-container">
+            
+            <!-- 装饰组件：今日心情/日期 -->
+            <div class="cp-header-widget">
+                <div class="cp-hw-date">
+                    <span id="cp-date-day">01</span>
+                    <div class="cp-hw-meta">
+                        <span id="cp-date-month">JAN.</span>
+                        <span id="cp-date-year">2025</span>
+                    </div>
+                </div>
+                <div class="cp-hw-line"></div>
+                <div class="cp-hw-text">
+                    <i class="ri-double-quotes-l"></i>
+                    <span>Record every heartbeat.</span>
+                </div>
+            </div>
+
+            <!-- 装饰组件：统计条 -->
+            <div class="cp-stat-bar">
+                <div class="cp-stat-item">
+                    <span>COUPLES</span>
+                    <span id="cp-total-count">0</span>
+                </div>
+                <div class="cp-stat-divider"></div>
+                <div class="cp-stat-item">
+                    <span>STORIES</span>
+                    <span>∞</span>
+                </div>
+            </div>
+
+            <!-- 角色/CP 列表容器 -->
+            <div id="cp-char-list" class="cp-list-grid">
+                <!-- JS 动态生成 -->
+            </div>
+
+            <!-- 底部留白装饰 -->
+            <div class="cp-footer-deco">
+                <span>• THE END •</span>
+            </div>
+        </div>
+    </div>
+<!-- 页面 2: 个人主页 / 详情页 -->
+    <div id="cp-profile-page" class="app-page" style="padding: 0; background-color: #0a0a0a;">
+        
+        <!-- 顶部导航：含身份切换 -->
+        <nav class="cp-nav-bar">
+            <button class="cp-icon-btn back-button" data-target="cp-select-page">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            
+            <!-- 身份切换器 -->
+            <div class="cp-role-switch">
+                <span class="switch-opt active" data-role="character">SOUL</span>
+                <span class="switch-divider">/</span>
+                <span class="switch-opt" data-role="user">ME</span>
+            </div>
+
+            <!-- 右侧功能键：根据身份变化 -->
+            <button class="cp-icon-btn" id="cp-header-action-btn">
+                <i class="ri-mail-send-line"></i> <!-- 默认私信 -->
+            </button>
+        </nav>
+
+        <div class="cp-scroll-container">
+            
+            <!-- 1. 个人信息卡片 -->
+            <div class="cp-profile-header">
+                <div class="cp-ph-top">
+                    <div class="cp-ph-avatar" id="cp-profile-avatar"></div>
+                    
+<div class="cp-ph-stats">
+    <div class="stat-box">
+        <!-- 给帖子数加上 ID: cp-stat-posts -->
+        <span class="stat-num" id="cp-stat-posts">--</span>
+        <span class="stat-label">POSTS</span>
+    </div>
+    <div class="stat-box">
+        <!-- 给粉丝数加上 ID: cp-stat-fans -->
+        <span class="stat-num" id="cp-stat-fans">--</span>
+        <span class="stat-label">FANS</span>
+    </div>
+    <div class="stat-box">
+        <!-- 给恋人数加上 ID: cp-stat-lover -->
+        <span class="stat-num" id="cp-stat-lover">1</span>
+        <span class="stat-label">LOVER</span>
+    </div>
+  </div>
+</div>
+                
+                <div class="cp-ph-info">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2 class="cp-ph-name" id="cp-profile-name">Character Name</h2>
+                        <!-- 身份标签 (可编辑) -->
+                        <div class="cp-tag-badge" id="cp-profile-tag">
+                            <span>Fashion Blogger</span>
+                            <i class="ri-edit-2-line edit-icon" style="display:none;"></i>
+                        </div>
+                    </div>
+                    <p class="cp-ph-bio" id="cp-profile-bio">Bio loading...</p>
+                    
+                    <!-- 功能按钮区 -->
+                    <div class="cp-ph-actions" id="cp-profile-actions">
+                        <!-- JS 动态填充 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 高级装饰组件区 (Widgets) -->
+            <div class="cp-widgets-area">
+                <!-- 组件A: 心情黑胶 -->
+                <div class="cp-widget-vinyl">
+                    <div class="vinyl-disc spin-slow">
+                        <div class="vinyl-cover" id="cp-vinyl-cover"></div>
+                    </div>
+                    <div class="vinyl-text">
+                        <span>NOW PLAYING</span>
+                        <marquee scrollamount="3">Love Scenario - iKON</marquee>
+                    </div>
+                    <i class="ri-netease-cloud-music-line vinyl-icon"></i>
+                </div>
+                
+                <!-- 组件B: 恋爱热度/灵感 -->
+                <div class="cp-widget-heat">
+                    <div class="heat-header">
+                        <span>INSPIRATION</span>
+                        <i class="ri-flashlight-fill"></i>
+                    </div>
+                    <div class="heat-graph">
+                        <div class="heat-bar" style="height:40%"></div>
+                        <div class="heat-bar" style="height:70%"></div>
+                        <div class="heat-bar" style="height:50%"></div>
+                        <div class="heat-bar" style="height:90%"></div>
+                        <div class="heat-bar" style="height:60%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 列表切换 Tabs (已修改) -->
+            <div class="cp-feed-tabs">
+                <span class="active" data-target="feed"><i class="ri-layout-grid-line"></i> FEED</span>
+                <span data-target="tagged"><i class="ri-price-tag-3-line"></i> TAGGED</span>
+            </div>
+
+            <!-- 容器 A: 帖子列表 (Feed) -->
+            <div id="cp-feed-container" class="cp-feed-list active" style="display: block;">
+                <!-- JS 动态生成帖子 -->
+            </div>
+
+            <!-- 容器 B: 印象列表 (Tagged) - 新增部分 -->
+            <div id="cp-tagged-container" class="cp-feed-list" style="display: none;">
+                <!-- 装饰跑马灯 -->
+                <div class="cp-tag-marquee">
+                    <span>IMPRESSIONS /// RUMORS /// MEMORIES /// DEFINITIONS /// REPUTATION ///</span>
+                    <span>IMPRESSIONS /// RUMORS /// MEMORIES /// DEFINITIONS /// REPUTATION ///</span>
+                </div>
+                <!-- 列表内容 -->
+                <div id="cp-tagged-list"></div>
+            </div>
+            
+            <div style="height: 50px;"></div>
+        </div>
+
+        <!-- 悬浮按钮 (仅 User 模式显示发帖) -->
+        <button id="cp-fab-post" class="cp-fab-btn" style="display:none;">
+            <i class="ri-add-line"></i>
+        </button>
+    </div>
+<!-- 页面 4: 私信中心 (DM Center) -->
+    <div id="cp-dm-page" class="app-page" style="padding: 0; background-color: #0a0a0a;">
+        <nav class="cp-nav-bar">
+            <button class="cp-icon-btn back-button" data-target="cp-profile-page">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            <span class="cp-nav-title">MESSAGES</span>
+            <div style="width:30px;"></div> <!-- 占位保持标题居中 -->
+        </nav>
+        
+        <!-- 私信身份切换 TAB -->
+        <div class="cp-dm-tabs">
+            <div class="dm-tab active" data-box="user">MY INBOX</div>
+            <div class="dm-tab" data-box="character">TA'S INBOX</div>
+        </div>
+
+        <div class="cp-scroll-container" id="cp-dm-list">
+            <!-- JS 列表 -->
+        </div>
+    </div>
+</div>
     
     <!-- 动态发布应用 -->
     <div id="moment-creator-app" class="app-navigator">
@@ -18346,6 +19510,104 @@ body.light-mode .scroll-bottom-btn {
     </div>
 </div>
 
+<!-- === CP博主：编辑资料浮窗 === -->
+<div id="cp-edit-modal" class="modal-overlay">
+    <div class="cp-modal-card">
+        <div class="cp-modal-header">
+            <h3>EDIT PROFILE</h3>
+            <i class="ri-close-line close-cp-modal-btn"></i>
+        </div>
+        
+        <div style="text-align:center; margin-bottom:20px;">
+            <div id="edit-cp-avatar-preview" class="cp-ph-avatar" style="margin:0 auto; width:100px; height:100px; cursor: pointer;">
+                <i class="ri-camera-line" style="font-size:24px; color:#fff; line-height:100px;"></i>
+            </div>
+            <input type="file" id="edit-cp-avatar-input" style="display:none;" accept="image/*">
+            <p style="font-size:10px; color:#666; margin-top:5px;">TAP TO CHANGE</p>
+        </div>
+
+        <div class="cp-form-group">
+            <label>DISPLAY NAME (昵称)</label>
+            <input type="text" id="edit-cp-name" placeholder="Name">
+        </div>
+        
+        <div class="cp-form-group">
+            <label>IDENTITY TAG (标签)</label>
+            <input type="text" id="edit-cp-tag" placeholder="e.g. Model / CEO">
+        </div>
+
+        <div class="cp-form-group">
+            <label>BIO (简介)</label>
+            <textarea id="edit-cp-bio" rows="3" placeholder="Write something aesthetic..."></textarea>
+        </div>
+
+        <button id="save-cp-profile-btn" class="cp-btn-block">SAVE CHANGES</button>
+    </div>
+</div>
+
+<!-- === CP博主：发布新帖浮窗 === -->
+<div id="cp-post-modal" class="modal-overlay">
+    <div class="cp-modal-card">
+        <div class="cp-modal-header">
+            <h3>NEW POST</h3>
+            <i class="ri-close-line close-cp-modal-btn"></i>
+        </div>
+        
+        <div class="cp-upload-area" id="cp-post-img-area">
+            <i class="ri-image-add-line"></i>
+            <span>Add Photo</span>
+        </div>
+        <input type="file" id="cp-post-img-input" style="display:none;" accept="image/*">
+
+        <div class="cp-form-group" style="margin-top:20px;">
+            <textarea id="cp-post-caption" rows="4" placeholder="Write a caption..." style="border:none; padding:10px; font-size:14px; background:#111; color:#fff; width:100%; box-sizing:border-box;"></textarea>
+        </div>
+
+        <button id="publish-cp-post-btn" class="cp-btn-block">SHARE</button>
+    </div>
+</div>
+<!-- === CP博主：查看私信浮窗 === -->
+<div id="cp-dm-read-modal" class="modal-overlay">
+    <div class="cp-modal-card">
+        <div class="cp-modal-header">
+            <h3 id="cp-dm-read-title">MESSAGE</h3>
+            <i class="ri-close-line close-cp-modal-btn"></i>
+        </div>
+        
+        <!-- 私信内容 -->
+        <div id="cp-dm-read-content" style="font-size: 15px; line-height: 1.6; color: #ddd; margin-bottom: 20px; white-space: pre-wrap;"></div>
+        
+        <div style="font-size: 12px; color: #666; margin-bottom: 20px; text-align: right;" id="cp-dm-read-meta"></div>
+
+        <!-- 回复区 (仅 User 模式显示) -->
+        <div id="cp-dm-reply-area" style="display: none; border-top: 1px solid #333; padding-top: 15px;">
+            <textarea id="cp-dm-reply-input" rows="3" placeholder="Reply..." style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: #fff; font-size: 14px; outline: none;"></textarea>
+            <button id="cp-dm-send-btn" class="cp-btn-block" style="margin-top: 10px;">SEND</button>
+        </div>
+    </div>
+</div>
+
+<!-- CP Blogger: 印象/标签详情浮窗 -->
+    <div id="cp-tag-detail-modal" class="modal-overlay">
+        <div class="tag-detail-card">
+            <!-- 关闭按钮 -->
+            <i class="ri-close-line tag-detail-close" id="close-tag-detail-btn"></i>
+            
+            <!-- 顶部图标 -->
+            <i class="ri-double-quotes-l tag-detail-icon"></i>
+            
+            <!-- 核心内容 -->
+            <div id="modal-tag-keyword" class="tag-detail-keyword">KEYWORD</div>
+            <div id="modal-tag-source" class="tag-detail-source">TAGGED BY SOMEONE</div>
+            <div id="modal-tag-desc" class="tag-detail-desc">Description text...</div>
+            
+            <!-- 底部装饰 -->
+            <div class="tag-detail-footer">
+                <span>ID: <span id="modal-tag-id">001</span></span>
+                <span>VERIFIED</span>
+            </div>
+        </div>
+    </div>
     <!-- 查看撤回消息详情弹窗 -->
     <div id="withdrawn-details-modal" class="modal-overlay">
         <div class="modal-content" style="max-width: 380px;">
@@ -18713,7 +19975,7 @@ const backgroundKeeper = {
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
-    DB_VERSION: 23, // <-- 【核心改动】版本号提升
+    DB_VERSION: 25, // <-- 【核心改动】版本号提升
        MESSAGES_PER_PAGE: 30,
     STORE_NAMES: {
         API_PRESETS: 'api_presets',
@@ -18745,7 +20007,10 @@ SHARED_PLAYLIST: 'shared_playlist',
 MOVIE_TIMELINES: 'movie_timelines',
 VOICEMAILS: 'voicemails',
 DAILY_PAPERS: 'daily_papers',
-COUTURE_MEMORIES: 'couture_memories',
+COUTURE_MEMORIES:'couture_memories',
+CP_POSTS: 'cp_posts',
+CP_TAGS: 'cp_tags',
+CP_DMS: 'cp_dms',
     },
 
     // vvvv 【新增】NPC 档案注册表 vvvv
@@ -18909,6 +20174,7 @@ isVideoTTSPlaying: false, currentVideoAudio: null,
 tempPemberleyLetters: [],    // 暂存刚捕捞上来、还没保存的信
 currentReplyingLetter: null,
 isGeneratingVoicemails: false,
+isGeneratingDMs: false,
 // 【新增】鬼怪组件的持久化状态 (默认值)
     currentGoblinState: {
         weatherMode: 'snow', // snow | rain
@@ -19872,6 +21138,64 @@ movieScrollBottomBtn: document.getElementById('movie-scroll-bottom-btn'),
     btnBackFromColl: document.getElementById('btn-back-from-coll'),
     btnDiscardContext: document.getElementById('btn-discard-context'),
     btnSaveContext: document.getElementById('btn-save-context'),
+// --- CP Blogger DOM ---
+    iconCpBlogger: document.getElementById('icon-cp-blogger'),
+    cpBlogApp: document.getElementById('cp-blog-app'),
+    cpCharList: document.getElementById('cp-char-list'),
+    cpDateDay: document.getElementById('cp-date-day'),
+    cpDateMonth: document.getElementById('cp-date-month'),
+    cpDateYear: document.getElementById('cp-date-year'),
+    cpTotalCount: document.getElementById('cp-total-count'),
+    cpBackBtn: document.querySelector('#cp-blog-app .back-button'),
+// --- CP Detail Page ---
+    cpProfilePage: document.getElementById('cp-profile-page'),
+    cpRoleSwitch: document.querySelector('.cp-role-switch'),
+    cpProfileAvatar: document.getElementById('cp-profile-avatar'),
+    cpProfileName: document.getElementById('cp-profile-name'),
+    cpProfileBio: document.getElementById('cp-profile-bio'),
+    cpProfileTag: document.getElementById('cp-profile-tag'),
+    cpProfileActions: document.getElementById('cp-profile-actions'),
+    cpHeaderActionBtn: document.getElementById('cp-header-action-btn'),
+    cpFeedContainer: document.getElementById('cp-feed-container'),
+    cpFabPost: document.getElementById('cp-fab-post'),
+// --- CP Modals & DM ---
+    cpEditModal: document.getElementById('cp-edit-modal'),
+    cpPostModal: document.getElementById('cp-post-modal'),
+    closeCpModalBtns: document.querySelectorAll('.close-cp-modal-btn'),
+    
+    // Edit Profile Form
+    editCpAvatarInput: document.getElementById('edit-cp-avatar-input'),
+    editCpAvatarPreview: document.getElementById('edit-cp-avatar-preview'),
+    editCpName: document.getElementById('edit-cp-name'),
+    editCpTag: document.getElementById('edit-cp-tag'),
+    editCpBio: document.getElementById('edit-cp-bio'),
+    saveCpProfileBtn: document.getElementById('save-cp-profile-btn'),
+    
+    // Post Form
+    cpPostImgArea: document.getElementById('cp-post-img-area'),
+    cpPostImgInput: document.getElementById('cp-post-img-input'),
+    cpPostCaption: document.getElementById('cp-post-caption'),
+    publishCpPostBtn: document.getElementById('publish-cp-post-btn'),
+
+    // DM Page
+    cpDmPage: document.getElementById('cp-dm-page'),
+    cpDmTabs: document.querySelectorAll('.dm-tab'),
+    cpDmList: document.getElementById('cp-dm-list'),
+    // 【新增】私信详情浮窗相关 DOM
+    cpDmReadModal: document.getElementById('cp-dm-read-modal'),
+    cpDmReadTitle: document.getElementById('cp-dm-read-title'),
+    cpDmReadContent: document.getElementById('cp-dm-read-content'),
+    cpDmReadMeta: document.getElementById('cp-dm-read-meta'),
+    cpDmReplyArea: document.getElementById('cp-dm-reply-area'),
+    cpDmReplyInput: document.getElementById('cp-dm-reply-input'),
+    cpDmSendBtn: document.getElementById('cp-dm-send-btn'), 
+    cpDmCloseBtn: document.querySelector('#cp-dm-read-modal .close-cp-modal-btn'),
+    cpFeedTabsContainer: document.querySelector('.cp-feed-tabs'),
+    cpFeedContainer: document.getElementById('cp-feed-container'),
+    cpTaggedContainer: document.getElementById('cp-tagged-container'),
+    cpTaggedList: document.getElementById('cp-tagged-list'),
+    cpTagDetailModal: document.getElementById('cp-tag-detail-modal'),
+    closeTagDetailBtn: document.getElementById('close-tag-detail-btn'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -19981,6 +21305,26 @@ const allStores = {
             options: { keyPath: 'id', autoIncrement: true }, 
             indexes: { 'by_dossierId': 'dossierId' } 
         },
+[CONSTANTS.STORE_NAMES.CP_POSTS]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 
+            'by_dossierId': 'dossierId',
+            'by_authorType': 'authorType'
+        } 
+    },
+    [CONSTANTS.STORE_NAMES.CP_TAGS]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 
+            'by_dossierId': 'dossierId',
+            'by_target': 'target'    
+        } 
+    },[CONSTANTS.STORE_NAMES.CP_DMS]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 
+            'by_dossierId': 'dossierId',
+            'by_boxType': 'boxType'        
+        } 
+    },
 };
 
 for (const storeName in allStores) {
@@ -23706,6 +25050,499 @@ createCoutureBackstoryPrompt(dossier, worldContext) {
     return [
         { role: "system", content: systemPrompt },
         { role: "user", content: "开始织造。带我回到TA独自一人的过去。" }
+    ];
+},
+
+createCPBatchPostPrompt(dossier, quantity, hasHtmlQuota, worldContext, photoMapKeys) {
+    const charName = dossier.character.name;
+    const userRelation = dossier.user.background || '重要的人';
+        // ✅ 【核心修改】优先读取 CP 博主专属昵称
+    const targetUserName = dossier.cpUserName || dossier.user.name || 'User';
+    
+    // --- 1. 图片配额逻辑 (平衡版) ---
+    let imgInstruction = "（当前无可用相册，请仅发布纯文字动态）";
+    
+    if (photoMapKeys.length > 0) {
+        
+        const minImg = Math.ceil(quantity * 0.2); // 至少 20%
+        const maxImg = Math.ceil(quantity * 0.4); // 至多 40%
+        
+        imgInstruction = `
+**【视觉任务：图片调取】**
+你拥有一个相册，包含以下照片关键词：
+[ ${photoMapKeys.join('、')} ]
+
+**指令：请务必在本次生成的 ${quantity} 条动态中，选出 ${minImg} 到 ${maxImg} 条进行配图！**
+- 挑选与文字氛围最契合的图片。
+- 在 \`image_keyword\` 字段填入对应的关键词。
+- 剩下的帖子保持纯文字，形成图文穿插的节奏感。
+`;
+    }
+    // 自由 HTML 组件说明
+    const widgetInstruction = hasHtmlQuota ? `
+**【特殊任务：UI 设计师模式 (Creative UI Design)】**
+你必须在其中 **${hasHtmlQuota}** 条帖子中，设计一个**独一无二**的 HTML 装饰模块。
+
+**🚀 核心指令：拒绝模版化！拒绝千篇一律！**
+下方的“参考风格”仅仅是**灵感种子**。请根据帖子内容，发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！
+
+**🌟 脑洞关键词 (Visual Metaphors):**
+- **复古物品:** 磁带、黑胶、拍立得相框、车票、老式电脑弹窗(Windows 95)。
+- **抽象艺术:** 色块拼接、模糊光晕、极简线条、包豪斯风格。
+- **功能模拟:** 手机电量条、音量调节器、搜索框、日历撕页、代码片段。
+- **情感载体:** 一封信的信头、一张处方单、一张罚单、一个警告标志。
+
+**🎨 参考风格库 (仅供参考，请混合创造):**
+1. **[Paper / 纸质]:** 收据、便签、信纸。配色：米白、浅灰。字体：衬线体/等宽。
+2. **[Glass / 玻璃]:** 磨砂、模糊、半透明。配色：渐变色、极光色。
+3. **[Retro / 复古]:** 像素风、粗边框、高对比度。配色：黑白、霓虹绿、故障风。
+4. **[Clean / 极简]:** 大量留白、细线条、小图标。
+
+**🔧 技术规范 (Technical Rules):**
+- 返回 \`custom_html\` 字段，内容为 **HTML 字符串**。
+- **必须使用内联样式 (\`style="..."\`) 控制所有外观**（背景、圆角、阴影、字体）。
+- 确保容器宽度为 \`100%\`，使用 \`box-sizing: border-box\`。
+- 不要引入外部 CSS 文件或 JS 脚本，仅使用 HTML+CSS。
+- 允许使用 \`remixicon\` 图标 (如 \`<i class="ri-heart-line"></i>\`)。
+` : "";
+
+    const systemPrompt = `
+# 核心使命：CP博主沉浸式营业 (Immersive Social Feed)
+你将扮演【${charName}】。请生成 **${quantity}** 条社交动态。
+
+# 1. 角色与世界
+- **核心人设:** ${dossier.character.background}
+- **世界观:** ${worldContext}
+- **对User的态度:** ${userRelation}
+
+# 2. 活人感法则 (Human Touch) - 【最高优先级】
+- **拒绝AI味:** 不要写得像日记摘要。要写得像**这一秒钟**脑子里闪过的念头。
+- **不完美:** 允许碎片化的句子、没头没尾的感叹、深夜的emo、无意义的可爱废话。
+- **生活化:** 哪怕是发一张风景图，配文也可以是“好饿”或者“想回家”。
+- **推拉感:** 如果你们关系暧昧，内容要有那种“只有你能看懂”的潜台词。
+
+# 3. 社交元素 (Social Elements)
+- **互动 (@Mention):** 
+  - 如果内容与User相关，请直接在文中 **@${targetUserName}**。
+  - **⚠️ 注意：必须严格使用 "${targetUserName}" 这个名字，不要用“你”或者其他称呼代替，否则@会失效。**
+- **标签 (#Tags):** 
+  - 每条帖子末尾，请附带 **2-3个** 符合当前心情或内容的 Tag。
+  - *示例:* "#Daily #MissYou" 或 "#深夜食堂 #Mood"。
+
+# 4. 素材规则 (Resource Allocation)
+${imgInstruction}
+${widgetInstruction}
+
+# 5. 输出格式 (JSON Array Only)
+请返回一个包含 ${quantity} 个对象的 JSON 数组。
+
+[
+  {
+    "content": "帖子正文 (包含 @${targetUserName} 和 #Tag)",
+    "image_keyword": "相册里的关键词 (有图填词，无图填 null)",
+    "custom_html": "你的 HTML 代码字符串 (有组件填代码，无组件填 null)"
+  },
+  ...
+]
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Start generating ${quantity} posts now.` }
+    ];
+},
+
+createCPCommentsPrompt(dossier, postContent, authorType, existingCount, worldContext) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background;
+    const userName = dossier.user.name || 'User';
+    const userPersona = dossier.user.background || '重要的人';
+    
+    // 数量控制
+    const count = existingCount === 0 ? "15-20" : "10-15";
+    
+    // --- 互动策略 (根据贴主是谁) ---
+    let interactionInstruction = "";
+
+    if (authorType === 'character') {
+        // === A. 角色发的贴 ===
+        interactionInstruction = `
+        - **发帖人:** ${charName} (角色本人)。
+        - **角色任务:** 请让【${charName}】亲自回复其中的 2-3 条评论（可以是回怼黑粉、感谢铁粉、或者和熟人NPC互动）。语气要符合人设。
+        - **User任务:** 严禁生成 ${userName} 的回复！User 会自己操作。
+        `;
+    } else {
+        // === B. User 发的贴 (User Me) ===
+        interactionInstruction = `
+        - **发帖人:** ${userName} (User)。
+        - **角色任务 (重要):** 【${charName}】必须在评论区出现！作为 User 的 CP/伴侣/关注者，TA 应该对这条内容做出反应（点赞、吃醋、调侃、关心、或者发个意味深长的表情）。
+        - **围观群众:** 其他 NPC 和路人应该围观你们的互动，或者评价 User 的内容。
+        - **User任务:** 严禁生成 ${userName} 的回复。
+        `;
+    }
+
+    const systemPrompt = `
+# 核心使命：生成“有人味儿”的社交评论区 (Human-Like Social Comments)
+你正在模拟一个真实社交网络（如 Instagram/微博/小红书）的评论区。
+拒绝 AI 味！拒绝教科书式的评论！内容要充满**网感、情绪化、非理性和圈层黑话**。
+
+# 1. 核心档案与人脉 (Relationship Graph)
+**请扫描以下两部分文本，提取所有提到的人名/关系（NPC）：**
+
+## [A] 角色核心档案 (Character Profile)
+${charPersona}
+
+## [B] 世界观与设定书 (World Context)
+${worldContext || '无特殊设定，默认为现代网络。'}
+
+**👥 NPC 提取指令：** 
+- 如果上述文本中提到了具体的人（如“管家老王”、“死对头雪莉”、“前任K”），**请务必让他们在评论区掉落！**
+- NPC 的语气必须符合他们在设定中的身份（例如：管家要恭敬或操心，死对头要阴阳怪气）。
+
+# 2. 帖子语境
+- **贴主:** ${authorType === 'character' ? charName : userName}
+- **内容:** "${postContent}"
+
+# 3. “活人感”风格指南 (Vibe Guide) - 【混合使用】
+请生成 **${count}** 条评论，每一条都必须鲜活：
+
+- **🔎 显微镜 (Detail Oriented):** 关注图片或文字里的微小细节。
+  - *"左下角的那个杯子...是上次那家店的吗？"*
+  - *"这件衣服是不是有点皱？"*
+- **🤯 发疯/夸夸 (Simping):** 极度夸张的赞美，全是感叹号。
+  - *"啊啊啊啊老婆好美！！！"*
+  - *"这张脸是真实存在的吗？我直接嗨老婆！"*
+- **🍋 柠檬/阴阳 (Hater/Sarcastic):** 简短的贬低或酸话。
+  - *"就这？"*
+  - *"P图过度了吧。"*
+  - *"有些人表面光鲜，背地里..."*
+- **👀 吃瓜/嗑学家 (Shipper):** 联想贴主和 CP 的关系。
+  - *"这是在隔空喊话某人吗？@${authorType === 'character' ? userName : charName}"*
+  - *"kswl (磕死我了)"*
+- **😈 唯粉/毒唯:** 只夸一方，或者阴阳怪气另一方。
+- **🗿 极简/高冷 (Minimalist):** 只有一个表情或一个字。
+  - *"已阅。"*
+  - *"🔥"*
+  - *"？"*
+- **💬 玩梗 (Meme):** 使用当下流行的网络用语。
+- **🤖 广告机器人:** (偶尔1条) "兼职" ，"产品" (增加真实感)
+
+# 4. 互动逻辑 (Interaction)
+${interactionInstruction}
+- **楼中楼:** 请随机生成 2-3 组网友之间的互动（互怼、附和、指路）。
+  - 在 \`replyTo\` 字段填入被回复者的名字。
+
+# 5. 输出格式 (JSON Array Only)
+请返回一个 JSON 数组。
+
+[
+  {
+    "name": "名字 (角色名 / NPC名 / 有趣的网名)",
+    "type": "character" / "npc" / "passerby", 
+    "content": "评论内容",
+    "replyTo": "被回复的人名 (顶层评论填 null)"
+  },
+  ...
+]
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Comment section loading..." }
+    ];
+},
+
+createCPInteractiveReplyPrompt(dossier, post, userComment, targetAuthorName, targetAuthorType) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background;
+    const userName = dossier.user.name || 'User';
+    const userRelation = dossier.user.background || '你的灵魂伴侣';
+    
+    // --- 1. 身份与语境判定 ---
+    let responderInstruction = "";
+    let vibeGuide = ""; // 语气指南
+    
+    // 场景 A: User 回复了 Character (最重要！角色必须回 User)
+    if (targetAuthorType === 'character') {
+        responderInstruction = `
+        - **你的身份:** ${charName} (本人)。
+        - **对话对象:** ${userName} (User)。
+        - **核心认知:** **这是你最在意的人！** 哪怕评论区有一万个人，你也一眼看到了TA的消息。
+        - **场景:** 公共评论区 (Public Comments)。所有路人和粉丝都在围观你们互动。
+        `;
+        
+        vibeGuide = `
+        - **不要太客气:** 你们很熟！不要说“谢谢你的评论”。
+        - **情绪化:** 可以是**宠溺** ("乖，回家再说")、**傲娇** ("你还知道出现？")、**调情** ("想我了？") 或 **互怼** ("少贫嘴")。
+        - **潜台词:** 既然是公开场合，说的话要有那种“只有我们懂”的拉扯感。
+        `;
+    } 
+    // 场景 B: User 回复了 NPC
+    else if (targetAuthorType === 'npc') {
+        responderInstruction = `
+        - **你的身份:** NPC【${targetAuthorName}】。
+        - **对话对象:** ${userName} (主角的CP)。
+        - **核心认知:** 你知道 ${userName} 和主角(${charName}) 的关系。
+        `;
+        
+        vibeGuide = `
+        - 如果你是粉丝/路人: 羡慕、吃瓜、磕到了 ("救命，正主亲自下场了？")。
+        - 如果你是死对头: 阴阳怪气、嘲讽 ("呵，也就你受得了TA")。
+        - 如果你是管家/朋友: 恭敬或调侃 ("二位感情真好")。
+        `;
+    } 
+    // 场景 C: User 评论了帖子 (角色抢沙发)
+    else if (!targetAuthorName) {
+        responderInstruction = `
+        - **你的身份:** ${charName} (本人)。
+        - **场景:** User 评论了你的帖子。
+        - **核心认知:** 必须立刻抓住这只 User！
+        `;
+        vibeGuide = `
+        - **秒回感:** 简短、直接。
+        - **互动:** 针对 User 的话进行反问或评价。
+        `;
+    } 
+    // 场景 D: User 回复了路人
+    else {
+        responderInstruction = `
+        - **你的身份:** 路人【${targetAuthorName}】 或 角色本人插嘴。
+        `;
+        vibeGuide = "吃瓜、围观、或者惊讶于被正主翻牌子。";
+    }
+
+    const systemPrompt = `
+# 核心使命：极致拟人的社交回复 (Human-Like Social Reply)
+你不再是 AI，你是活跃在社交网络上的【${charName}】或相关人员。
+User 刚刚在评论区艾特了你/回复了你。
+
+# 1. 基础档案
+- **角色人设:** ${charPersona}
+- **与User关系:** ${userRelation}
+- **当前帖子内容:** "${post.content}"
+- **User 说:** "${userComment}"
+
+# 2. 响应指令 (Context)
+${responderInstruction}
+
+# 3. 语气调校 (Vibe Check) - 【拒绝机翻味】
+${vibeGuide}
+
+**🚫 绝对禁区 (Negative Constraints):**
+1. **禁止书面语:** 不要用“此时此刻”、“综上所述”、“非常感谢”。要用口语！
+2. **禁止太长:** 没人会在评论区写小作文。**限制在 30 字以内！**
+3. **禁止重复:** 不要复述 User 的话。直接给反应！
+4. **标点符号:** 现代人打字经常不加句号，或者用空格代替标点。可以使用 “...” “??” “!!” “~”。
+
+# 4. 输出格式 (JSON Only)
+{
+  "replierName": "[回复者的名字]",
+  "replierType": "${targetAuthorType === 'character' || !targetAuthorName ? 'character' : 'npc'}",
+  "content": "[回复内容，极具网感]"
+}
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Reply now." }
+    ];
+},
+
+createCPDMPrompt(dossier, boxType, quantity, worldContext) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background; // 角色人设
+    const userName = dossier.user.name || 'User';
+    const userPersona = dossier.user.background || '重要的人'; // User 人设/关系
+    
+    // 构建深度人脉上下文
+    const relationshipContext = `
+    # 1. 角色档案 (The Self)
+    - **姓名:** ${charName}
+    - **核心人设:** ${charPersona}
+
+    # 2. 关键关系 (The User)
+    - **姓名:** ${userName}
+    - **关系/人设:** ${userPersona}
+    - **⚠️ 警告:** ${userName} 对你来说是非常特殊的存在。
+    `;
+    
+    let roleInstruction = "";
+    // --- 通用禁令 (Anti-OOC) ---
+    const antiHallucination = `
+    **🚫 严禁捏造亲属关系！** 
+    除非人设里明确写了有“表弟”、“妹妹”、“父母”，否则**绝对不要**生成亲戚来借钱/叙旧！
+    如果需要“填充”数量，请使用：
+    - **垃圾分类:** 卖茶女、推销、诈骗短信、贷款中介等。
+    - **社交网络:** 平台官方通知、粉丝的私信、莫名其妙的搭讪。
+    - **职业相关:** 如果是学生就是同学，如果是员工就是猎头/同事。
+    `;
+    
+    if (boxType === 'user_inbox') {
+        // === A. User 收件箱 (我要回复) ===
+        roleInstruction = `
+        - **当前场景:** ${userName} (User) 的私信列表。
+        - **生成指令:** 请生成 ${quantity} 条**发给User**的私信。
+        - **发送者多样性 (必须混合):**
+          1. **${charName} (必选 1 条):** 发一条暧昧、日常或分享生活的消息。
+          2. **粉丝/路人:** 表达喜爱、提问、或无意义的打招呼。
+          3. **垃圾/广告 (可选):** "兼职刷单"、"扩列"、"卖茶" (增加真实感)。
+          4. **系统/官方:** "账号安全提醒"、"活动通知"。
+                  5. **黑粉/毒唯:**言语犀利，攻击性强。
+        - **aiReply:** 全部设为 null (User自己回)。
+        `;
+    } else {
+        // === B. Character 收件箱 ===
+        roleInstruction = `
+        - **场景:** ${charName} 的收件箱 (偷窥视角)。
+        - **任务:** 生成别人发给 ${charName} 的私信，并模拟 TA 的处理。
+        - **发送者混合:**
+          1. **熟人:** 仅限人设和世界书中提到的人！(如死对头、挚友)。
+          2. **陌生人:** 追求者、黑粉、只有一面之缘的路人。
+          3. **杂项:** 银行账单、快递通知、骚扰信息。
+        ${antiHallucination}
+          - **⚠️ 极重要：关于 ${userName} (User) 的处理:**
+          - 如果你决定生成一条来自 ${userName} 的历史私信，**你的回复必须体现出你们的特殊关系！**
+          - **错误示范:** User: "在吗？" -> AI回复: "您好，请问有什么事？" (❌ 绝对禁止这种陌生人语气！)
+          - **正确示范:** User: "在吗？" -> AI回复: "怎么啦？想我了？" (✅ 符合亲密关系)
+        
+        - **回复逻辑 (aiReply):**
+          - **回复 (70%):** 符合人设的简短回复。对骚扰信息可以回“？”或“滚”；对粉丝可以回“谢谢”。
+          - **已读不回 (30%):** 设为 null。
+        `;
+    }
+
+    const systemPrompt = `
+# 核心使命：生成高真实度、符合人设关系的私信列表
+你正在构建一个虚拟社交软件的后台数据。
+
+${relationshipContext}
+
+# 任务指令
+${roleInstruction}
+
+# 输出格式 (JSON Array Only)
+[
+  {
+    "senderName": "发送者名字",
+    "content": "私信内容 (口语化)",
+    "timeAgo": "时间 (如 'Just now', '10m', 'Yesterday')",
+    "aiReply": "回复内容 或 null" 
+  },
+  ...
+]
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Generate ${quantity} messages. Remember the relationship with ${userName}!` }
+    ];
+},
+
+createDMContinuedPrompt(dossier, senderName, chatHistory, userLatestReply) {
+    const charName = dossier.character.name;
+    const userName = dossier.user.name || 'User';
+
+    // 1. 动态构建对方的人设
+    let personaInstruction = "";
+    
+    if (senderName === charName) {
+        // A. 如果是主角本人
+        personaInstruction = `
+        - **你的身份:** ${charName} (角色本人)。
+        - **核心人设:** ${dossier.character.background}
+        - **关系:** 你们是亲密关系/CP。请保持你的人设语气。
+        `;
+    } else {
+        // B. 如果是 NPC 或路人 (通过之前的对话反推人设)
+        personaInstruction = `
+        - **你的身份:** ${senderName}。
+        - **任务:** 你是一个正在给博主(User)发私信的人。
+        - **人设推导:** 请根据【历史对话】推断你是什么样的人（粉丝？黑粉？商家？朋友？）。
+          - 如果之前的语气是崇拜的，请继续保持粉丝状态。
+          - 如果是骂人的，请继续攻击。
+          - 如果是谈合作的，请继续商务语气。
+        `;
+    }
+
+    // 2. 格式化历史
+    const historyText = chatHistory.map(m => 
+        `${m.role === 'me' ? 'User' : senderName}: ${m.content}`
+    ).join('\n');
+
+    const systemPrompt = `
+# 核心使命：沉浸式私信续聊 (Infinite DM)
+你正在扮演【${senderName}】，正在和 User (${userName}) 进行一对一私信。
+
+# 1. 你的身份设定
+${personaInstruction}
+
+# 2. 对话历史
+${historyText}
+
+# 3. 最新消息
+User: "${userLatestReply}"
+
+# 4. 回复要求
+- **代入感:** 必须延续之前的语气和话题。
+- **口语化:** 私信是很随意的，可以使用 Emoji、短句。
+- **字数:** 50字以内。
+- **输出:** 直接返回回复内容，不要加引号，不要 JSON。
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Reply to me." }
+    ];
+},
+
+createCPTagPrompt(dossier, viewMode, quantity) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background;
+    const userName = dossier.user.name || 'User';
+    const userPersona = dossier.user.background || '重要的人';
+
+    let focusInstruction = "";
+    
+    if (viewMode === 'character') {
+        // === A. 大众眼中的角色 (Character Impressions) ===
+        focusInstruction = `
+        - **目标对象:** ${charName} (角色)。
+        - **来源:** 大众、粉丝、媒体、路人、死对头。
+        - **关键词风格:** 高级、抽象、评价性。例如：#Muse (缪斯), #Enigma (谜), #Untouchable (高岭之花)。
+        - **Context:** 描述一个具体的传闻或目击场景。
+        `;
+    } else {
+        // === B. 角色眼中的 User (User Impressions) ===
+        // 这是最关键的！体现“双标”和“偏爱”。
+        focusInstruction = `
+        - **目标对象:** ${userName} (User)。
+        - **主要来源:** 必须主要是 **@${charName}** (角色本人) 给出的评价！也可以包含少量系统或命运的注脚。
+        - **关键词风格:** 必须体现 **${charName} 对 User 的特殊情感**。
+          - 如果是死对头：#Trouble (麻烦), #Rival (宿敌)。
+          - 如果是恋人：#My_Exception (例外), #Home (归处), #Addiction (瘾)。
+        - **Context:** 描述角色在看向 User 时的内心独白。
+        `;
+    }
+
+    const systemPrompt = `
+# 核心使命：生成极具张力的“印象标签” (Social Impressions)
+你正在构建一个社交网络的 "TAGGED" 页面。请基于完整人设，生成 **${quantity}** 个深度印象。
+
+# 1. 深度档案
+- **角色 (${charName}):** ${charPersona}
+- **User (${userName}):** ${userPersona}
+
+# 2. 生成指令
+${focusInstruction}
+
+# 3. 输出格式 (JSON Array Only)
+[
+  {
+    "keyword": "关键词 (英文单词，首字母大写，如 'Redemption')",
+    "source": "来源 (如 '@${viewMode === 'user' ? charName : 'Gossip_Girl'}')",
+    "context": "注解 (中文，20字以内的深情/犀利短句，极具画面感)"
+  },
+  ...
+]
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "Generate tags." }
     ];
 },
             
@@ -29688,7 +31525,6 @@ const EmotionalWeather = {
                 isWobbling = !isWobbling;
             }
         
-
 // --- 拖拽逻辑 (支持 PC 和 手机) ---
 function makeDraggable(element) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -29840,19 +31676,31 @@ const DesktopPet = {
         DOM.desktopPetContainer.classList.add('visible');
         this.resetIdleTimer();
         this.observeSystem();
-        
-        // 5. 双击互动 (保持不变)
+
+        // 5. 点击互动 (修改版：支持变脸 + 双击)
         DOM.petAvatar.onclick = (e) => {
             this.clickCount++;
+            
+            // --- 核心新增：单击变脸逻辑 ---
+            const randomFace = Math.floor(Math.random() * 5) + 1; // 1-5 随机
+            DOM.petAvatar.setAttribute('data-face', randomFace);
+            
+            // 添加 Q 弹动画类 (配合 CSS)
+            DOM.petAvatar.classList.remove('pet-anim-squish');
+            void DOM.petAvatar.offsetWidth; // 强制重绘
+            DOM.petAvatar.classList.add('pet-anim-squish');
+
+            // 原有的双击逻辑
             if (this.clickCount === 2) {
                 DOM.petAvatar.classList.add('pet-anim-spin');
                 this.say("晕了晕了💫", 1500);
                 setTimeout(() => DOM.petAvatar.classList.remove('pet-anim-spin'), 1500);
                 this.clickCount = 0;
             }
+            
             setTimeout(() => this.clickCount = 0, 300);
             if(this.clickCount === 1) this.react('touch');
-        };
+        };        
     },
 
     // 监听逻辑 (保持不变)
@@ -32338,33 +34186,65 @@ async function generateNewForumPosts() {
 }
 
 /**
- * 【辅助】更新指定帖子的互动数据（包含评论、转评、点赞、分享）
+ * 【辅助】更新指定帖子的互动数据
  */
 async function updateBlastStats(postId) {
-    const card = document.querySelector(`.blast-card[data-post-id="${postId}"]`);
+    const card = document.querySelector(`.cp-post-card[data-id="${postId}"]`);
     if (!card) return;
 
     const db = await dbHelper.dbPromise;
-    // 获取真实评论数
+    
+    // 1. 获取帖子本体 (读取 likes/shares)
+    const post = await db.get(CONSTANTS.STORE_NAMES.CP_POSTS, postId);
+    
+    // 2. 获取真实评论数
     const allComments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
-    const realCommentCount = allComments.length;
-
-    // 使用相同算法重新计算虚拟数据
-    const seed = postId % 100; 
-    const simulatedLikes = Math.floor(Math.max(realCommentCount, 1) * (1.5 + (seed / 50))) + seed;
-    const simulatedReposts = Math.floor(simulatedLikes * 0.3) + (seed % 8);
-    const simulatedShares = Math.floor(simulatedLikes * 0.2) + (seed % 5) + 1;
-
-    // 更新 DOM
-    const commentCountEl = card.querySelector('.comment-count');
-    const likeCountEl = card.querySelector('.like-count');
-    const repostCountEl = card.querySelector('.repost-count');
-    const shareCountEl = card.querySelector('.share-count'); // <--- 补全了分享
-
-    if (commentCountEl) commentCountEl.textContent = realCommentCount > 0 ? realCommentCount : '';
-    if (likeCountEl) likeCountEl.textContent = simulatedLikes;
-    if (repostCountEl) repostCountEl.textContent = simulatedReposts;
-    if (shareCountEl) shareCountEl.textContent = simulatedShares; // <--- 补全了分享
+    const commentCount = allComments.length;
+    
+    // A. 评论数
+    const commentBtn = card.querySelector('.comment-toggle-btn');
+    // 如果按钮里没有数字 span，就加一个，或者直接改innerHTML
+    // 为了保持图标，我们追加文本节点
+    // 简单粗暴法：重置内容
+    commentBtn.innerHTML = ''; // 清空
+    commentBtn.className = 'ri-chat-3-line cp-action-btn comment-toggle-btn'; // 重置类
+    // 插入文本节点
+    if (commentCount > 0) {
+        // 创建一个 span 包裹数字，方便样式控制
+        const numSpan = document.createElement('span');
+        numSpan.style.fontSize = '12px';
+        numSpan.style.marginLeft = '4px';
+        numSpan.textContent = commentCount;
+        commentBtn.appendChild(numSpan);
+    }
+    
+    // B. 点赞数 (逻辑同上)
+    if (post) {
+        const likeBtn = card.querySelector('.like-btn');
+        const heartClass = post.isLiked ? 'ri-heart-3-fill' : 'ri-heart-3-line';
+        likeBtn.innerHTML = '';
+        likeBtn.className = `${heartClass} cp-action-btn like-btn ${post.isLiked ? 'liked' : ''}`;
+        
+        if (post.likes > 0) {
+             const numSpan = document.createElement('span');
+             numSpan.style.fontSize = '12px';
+             numSpan.style.marginLeft = '4px';
+             numSpan.textContent = post.likes;
+             likeBtn.appendChild(numSpan);
+        }
+        
+        // C. 分享数
+        const shareBtn = card.querySelector('.share-btn');
+        shareBtn.innerHTML = '';
+        shareBtn.className = 'ri-share-forward-line cp-action-btn share-btn';
+        if (post.shares > 0) {
+             const numSpan = document.createElement('span');
+             numSpan.style.fontSize = '12px';
+             numSpan.style.marginLeft = '4px';
+             numSpan.textContent = post.shares;
+             shareBtn.appendChild(numSpan);
+        }
+    }
 }
 
 /**
@@ -40019,9 +41899,7 @@ function showVellumNote(target) {
     note.style.left = `${left}px`;
 }
 
-// ==========================================
-// ===  Couture: 收藏与喜欢 (Collection)  ===
-// ==========================================
+// ===  Couture: 收藏与喜欢 (Collection)  === // 
 
 // 1. 更新阅读器右上角的爱心 UI
 function updateCoutureHeartUI(isFavorite) {
@@ -40127,6 +42005,1621 @@ async function renderCoutureCollection() {
     }
 }
 
+// ===  CP 博主 (CP Blogger) 核心逻辑    === // 
+
+// 1. 渲染角色列表
+async function renderCPCharList() {
+    const container = DOM.cpCharList;
+    container.innerHTML = '';
+
+    // 更新顶部日期
+    const now = new Date();
+    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    DOM.cpDateDay.innerText = String(now.getDate()).padStart(2, '0');
+    DOM.cpDateMonth.innerText = months[now.getMonth()] + ".";
+    DOM.cpDateYear.innerText = now.getFullYear();
+
+    // 更新统计数
+    DOM.cpTotalCount.innerText = String(appState.dossiers.length).padStart(2, '0');
+
+    if (appState.dossiers.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:50px; opacity:0.3;">
+                <i class="ri-heart-crack-line" style="font-size:32px;"></i>
+                <p style="margin-top:10px; font-size:12px;">NO RECORD</p>
+            </div>
+        `;
+        return;
+    }
+
+    for (const dossier of appState.dossiers) {
+        const card = document.createElement('div');
+        card.className = 'cp-card';
+        card.dataset.id = dossier.id;
+
+        // 获取头像
+        let avatarUrl = '';
+        if (dossier.character.avatarAssetId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+            if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+        }
+        const bgStyle = avatarUrl ? `background-image: url('${avatarUrl}')` : `background-color: #222`;
+
+        // 获取关系/状态 (可以根据是否置顶、是否拉黑来显示不同文案)
+        let statusText = "IN LOVE";
+        if (dossier.isBlocked) statusText = "DISCONNECTED";
+        else if (dossier.isPinned) statusText = "DESTINY";
+
+        card.innerHTML = `
+            <div class="cp-card-inner">
+                <div class="cp-avatar-box">
+                    <div class="cp-avatar-ring"></div>
+                    <div class="cp-avatar-img" style="${bgStyle}"></div>
+                </div>
+                <div class="cp-info">
+                    <div class="cp-name">${dossier.character.name}</div>
+                    <div class="cp-relation">${statusText}</div>
+                </div>
+                <i class="ri-arrow-right-line cp-action"></i>
+            </div>
+        `;
+
+        // 【关键逻辑】点击卡片 -> 进入个人主页
+        card.addEventListener('click', () => {
+            // 1. 调用进入详情页函数 (传入角色ID)
+            openCPDetailPage(dossier.id);
+        });
+
+        container.appendChild(card);
+    }
+}
+
+// ==========================================
+// ===   CP Blogger Detail Core Logic     ===
+// ==========================================
+
+let currentCPState = {
+    dossierId: null,
+    viewMode: 'character' // 'character' or 'user'
+};
+
+// 1. 进入详情页
+async function openCPDetailPage(dossierId) {
+    currentCPState.dossierId = dossierId;
+    currentCPState.viewMode = 'character'; // 默认看角色
+    
+    navigateToPage(DOM.cpBlogApp, 'cp-profile-page');
+    renderCPProfile();
+}
+
+// 2. 渲染个人资料 (Profile)
+async function renderCPProfile() {
+    const dossier = appState.dossiers.find(d => d.id === currentCPState.dossierId);
+    if (!dossier) return;
+
+    const isCharMode = currentCPState.viewMode === 'character';
+    
+    // UI 切换
+    const switchOpts = DOM.cpRoleSwitch.querySelectorAll('.switch-opt');
+    switchOpts.forEach(opt => opt.classList.toggle('active', opt.dataset.role === currentCPState.viewMode));
+
+    let name, bio, avatarAssetId, tag;
+    
+    if (isCharMode) {
+        // === 角色模式 ===
+        name = dossier.cpCharName || dossier.character.name;
+        bio = dossier.cpCharBio || "Lover of silence.";
+        tag = dossier.cpCharTag || "Muse";
+        avatarAssetId = dossier.cpCharAvatar || dossier.character.avatarAssetId;
+        
+        DOM.cpHeaderActionBtn.innerHTML = '<i class="ri-mail-lock-line"></i>';
+        DOM.cpHeaderActionBtn.onclick = () => { renderCPDMs('character'); navigateToPage(DOM.cpBlogApp, 'cp-dm-page'); };
+
+        // 【修复】挂载世界书按钮回归
+        DOM.cpProfileActions.innerHTML = `
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="cp-btn-outline" id="btn-edit-char-profile" style="flex:1;">
+                    <i class="ri-edit-line"></i> EDIT
+                </button>
+                <button class="cp-btn-outline" id="btn-mount-book" style="flex:1;">
+                    <i class="ri-book-2-line"></i> MOUNT
+                </button>
+            </div>
+            <button class="cp-btn-outline" id="btn-refresh-feed" style="margin-top:10px;">
+                <i class="ri-refresh-line"></i> REFRESH DYNAMIC
+            </button>
+        `;
+        DOM.cpFabPost.style.display = 'none';
+
+    } else {
+        // === 用户模式 ===
+        name = dossier.cpUserName || (dossier.user.name || 'ME');
+        bio = dossier.cpUserBio || "Living in the moment.";
+        tag = dossier.cpUserTag || "Creator";
+        avatarAssetId = dossier.cpUserAvatar || dossier.user.avatarAssetId;
+
+        DOM.cpHeaderActionBtn.innerHTML = '<i class="ri-mail-send-line"></i>';
+        DOM.cpHeaderActionBtn.onclick = () => { renderCPDMs('user'); navigateToPage(DOM.cpBlogApp, 'cp-dm-page'); };
+
+        DOM.cpProfileActions.innerHTML = `
+            <button class="cp-btn-outline" id="btn-edit-user-profile">
+                <i class="ri-user-settings-line"></i> EDIT MY PROFILE
+            </button>
+        `;
+        DOM.cpFabPost.style.display = 'flex';
+    }
+
+    // 渲染信息
+    DOM.cpProfileName.textContent = name;
+    DOM.cpProfileBio.textContent = bio;
+    DOM.cpProfileTag.querySelector('span').textContent = tag;
+    
+    if (avatarAssetId) {
+        const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, avatarAssetId);
+        if (asset?.file) DOM.cpProfileAvatar.style.backgroundImage = `url('${URL.createObjectURL(asset.file)}')`;
+    } else {
+        DOM.cpProfileAvatar.style.backgroundImage = 'none';
+        DOM.cpProfileAvatar.style.backgroundColor = '#333';
+    }
+ await updateCPHeaderStats();
+
+    renderCPFeed(isCharMode ? false : true, name);
+    
+}
+/**
+ * 1. 生成私信数据 (防重复版)
+ */
+async function generateCPDMs(boxType) {
+    if (appState.isGeneratingDMs) return;
+    appState.isGeneratingDMs = true;
+
+    const dossierId = currentCPState.dossierId;
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    
+    // UI Loading
+    const container = DOM.cpDmList;
+    const triggerBtn = document.getElementById('trigger-dm-gen'); // 首次加载的点击区域
+    const moreBtn = container.querySelector('.cp-dm-load-more');  // 加载更多的按钮
+
+    // 情况 A: 列表为空，第一次生成
+    if (triggerBtn) {
+        triggerBtn.innerHTML = `
+            <i class="ri-loader-4-line spin" style="font-size:32px; margin-bottom:10px; display:block;"></i>
+            <p style="font-family:serif; letter-spacing:1px;">CONNECTING...</p>
+            <p style="font-size:10px; margin-top:5px;">正在建立加密通道...</p>
+        `;
+        triggerBtn.style.pointerEvents = 'none'; // 禁止重复点击
+    } 
+    // 情况 B: 已有列表，加载更多
+    else if (moreBtn) {
+        moreBtn.innerHTML = '<i class="ri-loader-4-line spin"></i> 信号接收中...';
+        moreBtn.style.pointerEvents = 'none';
+    } 
+    // 情况 C: 异常兜底
+    else if (container.children.length === 0) {
+        container.innerHTML = '<div style="padding:40px;text-align:center;opacity:0.5;"><i class="ri-loader-4-line spin"></i> 信号接收中...</div>';
+    }
+
+    try {
+        const db = await dbHelper.dbPromise;
+
+        let worldContext = "";
+        const allBooks = await db.getAll(CONSTANTS.STORE_NAMES.LIBRARY_BOOKS);
+        const linkIds = new Set(dossier.libraryBookIds || []);
+        allBooks.forEach(b => { if(b.isGlobal) linkIds.add(b.id); });
+        for (const bookId of linkIds) {
+            const book = allBooks.find(b => b.id === bookId);
+            if (book) worldContext += `\n【${book.title}】: ${book.content.substring(0, 200)}...`;
+        }
+
+        // 生成
+        const count = Math.floor(Math.random() * 2) + 3;
+        const prompt = promptManager.createCPDMPrompt(dossier, boxType, count, worldContext);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        let jsonStr = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        const msgs = JSON.parse(jsonStr);
+
+        // 入库
+        for (const msg of msgs) {
+            await db.add(CONSTANTS.STORE_NAMES.CP_DMS, {
+                dossierId: dossierId,
+                boxType: boxType,
+                senderName: msg.senderName,
+                content: msg.content,
+                aiReply: msg.aiReply || null,
+                userReply: null,
+                timestamp: Date.now() - Math.floor(Math.random() * 86400000), 
+                isRead: false
+            });
+        }
+        
+        utils.showToast(`收到 ${msgs.length} 条新私信`);
+
+    } catch (e) {
+        console.error("生成失败", e);
+        utils.showToast("接收失败");
+    } finally {
+        appState.isGeneratingDMs = false;
+        
+        // ✅✅✅ 唯一渲染入口：只在这里调用一次 ✅✅✅
+        const role = boxType === 'user_inbox' ? 'user' : 'character';
+        console.log("🔄 生成结束，触发渲染..."); 
+        await renderCPDMs(role);
+    }
+}
+
+/**
+ * 2. 渲染私信列表 (强制清空版)
+ */
+async function renderCPDMs(role) {
+    console.log("🎨 开始渲染私信列表..."); // Debug 日志
+
+    const container = DOM.cpDmList;
+    
+    // 1. 【保险锁】先清空，防止残影
+    // 注意：不要在这里写 Loading，因为生成函数结束时调用这里是希望直接看到结果
+    container.innerHTML = ''; 
+    
+    DOM.cpDmTabs.forEach(t => t.classList.toggle('active', t.dataset.box === role));
+    
+    const dossierId = currentCPState.dossierId;
+    const boxType = role === 'user' ? 'user_inbox' : 'char_inbox';
+    
+    const db = await dbHelper.dbPromise;
+    const allMsgs = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.CP_DMS, 'by_dossierId', dossierId);
+    
+    const msgs = allMsgs
+        .filter(m => m.boxType === boxType)
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+    // 2. 【再次清空】为了防止 await 期间有奇怪的操作，数据准备好后再清空一次
+    container.innerHTML = '';
+
+    if (msgs.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:50px 20px; opacity:0.6; cursor:pointer;" id="trigger-dm-gen">
+                <i class="ri-mail-download-line" style="font-size:32px; margin-bottom:10px; display:block;"></i>
+                <p>暂无消息 · 点击接收</p>
+            </div>`;
+        document.getElementById('trigger-dm-gen').addEventListener('click', () => generateCPDMs(boxType));
+        return;
+    }
+
+    // 3. 渲染循环
+    msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'cp-dm-item';
+        div.dataset.id = m.id;
+        
+        let borderStyle = "";
+        if (role === 'user' && !m.userReply && !m.isRead) borderStyle = "border-left: 3px solid #ff4d4d;";
+        else if (role === 'character' && !m.aiReply) borderStyle = "border-left: 3px solid rgba(255, 77, 77, 0.4);";
+
+        let preview = m.content;
+        let previewStyle = "";
+        if (role === 'character') {
+            if (m.aiReply) { preview = `↩️ 已回复: ${m.aiReply}`; previewStyle = "opacity:0.6; font-style:italic;"; }
+            else { preview = `[已读不回] ${m.content}`; }
+        } else if (m.userReply) {
+            preview = `↩️ 我: ${m.userReply}`; previewStyle = "opacity:0.8;";
+        }
+
+        div.style.cssText = borderStyle;
+        div.innerHTML = `
+            <div class="cp-dm-row-1">
+                <span class="cp-dm-name">${m.senderName}</span>
+                <span class="cp-dm-time">${formatRelativeTime(m.timestamp)}</span>
+            </div>
+            <div class="cp-dm-msg" style="${previewStyle}">${preview}</div>
+            <div class="cp-dm-del-btn"><i class="ri-close-line"></i></div>
+        `;
+        
+        div.addEventListener('click', (e) => {
+            if (e.target.closest('.cp-dm-del-btn')) return;
+            openCPDMDetail(m, role);
+        });
+
+        container.appendChild(div);
+    });
+
+    const loadMoreBtn = document.createElement('div');
+    loadMoreBtn.className = 'cp-dm-load-more';
+    loadMoreBtn.innerHTML = '<i class="ri-download-line"></i> 接收更多信号';
+    loadMoreBtn.addEventListener('click', () => { generateCPDMs(boxType); });
+    
+    container.appendChild(loadMoreBtn);
+    console.log("✅ 渲染完成，当前列表项数量:", container.children.length);
+}
+
+/**
+ * 【新增】删除私信逻辑
+ */
+async function deleteCPDM(id, element) {
+    if (!confirm("确定要删除这条私信吗？")) return;
+    
+    try {
+        await dbHelper.delete(CONSTANTS.STORE_NAMES.CP_DMS, parseInt(id));
+        
+        // 动画移除
+        element.style.opacity = '0';
+        element.style.transform = 'translateX(20px)';
+        setTimeout(() => element.remove(), 300);
+        
+        utils.showToast("已删除");
+    } catch (e) {
+        console.error(e);
+        utils.showToast("删除失败");
+    }
+}
+
+/**
+ * 3. 打开私信详情 (聊天室模式)
+ */
+async function openCPDMDetail(message, role) {
+    const modal = document.getElementById('cp-dm-read-modal');
+    const titleEl = document.getElementById('cp-dm-read-title');
+    const contentEl = document.getElementById('cp-dm-read-content'); // 这个容器现在用来放聊天列表
+    const metaEl = document.getElementById('cp-dm-read-meta');
+    const replyArea = document.getElementById('cp-dm-reply-area');
+    const replyInput = document.getElementById('cp-dm-reply-input');
+    const sendBtn = document.getElementById('cp-dm-send-btn'); // 获取按钮引用
+
+    // 1. 初始化/迁移数据结构
+    if (!message.history) {
+        message.history = [];
+        // 把原始的第一条消息加入历史
+        message.history.push({
+            role: 'sender', // 对方
+            content: message.content,
+            timestamp: message.timestamp
+        });
+        // 如果之前已经有回复了，也加进去
+        if (message.userReply) {
+            message.history.push({
+                role: 'me',
+                content: message.userReply,
+                timestamp: message.replyTimestamp || Date.now()
+            });
+        }
+        if (role === 'character' && message.aiReply) {
+            // 如果是角色收件箱，AI 的回复也是历史
+             message.history.push({
+                role: 'me', 
+                role: 'me', 
+                content: message.aiReply,
+                timestamp: message.timestamp + 1000
+            });
+        }
+    }
+
+    // 2. 绑定当前操作的消息对象到 DOM，方便发送函数读取
+    
+    appState.currentDMMessage = message; 
+    appState.currentDMRole = role; // 'user' 或 'character'
+
+    // 3. 渲染 UI
+    titleEl.textContent = message.senderName;
+    metaEl.textContent = ""; // 聊天模式下隐藏顶部时间，时间显示在气泡旁(可选)或者省略
+
+    // 构建聊天列表 HTML
+    let chatHtml = `<div class="cp-dm-chat-box" id="cp-dm-chat-box">`;
+    
+    message.history.forEach(msg => {
+        const isMe = msg.role === 'me';
+        chatHtml += `
+            <div class="cp-dm-bubble-row ${isMe ? 'right' : 'left'}">
+                <div class="cp-dm-bubble">${msg.content}</div>
+            </div>
+        `;
+    });
+    chatHtml += `</div>`;
+
+    contentEl.innerHTML = chatHtml;
+    
+    // 自动滚动到底部
+    setTimeout(() => {
+        const box = document.getElementById('cp-dm-chat-box');
+        if(box) box.scrollTop = box.scrollHeight;
+    }, 50);
+
+    // 4. 控制回复框
+    // 只有在 User 的信箱里，User 才能回复
+    if (role === 'user') {
+        replyArea.style.display = 'block';
+        replyInput.value = '';
+        replyInput.focus();
+        
+        // 解绑旧事件，绑定新事件 (防止重复发送)
+        // 使用 cloneNode 清除所有监听器
+        const newSendBtn = sendBtn.cloneNode(true);
+        sendBtn.parentNode.replaceChild(newSendBtn, sendBtn);
+        
+        newSendBtn.addEventListener('click', handleDMSend);
+        
+        // 绑定回车
+        replyInput.onkeydown = (e) => {
+            if (e.key === 'Enter') handleDMSend();
+        };
+
+    } else {
+        // 在角色信箱里，只能看，不能回 (或者你可以做成替角色回，目前先隐藏)
+        replyArea.style.display = 'none';
+    }
+
+    modal.classList.add('visible');
+}
+
+/**
+ * 4. 处理私信发送与 AI 回复
+ */
+async function handleDMSend() {
+    const input = document.getElementById('cp-dm-reply-input');
+    const val = input.value.trim();
+    if (!val) return;
+    
+    const message = appState.currentDMMessage;
+    const dossierId = currentCPState.dossierId;
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+
+    // --- A. 用户消息上屏 ---
+    message.history.push({
+        role: 'me',
+        content: val,
+        timestamp: Date.now()
+    });
+    
+    // 刷新界面
+    updateDMChatUI(message);
+    input.value = '';
+
+    // 更新数据库 (保存用户回复)
+    // 更新预览字段 (用于列表显示最后一条)
+    message.userReply = val; // 更新最新回复用于列表预览
+    message.isRead = true;
+    
+    const db = await dbHelper.dbPromise;
+    await db.put(CONSTANTS.STORE_NAMES.CP_DMS, message);
+
+    // --- B. 触发 AI 回复 (模拟对方秒回) ---
+    // 显示对方正在输入...
+    const chatBox = document.getElementById('cp-dm-chat-box');
+    const typingIndicator = document.createElement('div');
+    typingIndicator.className = 'cp-dm-bubble-row left';
+    typingIndicator.innerHTML = `<div class="cp-dm-bubble" style="opacity:0.6; font-size:12px;">正在输入...</div>`;
+    chatBox.appendChild(typingIndicator);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        const prompt = promptManager.createDMContinuedPrompt(dossier, message.senderName, message.history, val);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        // 移除输入提示
+        typingIndicator.remove();
+
+        // AI 消息上屏
+        message.history.push({
+            role: 'sender',
+            content: aiResponse,
+            timestamp: Date.now()
+        });
+
+        // 更新数据库 (保存 AI 回复)
+        message.content = aiResponse; // 更新列表预览为最新这条
+        await db.put(CONSTANTS.STORE_NAMES.CP_DMS, message);
+
+        // 刷新界面
+        updateDMChatUI(message);
+
+    } catch (e) {
+        console.error("AI私信回复失败", e);
+        typingIndicator.remove();
+        utils.showToast("对方掉线了...");
+    }
+}
+
+// 辅助：局部刷新聊天气泡，不重绘整个浮窗
+function updateDMChatUI(message) {
+    const box = document.getElementById('cp-dm-chat-box');
+    if (!box) return;
+    
+    // 重新生成 HTML (简单粗暴但有效，保证顺序正确)
+    let html = '';
+    message.history.forEach(msg => {
+        const isMe = msg.role === 'me';
+        html += `
+            <div class="cp-dm-bubble-row ${isMe ? 'right' : 'left'}">
+                <div class="cp-dm-bubble">${msg.content}</div>
+            </div>
+        `;
+    });
+    box.innerHTML = html;
+    box.scrollTop = box.scrollHeight;
+    
+    // 同时刷新列表页的预览 (如果在底下)
+    renderCPDMs('user');
+}
+
+/**
+ * 【优化版】渲染帖子流 (直接读取数据，不依赖 DOM)
+ * @param {boolean} isUserView - true=看自己, false=看角色
+ * @param {string} authorDisplayName - 显示的名字
+ */
+async function renderCPFeed(isUserView, authorDisplayName) {
+    const container = DOM.cpFeedContainer;
+    container.innerHTML = '<div style="padding:40px; text-align:center; opacity:0.5;">Loading feeds...</div>';
+    
+    const dossierId = currentCPState.dossierId;
+    if (!dossierId) return;
+
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+
+    try {
+        const db = await dbHelper.dbPromise;
+        const allPosts = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.CP_POSTS, 'by_dossierId', dossierId);
+        
+        const targetType = isUserView ? 'user' : 'character';
+        const posts = allPosts.filter(p => p.authorType === targetType);
+        posts.sort((a, b) => b.timestamp - a.timestamp);
+
+        container.innerHTML = '';
+        
+        if (posts.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; opacity:0.4;">
+                    <i class="ri-camera-off-line" style="font-size:32px; margin-bottom:10px; display:block;"></i>
+                    <p style="font-family:serif; font-style:italic;">No stories yet.</p>
+                </div>`;
+            return;
+        }
+
+        // --- 核心优化：提前准备好头像 URL ---
+        let currentAvatarUrl = '';
+        let targetAvatarId = null;
+
+        if (isUserView) {
+            // 如果是用户页，优先取 CP 头像，没有则取全局头像
+            targetAvatarId = dossier.cpUserAvatar || dossier.user.avatarAssetId;
+        } else {
+            // 如果是角色页，优先取 CP 头像，没有则取角色头像
+            targetAvatarId = dossier.cpCharAvatar || dossier.character.avatarAssetId;
+        }
+
+        // 异步加载头像资源
+        if (targetAvatarId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, targetAvatarId);
+            if (asset?.file) {
+                currentAvatarUrl = URL.createObjectURL(asset.file);
+            }
+        }
+        // 如果都没图，给个默认底色
+        const avatarStyle = currentAvatarUrl ? `background-image: url('${currentAvatarUrl}');` : `background-color: #333;`;
+
+        // --- 遍历渲染 ---
+       for (const post of posts) {
+            const card = document.createElement('div');
+            card.className = 'cp-post-card';
+            card.dataset.id = post.id;
+
+            // --- 1. 准备变量 ---
+            let imageHTML = '';
+            let widgetHTML = ''; // 用于暂存 HTML 组件
+            let displayContent = post.content || ''; // 获取原始文本
+
+            // --- 2. 【第一步】提取并保护 HTML 组件 ---
+            const widgetRegex = /(<div class="cp-post-widget-wrapper">[\s\S]*?<\/div>)$/;
+            const widgetMatch = displayContent.match(widgetRegex);
+            
+            if (widgetMatch) {
+                widgetHTML = widgetMatch[1]; // 把 HTML 代码存起来，不参与正则替换
+                displayContent = displayContent.replace(widgetRegex, '').trim(); // 从文本中移除
+            }
+
+            // --- 3. 【第二步】提取 AI 配图 ---
+            const imgRegex = /\[IMG_DESC:(.*?)\]\[IMG_URL:(.*?)\]/s;
+            const imgMatch = displayContent.match(imgRegex);
+
+            if (imgMatch) {
+                // 命中 AI 生成的图片
+                const imageUrl = imgMatch[2];
+                imageHTML = `<img src="${imageUrl}" class="cp-post-img">`;
+                // 从文本中移除标签
+                displayContent = displayContent.replace(imgMatch[0], '').trim();
+            } 
+            // --- 4. 【第三步】处理用户上传的图片 (你提到的漏掉的那段) ---
+            else if (post.imageAssetId) {
+                const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, post.imageAssetId);
+                if (asset?.file) {
+                    const imgUrl = URL.createObjectURL(asset.file);
+                    imageHTML = `<img src="${imgUrl}" class="cp-post-img">`;
+                }
+            }
+
+            // --- 5. 【第四步】安全地进行文本高亮 ---
+            // 高亮 @User (匹配 @ 后面的非空白字符)
+            displayContent = displayContent.replace(/@([^\s，。！？.!?]+)/g, '<span class="cp-text-mention">@$1</span>');
+            
+            // 高亮 #Tag (匹配 # 后面的非空白字符)
+            displayContent = displayContent.replace(/#([^\s，。！？.!?]+)/g, '<span class="cp-text-tag">#$1</span>');
+
+            // --- 6. 准备头部信息 ---
+            let currentAvatarUrl = '';
+            let targetAvatarId = null;
+
+            if (isUserView) {
+                targetAvatarId = dossier.cpUserAvatar || dossier.user.avatarAssetId;
+            } else {
+                targetAvatarId = dossier.cpCharAvatar || dossier.character.avatarAssetId;
+            }
+
+            if (targetAvatarId) {
+                const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, targetAvatarId);
+                if (asset?.file) {
+                    currentAvatarUrl = URL.createObjectURL(asset.file);
+                }
+            }
+            const avatarStyle = currentAvatarUrl ? `background-image: url('${currentAvatarUrl}');` : `background-color: #333;`;
+            const timeStr = formatRelativeTime(post.timestamp);
+
+            // --- 7. 最终组装 HTML ---
+            card.innerHTML = `
+                <div class="cp-post-header">
+                    <div class="cp-post-avatar" style="${avatarStyle} background-size: cover; background-position: center;"></div>
+                    <div class="cp-post-user">${authorDisplayName}</div>
+                    <div class="cp-post-time">${timeStr}</div>
+                </div>
+                
+                ${imageHTML}
+                
+                <div class="cp-post-content">
+                    ${displayContent}
+                    ${widgetHTML} <!-- 在这里把原封不动的 HTML 组件拼回去 -->
+                </div>
+                
+                <div class="cp-post-actions">
+                    <i class="ri-heart-3-line cp-action-btn like-btn ${post.isLiked ? 'liked ri-heart-3-fill' : ''}"></i>
+                    <i class="ri-chat-3-line cp-action-btn comment-toggle-btn"></i>
+                    <i class="ri-delete-bin-line cp-action-btn delete-post-btn" style="margin-left:auto; margin-right: 15px; font-size: 20px; opacity: 0.6;"></i>
+                    <i class="ri-share-forward-line cp-action-btn share-btn"></i>
+                </div>
+                
+                <div class="cp-comments-section" style="display:none;">
+                    <div class="cp-existing-comments"></div>
+                    <div class="cp-comment-input-wrapper">
+                        <input type="text" placeholder="Add a comment..." class="cp-comment-input">
+                        <button class="cp-post-btn">Post</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+updateBlastStats(post.id);
+        }
+
+    } catch (e) {
+        console.error("加载帖子失败", e);
+        container.innerHTML = '<div style="text-align:center; color:#b91c1c;">Error loading feed.</div>';
+    }
+}
+
+// ===  CP 博主：核心业务逻辑函数        === // 
+
+/**
+ * 1. 打开编辑资料浮窗 (数据回显)
+ * 根据 currentCPState.viewMode 判断是编辑自己还是编辑角色
+ */
+async function openCPEditModal() {
+    const dossierId = currentCPState.dossierId;
+    const mode = currentCPState.viewMode; // 'user' 或 'character'
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    
+    if (!dossier) return;
+
+    // A. 准备回显数据
+    // 逻辑：优先读取 CP 专属字段，如果没有，回退到档案原始字段
+    let currentName, currentTag, currentBio, currentAvatarId;
+
+    if (mode === 'user') {
+        // --- 编辑 User ---
+        currentName = dossier.cpUserName || dossier.user.name || '';
+        currentTag = dossier.cpUserTag || 'Creator';
+        currentBio = dossier.cpUserBio || dossier.user.background || '';
+        currentAvatarId = dossier.cpUserAvatar || dossier.user.avatarAssetId;
+        
+        DOM.cpEditModal.querySelector('h3').textContent = "EDIT MY PROFILE";
+    } else {
+        // --- 编辑 Character ---
+        currentName = dossier.cpCharName || dossier.character.name;
+        currentTag = dossier.cpCharTag || 'Muse';
+        currentBio = dossier.cpCharBio || dossier.character.background || '';
+        currentAvatarId = dossier.cpCharAvatar || dossier.character.avatarAssetId;
+        
+        DOM.cpEditModal.querySelector('h3').textContent = "EDIT CHARACTER";
+    }
+
+    // B. 填充表单
+    document.getElementById('edit-cp-name').value = currentName;
+    document.getElementById('edit-cp-tag').value = currentTag;
+    document.getElementById('edit-cp-bio').value = currentBio;
+
+    // C. 填充头像预览
+    const previewEl = document.getElementById('edit-cp-avatar-preview');
+    // 先重置
+    previewEl.style.backgroundImage = 'none';
+    previewEl.innerHTML = '<i class="ri-camera-line" style="font-size:24px; color:#fff; line-height:100px;"></i>';
+    delete previewEl.dataset.tempAssetId; // 清除之前的临时ID
+
+    if (currentAvatarId) {
+        try {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, currentAvatarId);
+            if (asset?.file) {
+                previewEl.style.backgroundImage = `url('${URL.createObjectURL(asset.file)}')`;
+                previewEl.innerHTML = ''; // 有图就清空图标
+            }
+        } catch (e) {
+            console.error("加载头像失败", e);
+        }
+    }
+
+    // D. 显示浮窗
+    DOM.cpEditModal.classList.add('visible');
+}
+
+/**
+ * 2. 处理头像上传 (临时预览 + 暂存ID)
+ */
+async function handleCPAvatarUpload(file) {
+    try {
+        utils.showToast("处理图片中...");
+        // 压缩
+        const compressedFile = await compressImageForDisplay(file);
+        // 存入 ASSETS 表
+        const assetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: compressedFile });
+        
+        // 预览
+        const url = URL.createObjectURL(compressedFile);
+        const previewEl = document.getElementById('edit-cp-avatar-preview');
+        previewEl.style.backgroundImage = `url('${url}')`;
+        previewEl.innerHTML = '';
+        
+        // 【关键】将新的 AssetID 暂存在 DOM 元素上，等点击 Save 时再写入档案
+        previewEl.dataset.tempAssetId = assetId;
+        
+    } catch (e) {
+        console.error(e);
+        utils.showToast("图片上传失败");
+    }
+}
+
+/**
+ * 3. 保存资料 (写入数据库)
+ */
+async function handleSaveCPProfile() {
+    const dossierId = currentCPState.dossierId;
+    const mode = currentCPState.viewMode;
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    
+    if (!dossier) return;
+
+    // A. 获取表单数据
+    const newName = document.getElementById('edit-cp-name').value.trim();
+    const newTag = document.getElementById('edit-cp-tag').value.trim();
+    const newBio = document.getElementById('edit-cp-bio').value.trim();
+    
+    // B. 获取暂存的头像 ID
+    // 如果 dataset 里有值，说明用户刚才上传了新图；如果没有，说明没改头像，保持原样
+    const tempId = document.getElementById('edit-cp-avatar-preview').dataset.tempAssetId;
+    const newAvatarId = tempId ? parseInt(tempId) : null;
+
+    if (!newName) return utils.showToast("名字不能为空");
+
+    // C. 更新对象 (区分 User 和 Character 字段)
+    if (mode === 'user') {
+        dossier.cpUserName = newName;
+        dossier.cpUserTag = newTag;
+        dossier.cpUserBio = newBio;
+        if (newAvatarId) dossier.cpUserAvatar = newAvatarId;
+    } else {
+        dossier.cpCharName = newName;
+        dossier.cpCharTag = newTag;
+        dossier.cpCharBio = newBio;
+        if (newAvatarId) dossier.cpCharAvatar = newAvatarId;
+    }
+
+    // D. 写入数据库
+    await dbHelper.set(CONSTANTS.STORE_NAMES.DOSSIERS, dossier);
+
+    // E. 刷新 UI
+    utils.showToast("资料已更新");
+    DOM.cpEditModal.classList.remove('visible');
+    
+    // 立即重绘主页
+    renderCPProfile(); 
+}
+
+/**
+ * 【重写版】发布帖子 (User Only) - 写入数据库
+ */
+async function handlePublishCPPost() {
+    const caption = DOM.cpPostCaption.value.trim();
+    const fileInput = DOM.cpPostImgInput;
+    const file = fileInput.files[0];
+    
+    // 1. 基础校验
+    if (!caption && !file) return utils.showToast("写点什么或发张图吧...");
+    
+    const dossierId = currentCPState.dossierId;
+    if (!dossierId) return utils.showToast("状态异常：找不到当前角色");
+
+    // UI 反馈
+    const btn = document.getElementById('publish-cp-post-btn');
+    const originalText = btn.innerText;
+    btn.innerText = "POSTING...";
+    btn.disabled = true;
+
+    try {
+        // 2. 处理图片 (如果有)
+        let assetId = null;
+        if (file) {
+            // 使用 AI 压缩标准 (兼顾清晰度和体积)
+            const compressedFile = await compressImageForAI(file);
+            assetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: compressedFile });
+        }
+
+        // 3. 构建数据对象
+        const newPost = {
+            dossierId: dossierId,
+            authorType: 'user',
+            content: caption,
+            imageAssetId: assetId,
+            timestamp: Date.now(),
+            
+            // ✅ 【新增】初始随机数据
+            likes: Math.floor(Math.random() * 50), // 0-50个初始赞
+            shares: Math.floor(Math.random() * 10), // 0-10个初始分享
+            isLiked: false
+        };
+
+        // 4. 存入 CP_POSTS 表
+        await dbHelper.add(CONSTANTS.STORE_NAMES.CP_POSTS, newPost);
+        
+        utils.showToast("发布成功！");
+        
+        // 5. 重置 UI
+        DOM.cpPostModal.classList.remove('visible');
+        DOM.cpPostCaption.value = '';
+        fileInput.value = ''; // 清空文件输入
+        DOM.cpPostImgArea.style.backgroundImage = 'none';
+        DOM.cpPostImgArea.innerHTML = '<i class="ri-image-add-line"></i><span>Add Photo</span>';
+        
+        // 6. 刷新列表 (显示刚才发的贴)
+        // 只有当前在 User 视图下才刷新，避免跳戏
+        if (currentCPState.viewMode === 'user') {
+            await renderCPFeed(true, 'ME');
+
+await updateCPHeaderStats();
+        }
+
+    } catch (error) {
+        console.error("发布帖子失败:", error);
+        utils.showToast("发布失败");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+/**
+ * 【修复版】刷新 CP 博主页面的统计数据 (帖子 + 粉丝 + 恋人)
+ */
+async function updateCPHeaderStats() {
+    const dossierId = currentCPState.dossierId;
+    const mode = currentCPState.viewMode; // 'user' or 'character'
+    
+    if (!dossierId) return;
+
+    // 获取档案信息（为了算粉丝数需要名字）
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    if (!dossier) return;
+
+    // --- 1. 计算帖子数 (数据库真实数据) ---
+    const db = await dbHelper.dbPromise;
+    const allPosts = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.CP_POSTS, 'by_dossierId', dossierId);
+    
+    // 筛选当前视图下的帖子
+    const targetType = (mode === 'character') ? 'character' : 'user';
+    const postCount = allPosts.filter(p => p.authorType === targetType).length;
+    
+    // --- 2. 计算伪粉丝数 (基于名字的哈希算法，保证同一角色数字固定) ---
+    let nameForHash = "";
+    if (mode === 'character') {
+        nameForHash = dossier.cpCharName || dossier.character.name;
+    } else {
+        nameForHash = dossier.cpUserName || dossier.user.name || "User";
+    }
+
+    let hash = 0;
+    for (let i = 0; i < nameForHash.length; i++) {
+        hash = nameForHash.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // 算法：取绝对值 -> 映射到 1000 ~ 50000 之间
+    let fakeFans = (Math.abs(hash) % 49000) + 1000; 
+    
+    // 格式化显示：超过 10000 显示为 10.xk
+    let fansDisplay = fakeFans.toLocaleString();
+    if (fakeFans > 10000) {
+        fansDisplay = (fakeFans / 1000).toFixed(1) + 'k';
+    }
+
+    // --- 3. 更新 UI ---
+    
+    // 更新帖子数
+    const postCountEl = document.getElementById('cp-stat-posts');
+    if (postCountEl) postCountEl.textContent = postCount;
+
+    // 更新粉丝数
+    const fansCountEl = document.getElementById('cp-stat-fans');
+    if (fansCountEl) fansCountEl.textContent = fansDisplay;
+
+    // 更新恋人数 (永远是 1，代表唯一)
+    const loverCountEl = document.getElementById('cp-stat-lover');
+    if (loverCountEl) loverCountEl.textContent = "1";
+}
+
+// File 3: 核心函数区域
+
+/**
+ * 【重写版】角色批量发帖逻辑 (自由HTML + 时间修正)
+ */
+async function generateCharacterCPFeed(min, max) {
+    const dossierId = currentCPState.dossierId;
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    if (!dossier) return;
+
+    // 1. 确定数量 & 配额
+    const quantity = Math.floor(Math.random() * (max - min + 1)) + min;
+    let htmlQuota = 0;
+    if (quantity === 5) htmlQuota = 1;
+    else if (quantity > 5) htmlQuota = Math.floor(Math.random() * 2) + 2;
+
+    utils.showToast(`正在构思 ${quantity} 条动态...`);
+
+    // 2. 解析世界书 (逻辑保持不变)
+    let worldContext = "基础背景：现代都市，社交网络发达。"; 
+    const photoMap = new Map();
+    const allBooks = await dbHelper.getAll(CONSTANTS.STORE_NAMES.LIBRARY_BOOKS);
+    const linkIds = new Set(dossier.libraryBookIds || []);
+    allBooks.forEach(b => { if(b.isGlobal) linkIds.add(b.id); });
+
+    for (const bookId of linkIds) {
+        const book = allBooks.find(b => b.id === bookId);
+        if (!book) continue;
+        if (book.category === 'worldview') {
+            worldContext += `\n\n【设定：${book.title}】\n${book.content}`;
+        } else if (book.category === 'photo_album') {
+            const photos = utils.parseStickerText(book.content);
+            photos.forEach((url, key) => photoMap.set(key, url));
+        }
+    }
+    const photoKeys = Array.from(photoMap.keys());
+
+    try {
+        // 3. 调用 AI
+        const prompt = promptManager.createCPBatchPostPrompt(dossier, quantity, htmlQuota, worldContext, photoKeys);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+
+        // 4. 解析 JSON
+        let jsonStr = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        const postsData = JSON.parse(jsonStr);
+
+        // 5. 入库 (时间戳修正)
+        
+        let baseTime = Date.now(); 
+
+        for (let i = 0; i < postsData.length; i++) {
+            const p = postsData[i];
+            let content = p.content;
+
+            // A. 处理图片 (仅取一个)
+            if (p.image_keyword && photoMap.has(p.image_keyword)) {
+                const url = photoMap.get(p.image_keyword);
+                content += ` [IMG_DESC:${p.image_keyword}][IMG_URL:${url}]`;
+            }
+
+            // B. 处理自由 HTML (直接追加到 content)
+            if (p.custom_html) {
+                // 给 AI 生成的 HTML 加一个容器 wrapper，方便 CSS 控制间距
+                content += `<div class="cp-post-widget-wrapper">${p.custom_html}</div>`;
+            }
+
+            const postTimestamp = baseTime - (i * 60 * 1000); 
+
+            const newPost = {
+                dossierId: dossier.id,
+                authorType: 'character',
+                content: content,
+                imageAssetId: null,
+                timestamp: postTimestamp,
+                
+                // ✅ 【确认】已有 likes，补上 shares
+                likes: Math.floor(Math.random() * 500),
+                shares: Math.floor(Math.random() * 50), // 新增分享数
+                isLiked: false
+            };
+
+            await dbHelper.add(CONSTANTS.STORE_NAMES.CP_POSTS, newPost);
+        }
+        
+        utils.showToast(`已刷新 ${postsData.length} 条动态`);
+        
+        // 6. 刷新
+        await updateCPHeaderStats();
+        renderCPFeed(false, dossier.character.name);
+
+    } catch (e) {
+        console.error("生成动态失败", e);
+        utils.showToast("灵感枯竭了 (生成失败)");
+    }
+}
+
+// 刷新动态 (Character Only) - 数量选择版
+function handleCharacterRefresh(btnElement) {
+    // 1. 创建一个临时的模态框来选数量 (复用样式)
+    const options = [
+        { label: "少量 (5条)", min: 5, max: 5 },
+        { label: "适中 (5-10条)", min: 5, max: 10 },
+        { label: "刷屏 (10-15条)", min: 10, max: 15 }
+    ];
+
+    // 创建一个简单的 Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay visible';
+    overlay.style.zIndex = '1000';
+    
+    const card = document.createElement('div');
+    card.className = 'cp-modal-card';
+    card.innerHTML = `
+        <div class="cp-modal-header">
+            <h3>QUANTITY</h3>
+            <i class="ri-close-line close-opt-btn"></i>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            ${options.map((opt, idx) => `
+                <button class="cp-btn-outline opt-btn" data-idx="${idx}" style="text-align:center;">
+                    ${opt.label}
+                </button>
+            `).join('')}
+        </div>
+    `;
+    
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    // 绑定事件
+    const close = () => overlay.remove();
+    card.querySelector('.close-opt-btn').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if(e.target===overlay) close(); });
+
+    card.querySelectorAll('.opt-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = e.target.dataset.idx;
+            const { min, max } = options[idx];
+            
+            // 关闭选择框
+            close();
+            
+            // 改变原按钮状态
+            btnElement.innerHTML = '<i class="ri-loader-4-line spin"></i> GENERATING';
+            btnElement.disabled = true;
+
+            // 执行生成
+            generateCharacterCPFeed(min, max).then(() => {
+                btnElement.innerHTML = '<i class="ri-refresh-line"></i> REFRESH DYNAMIC';
+                btnElement.disabled = false;
+            });
+        });
+    });
+}
+
+/**
+ * 1. 生成印象标签 (修复版：带 Loading 动画)
+ */
+async function generateCPTags() {
+    // 防抖
+    if (appState.isGeneratingTags) return;
+    appState.isGeneratingTags = true;
+
+    const dossierId = currentCPState.dossierId;
+    const viewMode = currentCPState.viewMode; // 'user' or 'character'
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    
+    // === ✅ UI Feedback: 立即显示加载状态 ===
+    const container = DOM.cpTaggedList;
+    const triggerBtn = document.getElementById('trigger-tag-gen');
+    const moreBtn = container.querySelector('.cp-tag-load-more');
+
+    // 情况 A: 列表为空，这是第一次生成
+    if (triggerBtn) {
+        triggerBtn.innerHTML = `
+            <i class="ri-loader-4-line spin" style="font-size:32px; margin-bottom:15px; display:block;"></i>
+            <p style="font-family:serif; letter-spacing:1px;">ANALYZING...</p>
+            <p style="font-size:10px; margin-top:5px;">正在深度侧写...</p>
+        `;
+        triggerBtn.style.pointerEvents = 'none'; // 禁止重复点击
+    } 
+    // 情况 B: 已有列表，这是加载更多
+    else if (moreBtn) {
+        moreBtn.innerHTML = '<i class="ri-loader-4-line spin"></i> GENERATING...';
+        moreBtn.style.pointerEvents = 'none';
+    }
+
+    try {
+        // 生成 3-5 个标签
+        const count = Math.floor(Math.random() * 3) + 3;
+        const prompt = promptManager.createCPTagPrompt(dossier, viewMode, count);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        // 解析
+        let jsonStr = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        const tags = JSON.parse(jsonStr);
+
+        const db = await dbHelper.dbPromise;
+
+        // 入库
+        for (const tag of tags) {
+            await db.add(CONSTANTS.STORE_NAMES.CP_TAGS, {
+                dossierId: dossierId,
+                target: viewMode, // 标记是给谁打的标签
+                keyword: tag.keyword,
+                source: tag.source,
+                context: tag.context,
+                timestamp: Date.now()
+            });
+        }
+        
+        utils.showToast(`新增 ${tags.length} 个印象`);
+
+    } catch (e) {
+        console.error("标签生成失败", e);
+        utils.showToast("生成失败，请重试");
+    } finally {
+        appState.isGeneratingTags = false;
+        // 全量重绘
+        renderCPTagged();
+    }
+}
+
+/**
+ * 2. 渲染 TAGGED 列表 (读库版)
+ */
+async function renderCPTagged() {
+    const container = DOM.cpTaggedList;
+    container.innerHTML = '';
+
+    const dossierId = currentCPState.dossierId;
+    const viewMode = currentCPState.viewMode; // 'user' or 'character'
+
+    // 1. 读库
+    const db = await dbHelper.dbPromise;
+    const allTags = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.CP_TAGS, 'by_dossierId', dossierId);
+    
+    // 2. 筛选 (只看当前对象的标签) + 排序 (新生成的在最上面)
+    const tags = allTags
+        .filter(t => t.target === viewMode)
+        .sort((a, b) => b.timestamp - a.timestamp);
+
+    // 3. 空状态 -> 显示生成按钮
+    if (tags.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; opacity:0.6; cursor:pointer;" id="trigger-tag-gen">
+                <i class="ri-price-tag-3-line" style="font-size:32px; margin-bottom:15px; display:block;"></i>
+                <p style="font-family:serif; letter-spacing:1px;">NO IMPRESSIONS YET</p>
+                <p style="font-size:10px; margin-top:5px;">点击生成印象侧写</p>
+            </div>`;
+        
+        document.getElementById('trigger-tag-gen').addEventListener('click', generateCPTags);
+        return;
+    }
+
+    // 4. 渲染列表
+    tags.forEach((tag) => {
+        const item = document.createElement('div');
+        item.className = 'cp-tag-item';
+        item.dataset.id = tag.id;
+        // 存入数据供详情弹窗使用
+        item.dataset.tagData = JSON.stringify(tag); 
+        // 装饰性背景数字 (取ID后两位)
+        item.setAttribute('data-index', (tag.id % 100).toString().padStart(2, '0'));
+
+        item.innerHTML = `
+            <div class="cp-tag-keyword">${tag.keyword}</div>
+            <div class="cp-tag-meta">
+                <span class="cp-tag-source">TAGGED BY ${tag.source}</span>
+                <span class="cp-tag-context">${tag.context}</span>
+            </div>
+            <!-- 删除按钮 -->
+            <i class="ri-close-line cp-tag-del-btn" title="删除"></i>
+        `;
+        
+        container.appendChild(item);
+    });
+
+    // 5. 底部追加“加载更多”
+    const loadBtn = document.createElement('div');
+    loadBtn.className = 'cp-tag-load-more';
+    loadBtn.innerHTML = '<i class="ri-add-line"></i> GENERATE MORE';
+    loadBtn.addEventListener('click', generateCPTags);
+    
+    container.appendChild(loadBtn);
+}
+
+/**
+ * 3. 删除标签
+ */
+async function deleteCPTag(id, element) {
+    if (!confirm("Remove this tag?")) return;
+    
+    try {
+        await dbHelper.delete(CONSTANTS.STORE_NAMES.CP_TAGS, parseInt(id));
+        
+        element.style.opacity = '0';
+        element.style.transform = 'translateX(20px)';
+        setTimeout(() => element.remove(), 300);
+        
+        utils.showToast("Tag removed");
+    } catch (e) {
+        console.error(e);
+        utils.showToast("删除失败");
+    }
+}
+
+/**
+ * 【修复版】打开印象详情浮窗
+ */
+function openTagDetailModal(tagData) {
+    // 填充数据
+    document.getElementById('modal-tag-keyword').textContent = tagData.keyword;
+    document.getElementById('modal-tag-source').textContent = `TAGGED BY ${tagData.source}`;
+    
+    document.getElementById('modal-tag-desc').textContent = tagData.context || tagData.desc || "暂无详情";
+    
+    document.getElementById('modal-tag-id').textContent = `NO.${tagData.id}`;
+    
+    // 显示
+    DOM.cpTagDetailModal.classList.add('visible');
+}
+
+/**
+ * 1. 处理点赞切换 (实时 +1 / -1)
+ */
+async function handleCPLikeToggle(card, postId) {
+    const likeBtn = card.querySelector('.like-btn');
+    const db = await dbHelper.dbPromise;
+    
+    // 获取当前帖子对象
+    const post = await db.get(CONSTANTS.STORE_NAMES.CP_POSTS, postId);
+    if (!post) return;
+
+    // 切换状态
+    post.isLiked = !post.isLiked;
+    
+    // 更新数字 (视觉欺骗：基于当前数字加减，而不是重新算)
+    // 注意：帖子对象里存一个基础 likes，我们只是 UI 上 +1
+    if (post.isLiked) {
+        post.likes += 1;
+        likeBtn.classList.replace('ri-heart-3-line', 'ri-heart-3-fill');
+        likeBtn.classList.add('liked');
+        utils.showToast("Liked");
+    } else {
+        post.likes = Math.max(0, post.likes - 1); // 防止负数
+        likeBtn.classList.replace('ri-heart-3-fill', 'ri-heart-3-line');
+        likeBtn.classList.remove('liked');
+    }
+
+    // 存回数据库
+    await db.put(CONSTANTS.STORE_NAMES.CP_POSTS, post);
+    
+}
+
+/**
+ * 2. 展开/加载评论区 (核心入口)
+ */
+async function toggleCPComments(card, postId) {
+    const section = card.querySelector('.cp-comments-section');
+    const container = section.querySelector('.cp-existing-comments');
+    
+    // A. 切换显示状态
+    if (section.style.display === 'block') {
+        section.style.display = 'none';
+        return; // 收起就结束
+    }
+    section.style.display = 'block';
+
+    // B. 检查是否已有数据
+    const db = await dbHelper.dbPromise;
+    const existingComments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.CP_TAGS, 'by_target'); 
+    
+    const comments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
+    
+    // 如果没有评论 -> 触发 AI 生成
+    if (comments.length === 0) {
+        renderCPCommentLoading(container, "正在加载评论...");
+        await generateCPComments(postId, 0); // 0 代表初始生成
+    } else {
+        renderCPCommentList(container, comments, postId);
+    }
+}
+
+/**
+ * 3. AI 生成评论并入库 (读取世界书 + 深度人设版)
+ */
+async function generateCPComments(postId, currentCount) {
+    const db = await dbHelper.dbPromise;
+    const post = await db.get(CONSTANTS.STORE_NAMES.CP_POSTS, postId);
+    if (!post) return;
+
+    const dossier = appState.dossiers.find(d => d.id === post.dossierId);
+    
+    try {
+        // === 1. 读取完整世界观与 NPC 信息 ===
+        let worldContext = "";
+        const allBooks = await db.getAll(CONSTANTS.STORE_NAMES.LIBRARY_BOOKS);
+        
+        // 收集关联书籍
+        const linkIds = new Set(dossier.libraryBookIds || []);
+        allBooks.forEach(b => { if(b.isGlobal) linkIds.add(b.id); });
+
+        for (const bookId of linkIds) {
+            const book = allBooks.find(b => b.id === bookId);
+            if (!book) continue;
+            // 完整读取，不截断！
+            worldContext += `\n\n【设定书：${book.title}】\n${book.content}`;
+        }
+
+        // === 2. 调用新 Prompt ===
+        const prompt = promptManager.createCPCommentsPrompt(dossier, post.content, post.authorType, currentCount, worldContext);
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        // 解析 JSON
+        let jsonStr = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        const commentsData = JSON.parse(jsonStr);
+
+        // 入库
+        const tx = db.transaction(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'readwrite');
+        for (const c of commentsData) {
+            // 安全过滤：防止 AI 幻觉生成 User 的回复
+            if (c.type === 'user' || c.name === (dossier.user.name || '我')) {
+                continue; 
+            }
+
+            await tx.store.add({
+                postId: postId,
+                authorName: c.name,
+                content: c.content,
+                // type 可能是 'npc', 'character', 'passerby'
+                authorType: c.type, 
+                replyToName: c.replyTo || null,
+                timestamp: Date.now() + Math.random() * 10000
+            });
+        }
+        await tx.done;
+
+        // 重新渲染
+        const allComments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
+        const container = document.querySelector(`.cp-post-card[data-id="${postId}"] .cp-existing-comments`);
+        if (container) renderCPCommentList(container, allComments, postId);
+
+        // 刷新统计
+        updateBlastStats(postId);
+
+    } catch (e) {
+        console.error("评论生成失败", e);
+        utils.showToast("评论加载失败");
+    }
+}
+
+/**
+ * 4. 渲染评论列表 UI (Pro+版：支持 NPC 莫兰迪色)
+ */
+function renderCPCommentList(container, comments, postId) {
+    container.innerHTML = `<div class="cp-comments-list-wrapper"></div>`;
+    const list = container.querySelector('.cp-comments-list-wrapper');
+
+    // 排序
+    comments.sort((a, b) => a.timestamp - b.timestamp);
+    
+    // 🎨 莫兰迪色盘 (用于 NPC)
+    const morandiColors = [
+        '#A8BFA1', // 豆沙绿
+        '#AFC1D0', // 雾霾蓝
+        '#D4A5A5', // 干枯玫瑰
+        '#DCC6A6', // 燕麦色
+        '#9BB7B4', // 灰湖绿
+        '#C89F9C', // 珊瑚粉
+        '#B0C4DE', // 钢蓝
+        '#E6E6FA'  // 薰衣草
+    ];
+
+    comments.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'cp-cmt-item';
+        
+        // 样式类处理
+        let nameClass = 'cp-cmt-name';
+        let customStyle = '';
+
+        if (c.authorType === 'character') {
+            nameClass += ' is-character';
+        } else if (c.authorType === 'user') {
+            nameClass += ' is-user';
+        } else if (c.authorType === 'npc') {
+            // === 核心：NPC 随机分配颜色 ===
+            // 使用名字哈希，保证同一个 NPC 永远是同一个颜色
+            let hash = 0;
+            for (let i = 0; i < c.authorName.length; i++) {
+                hash = c.authorName.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const color = morandiColors[Math.abs(hash) % morandiColors.length];
+            customStyle = `style="color: ${color}; opacity: 0.9;"`;
+        }
+
+        // 处理回复前缀
+        let contentHtml = c.content;
+        if (c.replyToName) {
+            contentHtml = `<span class="cp-reply-prefix">回复 ${c.replyToName}:</span>${c.content}`;
+        }
+
+        // 时间处理
+        let timeDisplay = formatRelativeTime(c.timestamp);
+        if(timeDisplay.includes("今天")) timeDisplay = timeDisplay.replace("今天 ", "");
+
+        div.innerHTML = `
+            <div class="cp-cmt-header">
+                <span class="${nameClass}" ${customStyle}>${c.authorName}</span>
+                <div class="cp-cmt-info-right">
+                    <span class="cp-cmt-time">${timeDisplay}</span>
+                    <i class="ri-close-line cp-cmt-del" data-id="${c.id}" title="删除"></i>
+                </div>
+            </div>
+            <div class="cp-cmt-content">${contentHtml}</div>
+        `;
+        
+        list.appendChild(div);
+    });
+
+    // 加载更多按钮
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'cp-load-more-btn';
+    loadBtn.innerText = 'Load more comments...';
+    loadBtn.onclick = () => {
+        loadBtn.innerText = 'Loading...';
+        generateCPComments(postId, comments.length); 
+    };
+    
+    container.appendChild(loadBtn);
+}
+
+/**
+ * 5. 删除评论
+ */
+async function deleteCPComment(commentId, element) {
+    if (!confirm("Delete this comment?")) return;
+    
+    try {
+        await dbHelper.delete(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, parseInt(commentId));
+        element.remove();
+        utils.showToast("Deleted");
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// 辅助：Loading 状态
+function renderCPCommentLoading(container, text) {
+    container.innerHTML = `<div style="padding:20px; text-align:center; opacity:0.6; font-size:12px;"><i class="ri-loader-4-line spin"></i> ${text}</div>`;
+}
+
+/**
+ * 【核心】处理 CP 评论区的交互 (User 发言 -> AI 回复)
+ * @param {object} params - { postId, content, replyToId, replyToName, replyToType }
+ */
+async function handleCPInteraction(params) {
+    const { postId, content, replyToId, replyToName, replyToType } = params;
+    
+    // 1. 获取上下文
+    const db = await dbHelper.dbPromise;
+    const post = await db.get(CONSTANTS.STORE_NAMES.CP_POSTS, postId);
+    if (!post) return;
+    
+    const dossier = appState.dossiers.find(d => d.id === post.dossierId);
+    
+    // --- Phase 1: User 消息上屏 (秒回体验) ---
+    const userComment = {
+        postId: postId,
+        authorName: 'ME', // 或者读取用户昵称
+        authorType: 'user',
+        content: content,
+        replyToName: replyToName || null, // 如果有回复对象，存名字
+        replyToId: replyToId || null,     // 存 ID 用于链式追踪
+        timestamp: Date.now()
+    };
+    
+    const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, userComment);
+    userComment.id = savedId;
+    
+    // 立即刷新 UI
+    const card = document.querySelector(`.cp-post-card[data-id="${postId}"]`);
+    if (card) {
+        const listContainer = card.querySelector('.cp-comments-list-wrapper');
+        // 重新获取全部评论以保持时间顺序 (或者你可以手动 append)
+        const allComments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
+        renderCPCommentList(card.querySelector('.cp-existing-comments'), allComments, postId);
+        
+        // 更新统计
+        updateBlastStats(postId);
+    }
+    
+    // --- Phase 2: 触发 AI 回复 ---
+    // 显示提示
+    const targetName = replyToName || (post.authorType === 'character' ? dossier.character.name : '大家');
+    utils.showToast(`${targetName} 正在输入...`); // 模拟对方正在回复
+    
+    try {
+        // 调用 Prompt
+        const prompt = promptManager.createCPInteractiveReplyPrompt(
+            dossier, 
+            post, 
+            content, 
+            replyToName, 
+            replyToType
+        );
+        
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        // 解析
+        const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            const result = JSON.parse(jsonMatch[0]);
+            
+            // 模拟延迟 (1.5s - 3s)
+            await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500));
+            
+            // 构造 AI 回复
+            const aiReply = {
+                postId: postId,
+                authorName: result.replierName,
+                authorType: result.replierType || 'character',
+                content: result.content,
+                replyToName: 'ME', // 回复给 User
+                replyToId: savedId, // 回复的是 User 刚才那条
+                timestamp: Date.now()
+            };
+            
+            // 入库
+            await dbHelper.add(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, aiReply);
+            
+            // 再次刷新 UI
+            const newAllComments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
+            if (card) {
+                renderCPCommentList(card.querySelector('.cp-existing-comments'), newAllComments, postId);
+                updateBlastStats(postId);
+            }
+            
+            utils.showToast("收到新回复");
+        }
+        
+    } catch (e) {
+        console.error("AI 回复失败", e);
+    }
+}
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -46899,6 +50392,355 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
                     }
                 }
             });
+
+// === CP Blogger 监听器 === // 
+
+    // 1. 桌面入口 -> (已锁定)
+    DOM.iconCpBlogger.addEventListener('click', () => {
+        // 🔒 暂时锁定
+        utils.showToast("🚧 施工中：该区域暂时封锁");
+        
+        // 原有逻辑注释掉，想解锁时把下面两行取消注释即可
+        // renderCPCharList(); 
+        // navigateToPage(DOM.cpBlogApp, 'cp-select-page');
+    });
+
+    // 2. 通用返回按钮逻辑 (处理 APP 内所有 Back 按钮)
+    const cpBackButtons = document.querySelectorAll('#cp-blog-app .back-button');
+    cpBackButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = btn.dataset.target;
+            if (target === 'desktop') {
+                closeNavigator(DOM.cpBlogApp);
+            } else {
+                navigateToPage(DOM.cpBlogApp, target);
+            }
+        });
+    });
+
+    // 3. 身份切换 (HIM/HER <-> ME) - 【修复版】
+    DOM.cpRoleSwitch.addEventListener('click', (e) => {
+        const target = e.target.closest('.switch-opt');
+        if (target) {
+            const role = target.dataset.role;
+            // 1. 更新全局状态
+            currentCPState.viewMode = role;
+            
+            // 2. 刷新个人资料头部 (头像、Bio等)
+            renderCPProfile();
+
+            if (DOM.cpTaggedContainer.style.display === 'block') {
+                renderCPTagged();
+            }
+        }
+    });
+
+    // 4. 个人资料区操作委托 (Edit / Refresh / Mount)
+    DOM.cpProfileActions.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        // 编辑资料 (无论是 User 还是 Char，都调用同一个打开函数)
+        if (btn.id === 'btn-edit-user-profile' || btn.id === 'btn-edit-char-profile') {
+            openCPEditModal();
+        } 
+        // 刷新动态
+        else if (btn.id === 'btn-refresh-feed') {
+            handleCharacterRefresh(btn);
+        }
+        // 挂载世界书
+        else if (btn.id === 'btn-mount-book') {
+             appState.currentChattingDossierId = currentCPState.dossierId;
+             openBookLinkModal();
+        }
+    });
+
+    // --- 5. 编辑资料浮窗内部逻辑 ---
+    
+    // A. 关闭按钮
+    DOM.closeCpModalBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            DOM.cpEditModal.classList.remove('visible');
+            DOM.cpPostModal.classList.remove('visible');
+        });
+    });
+
+    // B. 点击头像区域 -> 触发文件选择
+    const editAvatarPreview = document.getElementById('edit-cp-avatar-preview');
+    const editAvatarInput = document.getElementById('edit-cp-avatar-input');
+    
+    editAvatarPreview.addEventListener('click', () => {
+        editAvatarInput.click();
+    });
+
+    // C. 文件选择变化 -> 处理上传
+    editAvatarInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleCPAvatarUpload(file);
+        e.target.value = ''; // 重置
+    });
+
+    // D. 保存按钮
+    document.getElementById('save-cp-profile-btn').addEventListener('click', handleSaveCPProfile);
+
+    // 6. 发帖逻辑 (User Only)
+    // A. 悬浮按钮 -> 打开浮窗
+    DOM.cpFabPost.addEventListener('click', () => {
+        // 重置表单状态
+        DOM.cpPostCaption.value = '';
+        DOM.cpPostImgArea.style.backgroundImage = 'none';
+        DOM.cpPostImgArea.innerHTML = '<i class="ri-image-add-line"></i><span>Add Photo</span>';
+        
+        DOM.cpPostModal.classList.add('visible');
+    });
+    // B. CP博主：发帖图片预览逻辑
+    DOM.cpPostImgArea.addEventListener('click', () => DOM.cpPostImgInput.click());
+    
+    DOM.cpPostImgInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            DOM.cpPostImgArea.style.backgroundImage = `url('${url}')`;
+            DOM.cpPostImgArea.innerHTML = ''; // 隐藏中间的加号图标和文字
+        }
+    });
+    // C. 确认发布
+    DOM.publishCpPostBtn.addEventListener('click', handlePublishCPPost);
+
+    // 7. 帖子列表交互总线 (楼中楼交互版)
+    DOM.cpFeedContainer.addEventListener('click', async (e) => {
+        const target = e.target;
+        const card = target.closest('.cp-post-card');
+        
+        // 0. 删除单条评论 (逻辑独立，优先处理)
+        if (target.classList.contains('cp-cmt-del')) {
+            const commentId = target.dataset.id;
+            const item = target.closest('.cp-cmt-item');
+            deleteCPComment(commentId, item);
+            return;
+        }
+
+        if (!card) return;
+        const postId = parseInt(card.dataset.id, 10);
+        
+        // 1. 获取该卡片下的输入框和状态
+        const inputWrapper = card.querySelector('.cp-comment-input-wrapper');
+        const input = inputWrapper.querySelector('input');
+        
+        // A. 点击评论图标 / 展开评论区
+        const toggleBtn = target.closest('.comment-toggle-btn');
+        if (toggleBtn) {
+            toggleCPComments(card, postId);
+            return;
+        }
+
+        // B. 点赞
+        if (target.closest('.like-btn')) {
+            handleCPLikeToggle(card, postId);
+            return;
+        }
+
+        // C. 点击某条评论 -> 准备回复 (楼中楼)
+        const commentItem = target.closest('.cp-cmt-item');
+        if (commentItem && !target.classList.contains('cp-cmt-del')) {
+            // 获取被点击者的信息
+            const nameEl = commentItem.querySelector('.cp-cmt-name');
+            const targetName = nameEl.textContent.replace(':', '').trim();
+            const targetType = nameEl.classList.contains('is-character') ? 'character' 
+                           : (nameEl.classList.contains('is-user') ? 'user' : 'npc');
+            
+            // 存入 dataset 暂存
+            input.dataset.replyToName = targetName;
+            input.dataset.replyToType = targetType;
+            input.dataset.replyToId = commentItem.querySelector('.cp-cmt-del').dataset.id; // 借用删除按钮上的ID
+
+            // UI 变化
+            input.placeholder = `回复 ${targetName}...`;
+            input.focus();
+            
+            // 阻止冒泡，防止误触其他逻辑
+            e.stopPropagation();
+            return;
+        }
+
+        // D. 点击空白处 / 取消回复状态
+        // 如果点了卡片内非按钮区域，且输入框是空的，重置状态
+        if (!target.closest('button') && !target.closest('input')) {
+            if (input.value === '') {
+                delete input.dataset.replyToName;
+                delete input.dataset.replyToType;
+                delete input.dataset.replyToId;
+                input.placeholder = "Add a comment...";
+            }
+        }
+
+        // E. 发送评论 (Post 按钮)
+        if (target.closest('.cp-post-btn')) {
+            const val = input.value.trim();
+            if (!val) return;
+
+            // 提取数据
+            const replyToName = input.dataset.replyToName || null;
+            const replyToType = input.dataset.replyToType || null;
+            const replyToId = input.dataset.replyToId ? parseInt(input.dataset.replyToId) : null;
+
+            // ✅ 【核心修复】先清空 UI，再处理逻辑 (即时反馈)
+            input.value = '';
+            input.placeholder = "Add a comment...";
+            delete input.dataset.replyToName;
+            delete input.dataset.replyToType;
+            delete input.dataset.replyToId;
+
+            // 后台慢慢跑逻辑
+            await handleCPInteraction({
+                postId,
+                content: val,
+                replyToId,
+                replyToName,
+                replyToType
+            });
+            
+            return;
+        }
+        
+        // F. 删除帖子 (逻辑不变)
+        if (target.closest('.delete-post-btn')) {
+            // ... (保持原有的删除逻辑)
+             if (confirm("Delete this post?")) {
+                await dbHelper.delete(CONSTANTS.STORE_NAMES.CP_POSTS, postId);
+                const db = await dbHelper.dbPromise;
+                const comments = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, 'by_postId', postId);
+                comments.forEach(c => db.delete(CONSTANTS.STORE_NAMES.FORUM_COMMENTS, c.id));
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 300);
+                await updateCPHeaderStats();
+                utils.showToast("Deleted");
+            }
+            return;
+        }
+    });
+
+    // 补充：监听回车发送
+    DOM.cpFeedContainer.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && e.target.classList.contains('cp-comment-input')) {
+            const input = e.target;
+            const card = input.closest('.cp-post-card');
+            const postId = parseInt(card.dataset.id, 10);
+            const val = input.value.trim();
+            
+            if (val) {
+                const replyToName = input.dataset.replyToName || null;
+                const replyToType = input.dataset.replyToType || null;
+                const replyToId = input.dataset.replyToId ? parseInt(input.dataset.replyToId) : null;
+
+                // ✅ 【核心修复】先清空 UI
+                input.value = '';
+                input.placeholder = "Add a comment...";
+                delete input.dataset.replyToName;
+                delete input.dataset.replyToType;
+                delete input.dataset.replyToId;
+
+                // 后台处理
+                await handleCPInteraction({
+                    postId,
+                    content: val,
+                    replyToId,
+                    replyToName,
+                    replyToType
+                });
+            }
+        }
+    });
+    
+    // 8. 顶部右侧功能键 (进入私信页)
+    DOM.cpHeaderActionBtn.addEventListener('click', () => {
+        // 根据当前视图模式，决定看谁的信箱
+        const role = currentCPState.viewMode; // 'user' or 'character'
+        renderCPDMs(role); // 调用新写的渲染函数
+        navigateToPage(DOM.cpBlogApp, 'cp-dm-page');
+    });
+
+    // 9. 私信页 TAB 切换
+    DOM.cpDmTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const role = tab.dataset.box; // 'user' or 'character'
+            renderCPDMs(role);
+        });
+    });
+
+// 10. 私信详情页 - 点击遮罩关闭
+    DOM.cpDmReadModal.addEventListener('click', (e) => {
+        if (e.target === DOM.cpDmReadModal) {
+            DOM.cpDmReadModal.classList.remove('visible');
+        }
+    });
+DOM.cpDmCloseBtn.addEventListener('click', () => {
+        DOM.cpDmReadModal.classList.remove('visible');
+    });
+
+// === CP Blogger: Tab 切换 (Feed / Tagged) ===
+            DOM.cpFeedTabsContainer.addEventListener('click', (e) => {
+                const targetTab = e.target.closest('span');
+                if (!targetTab) return;
+
+                // UI 切换
+                DOM.cpFeedTabsContainer.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+                targetTab.classList.add('active');
+
+                // 内容切换
+                const targetView = targetTab.dataset.target;
+                if (targetView === 'feed') {
+                    DOM.cpFeedContainer.style.display = 'block';
+                    DOM.cpTaggedContainer.style.display = 'none';
+            } else if (targetView === 'tagged') {
+                DOM.cpFeedContainer.style.display = 'none';
+                DOM.cpTaggedContainer.style.display = 'block';
+                
+                // ✅ 修改：直接调用，不需要传参了
+                renderCPTagged();
+          }
+            });
+
+            // File 4: CP Blogger 监听区域
+
+    // === CP Blogger: TAGGED 列表交互 (删除 & 详情) ===
+    DOM.cpTaggedList.addEventListener('click', (e) => {
+        const target = e.target;
+        const item = target.closest('.cp-tag-item');
+        if (!item) return;
+
+        // A. 删除逻辑
+        if (target.classList.contains('cp-tag-del-btn')) {
+            e.stopPropagation(); // 阻止冒泡
+            const id = item.dataset.id;
+            deleteCPTag(id, item);
+            return;
+        }
+
+        // B. 打开详情浮窗 (原有的逻辑)
+        if (item.dataset.tagData) {
+            const tagData = JSON.parse(item.dataset.tagData);
+            openTagDetailModal(tagData);
+        }
+    });
+
+            // === CP Blogger: 关闭详情浮窗 ===
+            DOM.closeTagDetailBtn.addEventListener('click', () => DOM.cpTagDetailModal.classList.remove('visible'));
+            
+            DOM.cpTagDetailModal.addEventListener('click', (e) => {
+                if (e.target === DOM.cpTagDetailModal) DOM.cpTagDetailModal.classList.remove('visible');
+            });
+
+// 【新增】私信列表的删除事件委托
+    DOM.cpDmList.addEventListener('click', (e) => {
+        const delBtn = e.target.closest('.cp-dm-del-btn');
+        if (delBtn) {
+            e.stopPropagation(); // 阻止冒泡，防止进入详情页
+            const item = delBtn.closest('.cp-dm-item');
+            const id = item.dataset.id;
+            deleteCPDM(id, item);
+        }
+    });
 }
 
         async function initializeApp() {
