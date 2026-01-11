@@ -15892,6 +15892,260 @@ body.light-mode .cp-dm-load-more:hover { color: #333; }
 @media (max-width: 768px) {
     .cp-tag-del-btn { opacity: 0.3; }
 }
+
+/* ==========================================
+   ===   Echo: Ins Feed 风格角色列表     ===
+   ========================================== */
+
+/* 1. 容器：改为单列布局，像刷朋友圈一样 */
+.cp-list-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* 卡片之间的间距大一点，更有呼吸感 */
+    padding: 10px 0 40px 0;
+}
+
+/* 2. Ins 卡片主体 */
+.ins-feed-item {
+    background: #000; /* 纯黑底，最经典 */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px; /* 稍微圆润一点 */
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.ins-feed-item:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 3. 头部：头像 + 名字 + 更多 */
+.ins-feed-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+}
+
+.ins-head-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.ins-head-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.ins-head-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ins-head-loc {
+    font-size: 11px;
+    color: #888;
+}
+
+.ins-head-more {
+    color: #fff;
+    font-size: 20px;
+    opacity: 0.6;
+}
+
+/* 4. 图片区域 (正方形或 4:5) */
+.ins-feed-image {
+    width: 100%;
+    aspect-ratio: 4 / 5; /* 这种比例最高级 */
+    background-size: cover;
+    background-position: center;
+    background-color: #1a1a1a;
+}
+
+/* 5. 底部互动栏 */
+.ins-feed-actions {
+    padding: 12px 12px 0 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 24px;
+    color: #fff;
+}
+
+.ins-action-left {
+    display: flex;
+    gap: 16px;
+}
+
+.ins-icon {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.ins-icon:hover { transform: scale(1.1); }
+.ins-icon.liked { color: #ff3b30; } /* 被选中的/置顶的显示红色 */
+
+/* 6. 点赞数与文案 */
+.ins-feed-likes {
+    padding: 10px 12px 4px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.ins-feed-caption {
+    padding: 0 12px 15px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #eee;
+}
+
+.ins-caption-name {
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.ins-comment-hint {
+    padding: 0 12px 15px 12px;
+    font-size: 13px;
+    color: #666;
+}
+
+/* 浅色模式适配 */
+body.light-mode .ins-feed-item {
+    background: #fff;
+    border-color: #dbdbdb;
+}
+body.light-mode .ins-head-name { color: #262626; }
+body.light-mode .ins-head-loc { color: #8e8e8e; }
+body.light-mode .ins-head-more { color: #262626; }
+body.light-mode .ins-feed-actions { color: #262626; }
+body.light-mode .ins-feed-likes { color: #262626; }
+body.light-mode .ins-feed-caption { color: #262626; }
+body.light-mode .ins-comment-hint { color: #8e8e8e; }
+
+/* ==========================================
+   ===   Echo: 时尚目录风私信列表 (Editorial) ===
+   ========================================== */
+
+/* 1. 列表容器 */
+#cp-dm-list {
+    padding: 20px 25px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 0; /* 紧凑排列，靠边框分割 */
+}
+
+/* 2. 单条私信 (去卡片化，改用线条分割) */
+.cp-dm-item {
+    position: relative;
+    padding: 25px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent !important; /* 去掉背景色 */
+    transition: padding-left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 悬停效果：整体轻微右移 */
+.cp-dm-item:hover {
+    padding-left: 15px;
+    border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 3. 顶部信息栏 (编号 + 时间) */
+.dm-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: monospace; /* 等宽字体，像打印出来的 */
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+/* 4. 发送者名字 (巨大的衬线体) */
+.cp-dm-name {
+    font-family: 'Playfair Display', 'Didot', serif; /* 时尚核心 */
+    font-size: 24px;
+    font-weight: 400; /* 不需要太粗，优雅为主 */
+    font-style: italic;
+    color: #f0f0f0;
+    letter-spacing: 1px;
+    line-height: 1.2;
+}
+
+/* 5. 消息预览 (极细无衬线体) */
+.cp-dm-msg {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 300;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    margin-top: 4px;
+}
+
+/* 6. 未读状态 (左侧亮条 -> 改为名字旁边的小红点) */
+.cp-dm-item.unread .cp-dm-name::after {
+    content: "●";
+    color: #ff4d4d;
+    font-size: 10px;
+    position: relative;
+    top: -8px;
+    margin-left: 5px;
+    font-style: normal;
+}
+
+/* 7. 右侧箭头 (默认隐藏，悬停出现) */
+.cp-dm-arrow {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: #fff;
+    opacity: 0;
+    transition: all 0.3s;
+}
+.cp-dm-item:hover .cp-dm-arrow {
+    opacity: 1;
+    right: 10px;
+}
+
+/* 8. 删除按钮 (复用之前的逻辑，调整位置) */
+.cp-dm-del-btn {
+    right: 0;
+    top: 25px; /* 对齐顶部 */
+    background: transparent;
+    color: #666;
+    transform: none;
+}
+.cp-dm-del-btn:hover {
+    color: #ff4d4d;
+    background: transparent;
+    transform: scale(1.2);
+}
+
+/* 浅色模式适配 (杂志纸风格) */
+body.light-mode .cp-dm-item { border-bottom-color: rgba(0,0,0,0.1); }
+body.light-mode .cp-dm-item:hover { border-bottom-color: rgba(0,0,0,0.3); }
+body.light-mode .dm-meta-row { color: #999; }
+body.light-mode .cp-dm-name { color: #111; }
+body.light-mode .cp-dm-msg { color: #555; }
+body.light-mode .cp-dm-arrow { color: #000; }
     </style>
 </head>
 
@@ -42007,34 +42261,28 @@ async function renderCoutureCollection() {
 
 // ===  CP 博主 (CP Blogger) 核心逻辑    === // 
 
-// 1. 渲染角色列表
+// File 3: renderCPCharList (Ins 风格版)
+
 async function renderCPCharList() {
     const container = DOM.cpCharList;
     container.innerHTML = '';
 
-    // 更新顶部日期
+    // 日期和统计更新保持不变
     const now = new Date();
     const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
     DOM.cpDateDay.innerText = String(now.getDate()).padStart(2, '0');
     DOM.cpDateMonth.innerText = months[now.getMonth()] + ".";
     DOM.cpDateYear.innerText = now.getFullYear();
-
-    // 更新统计数
     DOM.cpTotalCount.innerText = String(appState.dossiers.length).padStart(2, '0');
 
     if (appState.dossiers.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:50px; opacity:0.3;">
-                <i class="ri-heart-crack-line" style="font-size:32px;"></i>
-                <p style="margin-top:10px; font-size:12px;">NO RECORD</p>
-            </div>
-        `;
+        container.innerHTML = `<div style="text-align:center; padding:50px; opacity:0.3;">NO DATA</div>`;
         return;
     }
 
     for (const dossier of appState.dossiers) {
         const card = document.createElement('div');
-        card.className = 'cp-card';
+        card.className = 'ins-feed-item';
         card.dataset.id = dossier.id;
 
         // 获取头像
@@ -42043,31 +42291,73 @@ async function renderCPCharList() {
             const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
             if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
         }
+        
+        // 样式准备
         const bgStyle = avatarUrl ? `background-image: url('${avatarUrl}')` : `background-color: #222`;
+        
+        // 状态处理
+        let locationText = "Suggested for you"; // 默认文案
+        let heartClass = "ri-heart-line";
+        
+        if (dossier.isPinned) {
+            locationText = "Favorites • Pinned";
+            heartClass = "ri-heart-fill liked"; // 置顶的显示实心红心
+        } else if (dossier.isBlocked) {
+            locationText = "Restricted Account";
+        }
 
-        // 获取关系/状态 (可以根据是否置顶、是否拉黑来显示不同文案)
-        let statusText = "IN LOVE";
-        if (dossier.isBlocked) statusText = "DISCONNECTED";
-        else if (dossier.isPinned) statusText = "DESTINY";
+        // 随机生成的赞数 (基于名字，固定不变)
+        let hash = 0;
+        for(let i=0; i<dossier.character.name.length; i++) hash += dossier.character.name.charCodeAt(i);
+        const likes = (Math.abs(hash) % 8000) + 500;
+        const formattedLikes = likes.toLocaleString();
+
+        // 简介处理 (截取)
+        let bio = dossier.aiGenerated?.quote || dossier.character.background;
+        // 去除引号
+        bio = bio.replace(/^["“]|["”]$/g, '');
+        if (bio.length > 50) bio = bio.substring(0, 50) + "...more";
 
         card.innerHTML = `
-            <div class="cp-card-inner">
-                <div class="cp-avatar-box">
-                    <div class="cp-avatar-ring"></div>
-                    <div class="cp-avatar-img" style="${bgStyle}"></div>
+            <!-- 头部 -->
+            <div class="ins-feed-header">
+                <div class="ins-head-avatar" style="${bgStyle}"></div>
+                <div class="ins-head-info">
+                    <div class="ins-head-name">${dossier.character.name}</div>
+                    <div class="ins-head-loc">${locationText}</div>
                 </div>
-                <div class="cp-info">
-                    <div class="cp-name">${dossier.character.name}</div>
-                    <div class="cp-relation">${statusText}</div>
-                </div>
-                <i class="ri-arrow-right-line cp-action"></i>
+                <i class="ri-more-fill ins-head-more"></i>
             </div>
+            
+            <!-- 大图 -->
+            <div class="ins-feed-image" style="${bgStyle}"></div>
+            
+            <!-- 互动栏 -->
+            <div class="ins-feed-actions">
+                <div class="ins-action-left">
+                    <i class="${heartClass} ins-icon"></i>
+                    <i class="ri-chat-3-line ins-icon"></i>
+                    <i class="ri-send-plane-line ins-icon"></i>
+                </div>
+                <i class="ri-bookmark-line ins-icon"></i>
+            </div>
+            
+            <!-- 点赞 -->
+            <div class="ins-feed-likes">Liked by ME and ${formattedLikes} others</div>
+            
+            <!-- 文案 -->
+            <div class="ins-feed-caption">
+                <span class="ins-caption-name">${dossier.character.name}</span>
+                ${bio}
+            </div>
+            
+            <!-- 评论提示 -->
+            <div class="ins-comment-hint">View all comments</div>
         `;
 
-        // 【关键逻辑】点击卡片 -> 进入个人主页
+        // 点击卡片 -> 进入详情页
         card.addEventListener('click', () => {
-            // 1. 调用进入详情页函数 (传入角色ID)
-            openCPDetailPage(dossier.id);
+             openCPDetailPage(dossier.id);
         });
 
         container.appendChild(card);
@@ -42289,32 +42579,51 @@ async function renderCPDMs(role) {
     }
 
     // 3. 渲染循环
-    msgs.forEach(m => {
+    msgs.forEach((m, index) => {
         const div = document.createElement('div');
-        div.className = 'cp-dm-item';
-        div.dataset.id = m.id;
         
-        let borderStyle = "";
-        if (role === 'user' && !m.userReply && !m.isRead) borderStyle = "border-left: 3px solid #ff4d4d;";
-        else if (role === 'character' && !m.aiReply) borderStyle = "border-left: 3px solid rgba(255, 77, 77, 0.4);";
+        // 标记未读状态类名
+        let isUnread = false;
+        if (role === 'user' && !m.userReply && !m.isRead) isUnread = true;
+        else if (role === 'character' && !m.aiReply) isUnread = true;
 
+        div.className = `cp-dm-item ${isUnread ? 'unread' : ''}`;
+        div.dataset.id = m.id;
+
+        // 预览文字处理
         let preview = m.content;
-        let previewStyle = "";
-        if (role === 'character') {
-            if (m.aiReply) { preview = `↩️ 已回复: ${m.aiReply}`; previewStyle = "opacity:0.6; font-style:italic;"; }
-            else { preview = `[已读不回] ${m.content}`; }
-        } else if (m.userReply) {
-            preview = `↩️ 我: ${m.userReply}`; previewStyle = "opacity:0.8;";
+        // 如果是角色视角且已回复
+        if (role === 'character' && m.aiReply) {
+             preview = `RE: ${m.aiReply}`; // 用英文 RE: 更时尚
+        } 
+        // 如果是用户视角且已回复
+        else if (m.userReply) {
+             preview = `YOU: ${m.userReply}`;
         }
 
-        div.style.cssText = borderStyle;
+        // 装饰性编号 (补零，例如 01, 02)
+        const refNum = String(index + 1).padStart(2, '0');
+        const timeStr = formatRelativeTime(m.timestamp).toUpperCase(); // 大写时间
+
+        // === 新的 HTML 结构 ===
         div.innerHTML = `
-            <div class="cp-dm-row-1">
-                <span class="cp-dm-name">${m.senderName}</span>
-                <span class="cp-dm-time">${formatRelativeTime(m.timestamp)}</span>
+            <!-- 第一行：Meta 信息 -->
+            <div class="dm-meta-row">
+                <span>REF.${refNum}</span>
+                <span>${timeStr}</span>
             </div>
-            <div class="cp-dm-msg" style="${previewStyle}">${preview}</div>
-            <div class="cp-dm-del-btn"><i class="ri-close-line"></i></div>
+            
+            <!-- 第二行：名字 (大字) -->
+            <div class="cp-dm-name">${m.senderName}</div>
+            
+            <!-- 第三行：内容 (小字) -->
+            <div class="cp-dm-msg">${preview}</div>
+            
+            <!-- 装饰箭头 -->
+            <i class="ri-arrow-right-line cp-dm-arrow"></i>
+
+            <!-- 删除按钮 -->
+            <div class="cp-dm-del-btn" title="Delete"><i class="ri-close-line"></i></div>
         `;
         
         div.addEventListener('click', (e) => {
@@ -50395,14 +50704,10 @@ DOM.capsuleMsgInput.addEventListener('keypress', (e) => {
 
 // === CP Blogger 监听器 === // 
 
-    // 1. 桌面入口 -> (已锁定)
+    // 1. 桌面入口 -> 进入列表页
     DOM.iconCpBlogger.addEventListener('click', () => {
-        // 🔒 暂时锁定
-        utils.showToast("🚧 施工中：该区域暂时封锁");
-        
-        // 原有逻辑注释掉，想解锁时把下面两行取消注释即可
-        // renderCPCharList(); 
-        // navigateToPage(DOM.cpBlogApp, 'cp-select-page');
+        renderCPCharList(); // 渲染列表数据
+        navigateToPage(DOM.cpBlogApp, 'cp-select-page');
     });
 
     // 2. 通用返回按钮逻辑 (处理 APP 内所有 Back 按钮)
