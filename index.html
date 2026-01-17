@@ -16146,6 +16146,216 @@ body.light-mode .dm-meta-row { color: #999; }
 body.light-mode .cp-dm-name { color: #111; }
 body.light-mode .cp-dm-msg { color: #555; }
 body.light-mode .cp-dm-arrow { color: #000; }
+
+/* ==========================================
+   ===   全局通知横幅 (修复点击版)        ===
+   ========================================== */
+
+#global-notification-banner {
+    /* 1. 位置与尺寸 */
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    width: 92%;
+    max-width: 420px;
+    height: auto;
+    
+    /* 2. 材质与视觉 */
+    background: rgba(25, 25, 25, 0.85);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2);
+
+    /* 3. 布局 */
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 15px;
+    z-index: 99999; /* 顶级层级 */
+    
+    /* 4. 动画 */
+    transform: translate(-50%, -150%);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+
+    /* ✅✅✅【核心修复点】✅✅✅ */
+    cursor: pointer !important;    /* 强制显示小手光标 */
+    pointer-events: auto !important; /* 强制接收点击事件 */
+    user-select: none;             /* 禁止选中文字，像原生App */
+}
+
+/* 激活状态 */
+#global-notification-banner.visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+/* ✅【关键技巧】让内部所有元素“透明化”，点击直接穿透给父容器 */
+#global-notification-banner * {
+    pointer-events: none; 
+}
+
+/* --- 内部元素美化 (保持不变) --- */
+#global-notification-banner #notification-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background-color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+    background-size: cover;      /* 确保图片填满 */
+    background-position: center;
+}
+
+#global-notification-banner .notification-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    flex: 1;
+}
+
+#global-notification-banner #notification-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+#global-notification-banner #notification-message {
+    font-family: "Songti SC", "Noto Serif SC", serif;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#global-notification-banner::after {
+    content: '';
+    width: 4px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none; /* 装饰物也不挡点击 */
+}
+
+/* 浅色模式适配 */
+body.light-mode #global-notification-banner {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+body.light-mode #global-notification-banner #notification-avatar {
+    border-color: rgba(0, 0, 0, 0.05);
+    background-color: #f0f0f0;
+}
+body.light-mode #global-notification-banner #notification-title { color: #1a1a1a; }
+body.light-mode #global-notification-banner #notification-message { color: #555; }
+body.light-mode #global-notification-banner::after { background: rgba(0, 0, 0, 0.05); }
+
+/* ==========================================
+   ===   全新：灵动岛输入状态 (Island)    ===
+   ========================================== */
+
+#dynamic-typing-island {
+    position: absolute;
+    /* 悬浮在输入栏上方 */
+    bottom: 90px; 
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    
+    /* 尺寸与形状 */
+    min-width: 180px;
+    padding: 12px 20px;
+    border-radius: 16px;
+    
+    /* 材质：深黑磨砂 + 极细边框 */
+    background: rgba(15, 15, 15, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 10px 30px rgba(0,0,0,0.3),
+        0 0 0 1px rgba(0,0,0,0.5);
+    
+    /* 布局 */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 100;
+    
+    /* 默认隐藏 (带动画) */
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 激活状态 */
+#dynamic-typing-island.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 上面一行：小字 (灰色) */
+.island-row-top {
+    font-family: monospace; /* 等宽字体，更有代码感 */
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* 下面一行：状态 (亮色) */
+.island-row-bottom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 那个橙色的呼吸条 */
+.island-loading-bar {
+    width: 8px;
+    height: 8px;
+    background-color: #ff9f43; /* 经典的橙色 */
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255, 159, 67, 0.6);
+    animation: island-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes island-pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 159, 67, 0.9); }
+}
+
+/* Thinking 文字 */
+.island-status-text {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+/* 浅色模式适配 */
+body.light-mode #dynamic-typing-island {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+body.light-mode .island-row-top { color: rgba(0,0,0,0.4); }
+body.light-mode .island-status-text { color: #000; }
+
     </style>
 </head>
 
@@ -17049,6 +17259,15 @@ body.light-mode .cp-dm-arrow { color: #000; }
                 <i class="ri-more-fill right-icon" id="chat-more-btn"></i>
             </div>
             <div id="chat-messages-container"></div>
+<div id="dynamic-typing-island">
+    <div class="island-row-top">
+        <span>Reading Context...</span>
+    </div>
+    <div class="island-row-bottom">
+        <div class="island-loading-bar"></div>
+        <span class="island-status-text">Thinking</span>
+    </div>
+</div>
             <div id="reply-preview-container">
                 <div class="reply-content">
                     <span id="reply-author"></span>
@@ -27934,26 +28153,10 @@ async function handleRetry(clickedMessageId) {
                                 DOM.chatDialoguePage.classList.contains('active') && 
                                 appState.currentChattingDossierId === dossierId;
 
-        let typingIndicator;
-        if (isUserPresent()) {
-            typingIndicator = document.createElement('div');
-            typingIndicator.id = 'typing-indicator';
-            typingIndicator.className = 'chat-message character';
-            const prevMessageForTyping = appState.currentChatHistory[appState.currentChatHistory.length - 1];
-            const showTypingAvatar = !prevMessageForTyping || prevMessageForTyping.sender !== 'character';
-            if (showTypingAvatar) {
-                const avatarEl = document.createElement('div');
-                avatarEl.className = 'avatar';
-                if (avatarUrl) avatarEl.style.backgroundImage = `url('${avatarUrl}')`;
-                typingIndicator.appendChild(avatarEl);
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'avatar-placeholder';
-                typingIndicator.appendChild(placeholder);
-            }
-            typingIndicator.innerHTML += `<div class="bubble typing-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
-            DOM.messagesContainer.appendChild(typingIndicator);
-            utils.autoScrollToBottom();
+        // ✅✅✅ 新增：显示灵感岛 ✅✅✅
+        const typingIsland = document.getElementById('dynamic-typing-island');
+        if (isUserPresent() && typingIsland) {
+            typingIsland.classList.add('visible');
         }
 
         try {
@@ -28049,7 +28252,8 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
             }
             
             const aiResponse = await apiHelper.getChatCompletion(messages);
-            if (typingIndicator) typingIndicator.remove();
+             // ✅✅✅ 新增：隐藏灵感岛 ✅✅✅
+        if (typingIsland) typingIsland.classList.remove('visible');
 
             // --- 【核心改动】将AI回复拆分为“聊天部分”和“动态指令部分” ---
 
@@ -28641,7 +28845,8 @@ if (momentMatch) {
 
         } catch (error) {
             console.error("发送消息失败:", error);
-            if (typingIndicator) typingIndicator.remove();
+            // ✅✅✅ 新增：隐藏灵感岛
+        if (typingIsland) typingIsland.classList.remove('visible');
             if (isUserPresent()) {
                 await renderMessage({ content: `[错误] 无法获取回复: ${error.message}`, sender: 'system' });
             } else {
