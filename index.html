@@ -27392,6 +27392,9 @@ createIMessagePrompt(dossier, history, userLastInput) {
     const charPersona = dossier.character.background;
     const userName = dossier.user.name || 'User';
     const userPersona = dossier.user.background || '重要的人';
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const dateString = now.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' });
 
     // 格式化历史记录 (带上翻译，方便AI回顾语境)
     const historyText = history.slice(-15).map(m => {
@@ -27399,11 +27402,34 @@ createIMessagePrompt(dossier, history, userLastInput) {
         const trans = m.translation ? ` (译: ${m.translation})` : '';
         return `${role}: ${m.content}${trans}`;
     }).join('\n');
+    
+    let userMessagesBundle = [];
+    
+    if (userLastInput) {
+        userMessagesBundle.unshift(userLastInput);
+    }
+
+    // 倒序遍历历史记录
+    for (let i = history.length - 1; i >= 0; i--) {
+        const msg = history[i];
+        if (msg.sender === 'user') {
+            userMessagesBundle.unshift(msg.content);
+        } else {
+            
+            break;
+        }
+    }
+
+    const finalUserText = userMessagesBundle.join('\n');
 
     const systemPrompt = `
 # 核心使命：沉浸式短信交互 (Immersive SMS)
 你正在通过 iMessage/BlackBerry 与 ${userName} 发短信。
 **你的身份：** ${charName}。
+
+# 0. 环境与时间 (Context)
+- **当前时间:** ${dateString} ${timeString}
+- **注意:** 你能感知时间，但是不要一直挂在嘴巴。
 
 # 1. 深度档案 (Deep Profile)
 - **你的核心人设:** ${charPersona}
@@ -27416,9 +27442,10 @@ createIMessagePrompt(dossier, history, userLastInput) {
 # 2. 语感调校 (Texting Vibe) - 【拒绝AI味】
 - **载体特性:** 短信通常是私密、碎片化、即时性的。
 - **输入习惯:** 
-  - 不要写长篇大论！**每条短信控制在 1-2 句话。**
+  - 不要写长篇大论！**每条短信控制在 3-6 句话。**
   - **允许不完美:** 可以不加句号，可以用 "..." 表示无语或犹豫。
   - **情绪化:** 生气可以只回一个字，开心可以连发好几条。
+    - **针对性:** 用户可能连发了多条信息，**请务必综合阅读，统一回复**，不要只回最后一句！
 
 # 3. 灵魂翻译机制 (Soul Translation)
 **如果你的回复是外语（英语/日语/法语等），必须提供中文翻译。**
@@ -27444,9 +27471,10 @@ createIMessagePrompt(dossier, history, userLastInput) {
 ]
 `;
     
-    const userPrompt = userLastInput 
-        ? `New Message from ${userName}: "${userLastInput}"`
-        : `(User 刚刚发送了消息并停止了输入。请查看【对话历史】的最后一条，并对那条消息进行回复。)`;
+    // 构造最终传给 AI 的用户指令
+    const userPrompt = finalUserText 
+        ? `New Message(s) from ${userName}:\n"${finalUserText}"`
+        : `(User 沉默中，或者只发了图片/表情。请根据上文历史记录，自然地开启新话题或延续对话。)`;
 
     return [
         { role: "system", content: systemPrompt },
@@ -45631,13 +45659,19 @@ async function handleCPInteraction(params) {
 /**
  * 渲染 BlackBerry 风格的聊天列表
  */
+
 async function renderBlackBerryList() {
     const list = document.getElementById('bb-chat-list');
     list.innerHTML = '';
 
-    // 更新时间
+    // 更新时间 (状态栏)
     const now = new Date();
-    document.getElementById('bb-clock').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+    // ✅ 【修改】状态栏改为 24小时制
+    document.getElementById('bb-clock').textContent = now.toLocaleTimeString('zh-CN', {
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false
+    });
     document.getElementById('bb-current-date').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
 
     if (appState.dossiers.length === 0) {
@@ -45648,7 +45682,6 @@ async function renderBlackBerryList() {
     const db = await dbHelper.dbPromise;
 
     for (const dossier of appState.dossiers) {
-        // --- 获取真实数据 ---
         const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossier.id);
         let previewText = "No Message";
         let timeStr = "";
@@ -45658,9 +45691,14 @@ async function renderBlackBerryList() {
             history.sort((a, b) => a.timestamp - b.timestamp);
             const lastMsg = history[history.length - 1];
             previewText = lastMsg.content;
-            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}).toLowerCase(); // 12:00p
             
-            // 如果是我发的，显示对勾；对方发的，显示信封
+            // ✅ 【修改】列表项时间改为 24小时制
+            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('zh-CN', {
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false
+            }); 
+            
             statusIcon = lastMsg.sender === 'user' ? 'ri-check-line' : 'ri-mail-fill';
         }
 
@@ -45728,10 +45766,10 @@ async function renderIOS4List() {
             previewText = lastMsg.content;
             
             // 格式化时间 (例如 10:24 PM)
-            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('en-US', {
-                hour: 'numeric', 
+            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('zh-CN', {
+                hour: '2-digit', 
                 minute: '2-digit', 
-                hour12: true
+                hour12: false
             });
 
             // 简单逻辑：如果是对方发的，给个蓝点提示 (模拟未读)
@@ -45968,7 +46006,7 @@ async function openIMessageChat(dossierId, theme) {
     const dossier = appState.dossiers.find(d => d.id === dossierId);
     if (!dossier) return;
 
-    // --- 1. 预加载头像 (新增) ---
+    // --- 1. 预加载头像资源 ---
     let avatarUrl = '';
     if (dossier.character.avatarAssetId) {
         try {
@@ -45979,21 +46017,22 @@ async function openIMessageChat(dossierId, theme) {
         }
     }
 
-    // --- 2. 设置头部信息 ---
+    // --- 2. 设置头部信息 (区分主题) ---
     if (theme === 'ios') {
-        // iOS 头部通常只显示名字
+        // === iOS 4 风格 ===
         document.getElementById('ios4-chat-title').textContent = dossier.character.name;
+        // iOS 4 聊天页头部通常不显示头像，只显示名字，保持原样即可
     } else {
-        // BlackBerry 头部 (名字 + 头像)
+        // === BlackBerry 风格 ===
         document.getElementById('bb-chat-name').textContent = dossier.character.name;
         
+        // 2.1 设置黑莓头像
         const bbAvatarEl = document.getElementById('bb-chat-avatar');
         if (bbAvatarEl) {
             if (avatarUrl) {
                 // 有图：显示图片，清空文字
                 bbAvatarEl.style.backgroundImage = `url('${avatarUrl}')`;
                 bbAvatarEl.textContent = '';
-                // 确保样式覆盖
                 bbAvatarEl.style.backgroundColor = '#fff'; 
                 bbAvatarEl.style.display = 'block';
             } else {
@@ -46008,43 +46047,69 @@ async function openIMessageChat(dossierId, theme) {
                 bbAvatarEl.style.fontWeight = 'bold';
             }
         }
+
+        // 2.2 【修复】更新聊天页顶部的状态栏时钟 (24小时制)
+        const now = new Date();
+        const timeStr24 = now.toLocaleTimeString('zh-CN', {
+            hour: '2-digit', 
+            minute: '2-digit', 
+            hour12: false
+        });
+        
+        // 尝试获取聊天页的时间元素 (ID 需要在 HTML 中对应)
+        const clockEl = document.getElementById('bb-chat-clock') || document.querySelector('#imessage-chat-bb .bb-clock');
+        if (clockEl) clockEl.textContent = timeStr24;
     }
 
-    // --- 3. 加载历史记录 (保持不变) ---
+    // --- 3. 加载历史记录 ---
     const db = await dbHelper.dbPromise;
     const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossierId);
     history.sort((a, b) => a.timestamp - b.timestamp);
 
-    // --- 4. 渲染容器 (保持不变) ---
+    // --- 4. 渲染容器 ---
     const containerId = theme === 'ios' ? 'ios4-messages-container' : 'bb-messages-container';
     const container = document.getElementById(containerId);
     container.innerHTML = ''; 
 
-    // 插入时间戳头
-    const timeStr = new Date().toLocaleString('en-US', {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+    // 插入顶部日期分割线
+    const dateStr = new Date().toLocaleString('en-US', {
+        weekday:'short', 
+        month:'short', 
+        day:'numeric', 
+        hour:'numeric', 
+        minute:'2-digit',
+        hour12: false // 这里的顶部时间戳也顺便统一为24小时制，或者保持由 locale 决定
+    });
+
     if (theme === 'ios') {
-        container.innerHTML += `<div class="ios4-time-stamp">${timeStr}</div>`;
+        container.innerHTML += `<div class="ios4-time-stamp">${dateStr}</div>`;
     } else {
-        container.innerHTML += `<div class="bb-time-divider">${timeStr.toUpperCase()}</div>`;
+        container.innerHTML += `<div class="bb-time-divider">${dateStr.toUpperCase()}</div>`;
     }
 
-    // 渲染每一条
+    // 渲染每一条消息
     history.forEach(msg => {
+        // 调用之前的生成函数 (它内部已经包含了 24小时制 的修复)
         const html = generateIMessageHTML(msg, theme, dossier.character.name);
         container.insertAdjacentHTML('beforeend', html);
     });
 
-    // 跳转页面
+    // --- 5. 跳转页面 ---
     const pageId = theme === 'ios' ? 'imessage-chat-ios4' : 'imessage-chat-bb';
     navigateToPage(DOM.imessageApp, pageId);
     
+    // 滚动到底部
     setTimeout(() => scrollToIMBottom(theme === 'ios'), 100);
 }
 
 // 4. 辅助：生成单条 HTML
 function generateIMessageHTML(msg, theme, charName) {
     const isMe = msg.sender === 'user';
-    const timeShort = new Date(msg.timestamp).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+    const timeShort = new Date(msg.timestamp).toLocaleTimeString('zh-CN', {
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false 
+    });
     
     // ✅ 翻译逻辑：只有当 msg.translation 存在且不为空时，才生成 HTML
     const hasTrans = !!msg.translation;
