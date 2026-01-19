@@ -16356,6 +16356,1141 @@ body.light-mode #dynamic-typing-island {
 body.light-mode .island-row-top { color: rgba(0,0,0,0.4); }
 body.light-mode .island-status-text { color: #000; }
 
+/* ==========================================
+   ===   iMessage: 风格选择页 (Gallery UI) ===
+   ========================================== */
+
+/* 1. 页面容器 */
+.imessage-theme-page {
+    background-color: #0a0a0a;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important; /*以此覆盖默认padding*/
+}
+
+/* 2. 顶部导航 (杂志风) */
+.im-header {
+    padding: 60px 25px 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.im-header .back-button {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: color 0.3s;
+}
+.im-header .back-button:hover { color: #fff; }
+
+.im-header-text { text-align: right; }
+.im-header-text h1 {
+    font-family: 'Cinzel', serif; /* 艺术衬线体 */
+    font-size: 32px;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: 1px;
+}
+.im-header-text p {
+    font-family: monospace;
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 5px;
+}
+
+/* 3. 滚动区域 */
+.im-scroll-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* 4. 主题卡片 (通用) */
+.im-theme-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5; /* 竖长比例 */
+    border-radius: 4px;  /* 硬朗微圆角 */
+    padding: 20px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-sizing: border-box;
+}
+.im-theme-card:hover {
+    transform: translateY(-5px);
+}
+
+/* 装饰编号 */
+.im-card-no {
+    position: absolute;
+    top: 20px; left: 20px;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+}
+
+/* 底部信息栏 */
+.im-card-footer {
+    position: absolute;
+    bottom: 20px; left: 20px; right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid; /* 颜色在具体主题里定义 */
+    padding-top: 15px;
+    z-index: 2;
+}
+
+.im-card-text h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 24px;
+    margin: 0;
+    line-height: 1;
+}
+.im-card-text span {
+    font-family: sans-serif;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0.6;
+    margin-top: 4px;
+    display: block;
+}
+
+.im-card-arrow {
+    font-size: 24px;
+    transition: transform 0.3s;
+}
+.im-theme-card:hover .im-card-arrow {
+    transform: translateX(5px);
+}
+
+/* --- 主题 A: iOS 4 (白卡/水滴) --- */
+.im-theme-card.theme-light {
+    background-color: #e5e5e5;
+    color: #1a1a1a;
+    border: 1px solid transparent;
+}
+.im-theme-card.theme-light:hover {
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
+}
+.im-theme-card.theme-light .im-card-footer { border-top-color: rgba(0,0,0,0.1); }
+.im-theme-card.theme-light .im-card-no { color: rgba(0,0,0,0.4); }
+
+/* iOS 视觉元素：蓝色水滴 */
+.im-visual-blob {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    /* 拟物感渐变 */
+    background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.5), 0 10px 20px rgba(37, 99, 235, 0.3);
+    display: flex; justify-content: center; align-items: center;
+    transition: transform 0.5s;
+}
+.im-theme-card:hover .im-visual-blob { transform: translate(-50%, -50%) scale(1.1); }
+.im-visual-text { font-family: serif; font-style: italic; color: rgba(255,255,255,0.9); font-size: 18px; }
+
+/* --- 主题 B: BlackBerry (黑卡/矩阵) --- */
+.im-theme-card.theme-dark {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.im-theme-card.theme-dark:hover {
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.im-theme-card.theme-dark .im-card-footer { border-top-color: rgba(255,255,255,0.1); }
+.im-theme-card.theme-dark .im-card-no { color: rgba(255,255,255,0.3); }
+
+/* BlackBerry 视觉元素：键盘矩阵 */
+.im-visual-grid {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+.im-theme-card:hover .im-visual-grid { opacity: 1; }
+
+.im-grid-dot {
+    width: 6px; height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 1px;
+}
+
+/* 底部 Logo */
+.im-footer-logo {
+    text-align: center;
+    font-family: serif;
+    font-style: italic;
+    color: rgba(255,255,255,0.2);
+    font-size: 10px;
+    margin-top: 10px;
+}
+
+/* ==========================================
+   ===   iMessage Theme: BlackBerry OS    ===
+   ========================================== */
+
+/* 1. 全局容器 */
+.bb-theme-page {
+    background-color: #121212; /* 经典的深黑灰 */
+    color: #f0f0f0;
+    font-family: Arial, Helvetica, sans-serif; /* 黑莓多用无衬线 */
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+}
+
+/* 2. 状态栏 (极简像素风) */
+.bb-status-bar {
+    height: 25px;
+    background: linear-gradient(to bottom, #333, #1a1a1a);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    border-bottom: 1px solid #000;
+    flex-shrink: 0;
+}
+.bb-signal { display: flex; gap: 5px; align-items: center; font-weight: bold; }
+.bb-clock { font-weight: bold; }
+
+/* 3. 应用标题栏 (蓝色点缀) */
+.bb-app-header {
+    height: 40px;
+    background: #000;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    flex-shrink: 0;
+}
+.bb-header-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: bold; letter-spacing: -0.5px;
+}
+.bb-header-count { font-size: 12px; color: #888; }
+
+/* 4. 日期条 (经典灰色条) */
+.bb-date-strip {
+    background: #333;
+    color: #ddd;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 10px;
+    text-shadow: 0 1px 0 #000;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #000;
+    flex-shrink: 0;
+}
+
+/* 5. 列表容器 */
+.bb-scroll-view {
+    flex: 1;
+    overflow-y: auto;
+    background: #000;
+}
+
+/* 6. 单个列表项 (核心风格) */
+.bb-list-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid #222;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+/* 悬停/选中效果：经典的黑莓蓝 */
+.bb-list-item:hover, .bb-list-item:active {
+    background: #00A8DF; /* BlackBerry Blue */
+    border-bottom-color: #00A8DF;
+}
+/* 选中时文字变白/黑 */
+.bb-list-item:hover * { color: #fff !important; text-shadow: none !important; }
+
+/* 头像：方圆形，带白边 */
+.bb-avatar {
+    width: 40px; height: 40px;
+    border-radius: 6px; /* 方圆角 */
+    background-color: #fff;
+    border: 1px solid #555;
+    background-size: cover;
+    background-position: center;
+    margin-right: 10px;
+    flex-shrink: 0;
+    display: flex; justify-content: center; align-items: center;
+    color: #000; font-weight: bold; font-size: 16px;
+}
+
+/* 内容区 */
+.bb-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.bb-name-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+}
+.bb-name { font-size: 15px; font-weight: bold; color: #fff; }
+.bb-time { font-size: 11px; color: #fff; } /* BB的时间通常是白色的 */
+
+.bb-preview-row {
+    display: flex; align-items: center; gap: 5px;
+}
+.bb-icon-status { font-size: 12px; color: #888; } /* 发送/接收图标 */
+.bb-preview {
+    font-size: 13px; color: #999;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 7. 底部虚拟按键 */
+.bb-bottom-bar {
+    height: 40px;
+    background: #111;
+    border-top: 1px solid #333;
+    display: flex;
+    flex-shrink: 0;
+}
+.bb-phys-btn {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    border-right: 1px solid #222;
+    cursor: pointer;
+    color: #ccc;
+    font-size: 18px;
+}
+.bb-phys-btn:hover { background: #222; color: #fff; }
+.bb-phys-btn:active { background: #000; }
+
+/* ==========================================
+   ===   iMessage: BlackBerry Chat UI     ===
+   ========================================== */
+
+/* 1. 聊天页头部 (比列表页更简单) */
+.bb-chat-header {
+    height: 45px;
+    background: linear-gradient(to bottom, #333, #000);
+    border-bottom: 2px solid #00A8DF; /* 标志性的蓝条 */
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.bb-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bb-chat-avatar {
+    width: 30px; height: 30px;
+    border: 1px solid #666;
+    border-radius: 4px; /* BB 是小圆角方块 */
+    background-size: cover;
+    background-position: center;
+    background-color: #fff;
+}
+
+.bb-user-text {
+    display: flex; flex-direction: column;
+}
+
+.bb-chat-name {
+    font-size: 14px; font-weight: bold; color: #fff;
+    line-height: 1.1;
+}
+.bb-chat-status {
+    font-size: 10px; color: #00A8DF; /* 蓝色状态文字 */
+    text-transform: uppercase;
+}
+
+/* 2. 聊天内容区 */
+.bb-chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #121212; /* 纯黑背景 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 时间分割线 */
+.bb-time-divider {
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    margin: 5px 0;
+    font-family: monospace;
+}
+
+/* 3. 消息气泡 (核心风格) */
+.bb-msg-row {
+    display: flex;
+    width: 100%;
+    margin-bottom: 2px;
+}
+
+.bb-msg-bubble {
+    max-width: 80%;
+    padding: 8px 10px;
+    border-radius: 6px; /* 小圆角 */
+    font-size: 13px;
+    line-height: 1.4;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    font-family: Arial, sans-serif;
+}
+
+/* 对方 (Character): 灰色底，白字 */
+.bb-msg-row.left { justify-content: flex-start; }
+.bb-msg-row.left .bb-msg-bubble {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #444;
+}
+
+/* 我 (User): 白底，黑字 */
+.bb-msg-row.right { justify-content: flex-end; }
+.bb-msg-row.right .bb-msg-bubble {
+    background-color: #f0f0f0;
+    color: #000;
+    border: 1px solid #ccc;
+}
+
+/* 名字显示 (仅对方显示) */
+.bb-msg-name-tag {
+    font-size: 10px;
+    color: #00A8DF; /* 名字也是蓝色 */
+    font-weight: bold;
+    margin-bottom: 2px;
+    display: block;
+}
+
+/* 状态标记 (D/R) */
+.bb-msg-status {
+    font-size: 9px;
+    font-weight: bold;
+    margin-left: 5px;
+    color: #00A8DF;
+    vertical-align: bottom;
+}
+
+/* 4. 底部输入栏 */
+.bb-input-area {
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.bb-input {
+    flex: 1;
+    height: 30px;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 4px;
+    padding: 0 8px;
+    color: #000;
+    font-family: sans-serif;
+    outline: none;
+}
+.bb-input::placeholder { color: #888; font-style: italic; }
+
+/* 发送按钮 (实体键风格) */
+.bb-send-btn {
+    background: linear-gradient(to bottom, #444, #222);
+    border: 1px solid #555;
+    color: #fff;
+    border-radius: 4px;
+    width: 60px;
+    height: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.bb-send-btn:active {
+    background: #000;
+    border-color: #00A8DF;
+    color: #00A8DF;
+}
+
+/* ==========================================
+   ===   iMessage Theme: iOS 4 (Classic)  ===
+   ========================================== */
+
+/* 1. 全局容器 */
+.ios4-theme-page {
+    background-color: #dbe2ed; /* 经典的短信背景蓝灰色 */
+    color: #000;
+    font-family: Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+}
+
+/* 2. 顶部导航栏 (修复重叠 & 点击失效) */
+.ios4-nav-bar {
+    /* --- 核心修复开始 --- */
+    height: auto !important;     /* 高度自适应 */
+    min-height: 44px;            /* 保持最小高度 */
+    
+    /* 关键：把内容往下顶，避开系统时间 */
+    padding-top: 30px !important; 
+    padding-bottom: 10px !important;
+    padding-left: 10px;
+    padding-right: 10px;
+    
+    box-sizing: border-box; /* 确保不撑爆宽度 */
+    z-index: 100; /* 提高层级，确保在最上层，能够被点击 */
+    /* --- 核心修复结束 --- */
+
+    background: linear-gradient(to bottom, #b0bccd 0%, #889bb3 50%, #8195af 51%, #6d84a2 100%);
+    border-bottom: 1px solid #2d3642;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+
+
+.ios4-nav-title {
+    font-weight: bold;
+    font-size: 20px;
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+    flex: 1;
+    text-align: center;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 3. 玻璃按钮 */
+.ios4-btn {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 5px;
+    background: linear-gradient(to bottom, #94a7c3 0%, #687e9c 50%, #5d7595 51%, #4a5e7b 100%);
+    border: 1px solid #3e4f6a;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.3) inset, 0 1px 0 rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    font-size: 12px;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
+    cursor: pointer;
+}
+.ios4-btn:active {
+    filter: brightness(0.8);
+}
+
+/* 4. 搜索栏 */
+.ios4-search-bar {
+    background: #d2d5dc;
+    padding: 8px;
+    border-bottom: 1px solid #aeb4bf;
+}
+.ios4-search-input {
+    background: #fff;
+    border-radius: 15px;
+    height: 28px;
+    border: 1px solid #a0a0a0;
+    display: flex; align-items: center; justify-content: center;
+    color: #999; font-size: 13px; gap: 5px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 5. 列表区域 */
+.ios4-scroll-view {
+    flex: 1;
+    background: #fff;
+    overflow-y: auto;
+}
+
+.ios4-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0 0 0 10px;
+    height: 70px;
+    background: #fff;
+    cursor: pointer;
+}
+.ios4-list-item:active {
+    background: #0270dd; /* iOS 蓝色高亮 */
+}
+.ios4-list-item:active * { color: #fff !important; }
+
+/* 列表内容边框 */
+.ios4-item-content {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid #e0e0e0;
+    padding-right: 10px;
+    position: relative;
+}
+
+.ios4-list-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #000;
+    margin-bottom: 4px;
+}
+.ios4-list-preview {
+    font-size: 14px;
+    color: #888;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 220px;
+}
+.ios4-list-time {
+    position: absolute;
+    right: 30px;
+    top: 15px;
+    font-size: 13px;
+    color: #4b67a3; /* 经典蓝字时间 */
+    font-weight: bold;
+}
+.ios4-list-arrow {
+    position: absolute;
+    right: 10px;
+    top: 50%; transform: translateY(-50%);
+    color: #ccc;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* 6. 聊天气泡 (Skeuomorphic Bubbles) */
+.ios4-chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    /* 经典背景色 */
+    background-color: #dbe2ed; 
+}
+
+.ios4-time-stamp {
+    text-align: center;
+    font-size: 11px;
+    color: #8e8e93;
+    font-weight: bold;
+    text-shadow: 0 1px 0 #fff;
+    margin-bottom: 5px;
+}
+
+/* 基础通用设定 */
+.ios4-bubble {
+    max-width: 75%;
+    padding: 10px 14px; /* 稍微调整内边距适应文字 */
+    font-size: 15px;
+    line-height: 1.4;
+    position: relative;
+    /* 关键：允许小尾巴和光效溢出容器 */
+    overflow: visible !important; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3); /* 增加一点投影 */
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.ios4-bubble.sent {
+   align-self: flex-end; /* Flex布局靠右 */
+   
+   /* 形状 */
+   border-radius: 18px !important;
+   border-bottom-right-radius: 14px !important;
+   
+   /* 颜色与质感 */
+   background: linear-gradient(to bottom, #94c5fc 0%, #Aed9fa 100%) !important;
+   border: 0.5px solid #485671 !important;
+   color: #1a3b5c !important;
+   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+   
+   margin-left: auto !important;
+   margin-right: 5px !important; /* 留出一点空隙给尾巴 */
+}
+
+/* --- 用户气泡：高亮椭圆高光 (顶部反光) --- */
+.ios4-bubble.sent::before {
+   content: ""; position: absolute; z-index: 2; pointer-events: none;
+   top: 1px; left: 4px; right: 4px; height: 15px;
+   border-radius: 20px / 12px !important;
+   background: linear-gradient(to bottom, #eff6ff 0%, rgba(205, 226, 255, 0) 100%) !important;
+   opacity: 0.95 !important;
+}
+
+/* --- 用户气泡：图片小尾巴 --- */
+.ios4-bubble.sent::after {
+   content: ""; position: absolute; z-index: 1; /* 确保在背景之上 */
+   background-image: url("https://i.postimg.cc/jSypmfvW/IMG-1949.png");
+   background-size: contain !important; background-repeat: no-repeat !important;
+   width: 11px !important; height: 10px !important;
+   bottom: -1px !important; right: -5px !important; /* 定位到右下角外面 */
+   transform: rotate(0deg) !important; transform-origin: bottom left !important;
+}
+
+.ios4-bubble.received {
+   align-self: flex-start; /* Flex布局靠左 */
+   
+   /* 形状 */
+   border-radius: 18px !important;
+   border-bottom-left-radius: 13px !important;
+   
+   /* 颜色与质感 */
+   background: linear-gradient(to bottom, #e8e8e6 0%, #fafafb 100%) !important;
+   border: 1px solid #90959b !important;
+   color: #000000 !important;
+   text-shadow: 0 1px 0 #ffffff !important;
+ 
+   margin-right: auto !important;
+   margin-left: 5px !important; /* 留出一点空隙给尾巴 */
+}
+
+/* --- AI气泡：高亮椭圆高光 --- */
+.ios4-bubble.received::before {
+   content: ""; position: absolute; z-index: 2; pointer-events: none;
+   top: 1px; left: 4px; right: 4px; height: 15px;
+   border-radius: 20px / 12px !important;
+   background: linear-gradient(to bottom, #ffffff 0%, rgba(255,255,255,0) 100%) !important;
+   opacity: 1.0 !important;
+}
+
+/* --- AI气泡：图片小尾巴 --- */
+.ios4-bubble.received::after {
+   content: ""; position: absolute; z-index: 1;
+   background-image: url("https://i.postimg.cc/zG4HxVpW/wu-biao-ti153-20251123164705.png");
+   background-size: contain !important; background-repeat: no-repeat !important;
+   width: 10px !important; height: 10px !important;
+   bottom: -1px !important; left: -6px !important; /* 定位到左下角外面 */
+   transform: rotate(0deg) !important; transform-origin: bottom right !important;
+}
+
+/* 7. 底部输入栏 (银色金属) */
+.ios4-input-bar {
+    height: 48px;
+    background: linear-gradient(to bottom, #e2e2e2 0%, #d1d1d1 50%, #b6b6b6 100%);
+    border-top: 1px solid #888;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.ios4-cam-btn {
+    width: 28px; height: 28px;
+    background: #aebccc;
+    border-radius: 4px;
+    border: 1px solid #777;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.ios4-input {
+    flex: 1;
+    height: 30px;
+    border-radius: 15px;
+    border: 1px solid #999;
+    padding: 0 10px;
+    font-size: 15px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+    outline: none;
+}
+
+.ios4-send-btn {
+    background: linear-gradient(to bottom, #86b4f7 0%, #3e81ea 50%, #1e63d3 51%, #1557c6 100%);
+    color: #fff;
+    border: 1px solid #1a4f9b;
+    border-radius: 15px;
+    padding: 4px 12px;
+    font-weight: bold;
+    font-size: 13px;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+
+/* 8. 底部虚拟按键 (Home) */
+.ios4-bottom-dock {
+    height: 40px;
+    background: #000;
+    display: flex; justify-content: center; align-items: center;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.ios4-home-btn {
+    width: 30px; height: 30px;
+    border: 2px solid #333;
+    border-radius: 50%;
+    background: #111;
+}
+.ios4-home-btn::after {
+    content: ''; display: block;
+    width: 10px; height: 10px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    margin: 8px auto;
+}
+
+/* === iOS 4: 顶部功能按钮条 (Call/FaceTime/Contact) === */
+.ios4-action-strip {
+    background: #dbe2ed; /* 与背景融合 */
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid #c8c8c8;
+    flex-shrink: 0;
+}
+
+.ios4-action-btn {
+    flex: 1;
+    height: 30px;
+    background: linear-gradient(to bottom, #ffffff 0%, #f1f1f1 50%, #e1e1e1 51%, #f6f6f6 100%);
+    border: 1px solid #999;
+    border-radius: 5px;
+    color: #333;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+.ios4-action-btn:active {
+    background: linear-gradient(to bottom, #e1e1e1 0%, #f6f6f6 100%);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* 按钮文字 */
+.ios4-action-btn span {
+    margin-top: 1px;
+}
+
+/* ==========================================
+   ===   iOS 4: 时间戳与间距优化        ===
+   ========================================== */
+
+/* 1. 消息包裹容器 (新增) */
+/* 用来包裹 气泡 + 时间戳，确保它们是一组 */
+.ios4-msg-wrapper {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 2px; /* 气泡和时间戳之间的距离极小 */
+    width: 100%;
+}
+
+/* 2. 状态文字 (Read 10:06 PM) */
+.ios4-status-text {
+    font-size: 11px;
+    color: #8e8e93; /* 经典的 iOS 灰色 */
+    font-weight: bold;
+    font-family: Helvetica, Arial, sans-serif;
+    
+    /* 拟物化精髓：文字白色投影 */
+    text-shadow: 0 1px 0 #fff;
+    
+    margin-top: 3px;   /* 紧贴气泡底部 */
+    margin-bottom: 15px; /* 这才是下一条消息的间距 */
+}
+
+/* 3. 对齐方式 */
+/* 我发的 (右侧) */
+.ios4-msg-wrapper.right {
+    align-items: flex-end; /* 靠右对齐 */
+}
+.ios4-msg-wrapper.right .ios4-status-text {
+    text-align: right;
+    margin-right: 2px; /* 和气泡尾巴对齐 */
+}
+
+/* 对方发的 (左侧) */
+.ios4-msg-wrapper.left {
+    align-items: flex-start; /* 靠左对齐 */
+}
+.ios4-msg-wrapper.left .ios4-status-text {
+    text-align: left;
+    margin-left: 10px; /* 和气泡左侧对齐 */
+}
+
+/* 4. 微调气泡间距 (覆盖之前的样式) */
+/* 现在的间距由 ios4-status-text 的 margin-bottom 控制 */
+.ios4-bubble {
+    margin-bottom: 0 !important; 
+}
+
+/* ==========================================
+   ===   iMessage: 翻译功能 (Translation) ===
+   ========================================== */
+
+/* --- iOS 4 风格翻译 --- */
+.ios4-trans-box {
+    display: none; /* 默认隐藏 */
+    margin-top: 5px;
+    margin-bottom: 5px;
+    background-color: #fff9c4; /* 经典的便签黄 */
+    color: #444;
+    font-family: "Marker Felt", "Comic Sans MS", sans-serif; /* 手写体风格 */
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #e0e0a0;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+    animation: ios-slide-down 0.3s ease-out;
+}
+
+/* 小三角指向气泡 */
+.ios4-trans-box::after {
+    content: '';
+    position: absolute;
+    top: -6px; left: 15px; /* 默认左侧 */
+    width: 10px; height: 10px;
+    background: #fff9c4;
+    border-top: 1px solid #e0e0a0;
+    border-left: 1px solid #e0e0a0;
+    transform: rotate(45deg);
+}
+
+/* 右侧气泡的翻译三角在右边 */
+.ios4-msg-wrapper.right .ios4-trans-box::after {
+    left: auto; right: 15px;
+}
+
+/* --- BlackBerry 风格翻译 --- */
+.bb-trans-box {
+    display: none; /* 默认隐藏 */
+    margin-top: 4px;
+    background-color: #000;
+    border: 1px dashed #00A8DF; /* 黑莓蓝虚线 */
+    color: #00ff00; /* 终端绿 */
+    font-family: 'Courier New', monospace; /* 等宽字体 */
+    font-size: 11px;
+    padding: 6px;
+    border-radius: 2px;
+    animation: bb-blink-in 0.3s steps(5);
+}
+
+.bb-trans-prefix {
+    color: #00A8DF;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* 动画 */
+@keyframes ios-slide-down {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bb-blink-in {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    70% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* 激活类名 */
+.show-trans {
+    display: block !important;
+}
+
+/* 黑莓输入框左侧相机按钮 */
+.bb-cam-btn {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(to bottom, #444, #222);
+    border: 1px solid #555;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+    font-size: 16px;
+    cursor: pointer;
+    margin-right: 5px; /* 和输入框拉开一点距离 */
+}
+.bb-cam-btn:active {
+    background: #000;
+    color: #00A8DF;
+    border-color: #00A8DF;
+}
+
+/* ==========================================
+   ===   主聊天: 翻译挂件 (韩系黑白版)    ===
+   ========================================== */
+
+/* 1. 翻译框容器 (极简黑白) */
+.chat-trans-box {
+    display: none; /* 默认隐藏 */
+    margin-top: 8px; /* 增加一点距离 */
+    
+    /* 核心风格：纯色底 + 细边框 */
+    background: #111 !important; 
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 4px !important; /* 韩系喜欢小圆角或直角 */
+    
+    /* 字体风格：跟随全局，但更像注解 */
+    font-family: inherit !important; 
+    font-size: inherit !important; /* 跟随全局大小 */
+    line-height: 1.6;
+    color: #ccc !important; /* 稍微灰一点，区分原文 */
+    
+    padding: 12px 15px;
+    position: relative;
+    animation: fade-in-up 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    
+    /* 允许文本选择 */
+    user-select: text; 
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 激活显示 */
+.chat-trans-box.visible {
+    display: block;
+}
+
+/* 2. ❌ 去掉箭头 (核心要求) */
+.chat-trans-box::before {
+    display: none !important;
+}
+
+/* 3. 左右对齐适配 (仅调整位置，不改颜色) */
+.chat-message.character .chat-trans-box {
+    align-self: flex-start;
+    margin-left: 2px;
+}
+
+.chat-message.user .chat-trans-box {
+    align-self: flex-end;
+    margin-right: 2px;
+    /* 用户侧也保持深色风格，或者做反色，这里推荐保持统一黑白风更高级 */
+    background: #1a1a1a !important; 
+    border-color: rgba(255,255,255,0.1) !important;
+    text-align: right; /* 用户翻译右对齐 */
+}
+
+/* 4. 翻译前缀图标 (极简点缀) */
+.trans-icon {
+    margin-right: 8px;
+    font-size: 0.9em;
+    opacity: 0.5;
+    color: #fff !important; /* 纯白图标 */
+    vertical-align: middle;
+}
+/* 用户侧图标放右边 (如果是右对齐的话，微调一下) */
+.chat-message.user .trans-icon {
+    margin-right: 0;
+    margin-left: 8px;
+    display: none; /* 用户侧通常不需要图标，或者放后面，这里简化隐藏保持干净 */
+}
+
+/* 5. 全新设计的“译”字角标 (小黑圆标) */
+.bubble.has-trans::after {
+    /* 变成一个高级的符号，比如 serif 体的 'T' 或 图标 */
+    content: "T"; 
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    
+    /* 样式：黑底白字圆圈 */
+    background: #000;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    
+    font-size: 10px;
+    font-weight: bold;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 5;
+    pointer-events: none;
+    transition: transform 0.2s;
+}
+
+/* 悬停微动 */
+.bubble.has-trans:hover::after {
+    transform: scale(1.1);
+}
+
+/* 动画定义 */
+@keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==============================
+   === 浅色模式适配 (杂志纸感) ===
+   ============================== */
+body.light-mode .chat-trans-box {
+    background: #fff !important; /* 纯白纸张 */
+    color: #333 !important;      /* 墨黑文字 */
+    border-color: #ddd !important; /* 浅灰边框 */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+}
+
+body.light-mode .trans-icon {
+    color: #000 !important;
+}
+
+body.light-mode .chat-message.user .chat-trans-box {
+    background: #f9f9f9 !important;
+}
+
+body.light-mode .bubble.has-trans::after {
+    background: #fff;
+    color: #000;
+    border-color: #ccc;
+}
     </style>
 </head>
 
@@ -16704,16 +17839,16 @@ body.light-mode .island-status-text { color: #000; }
                 <span>Echo</span>
             </div>
 
-            <!-- 3. 记忆潜渊 (Couture) -->
+            <!-- 2. 记忆潜渊 (Couture) -->
 <div id="icon-memory-dive" class="app-icon icon-with-text customizable-icon" style="cursor: pointer;">
     <i class="fa-solid fa-hourglass-half" style="color: #dcdcdc;"></i>
     <span style="color: #dcdcdc; opacity: 0.8;">记忆潜渊</span>
 </div>
 
-            <!-- 3. 占位符 -->
-            <div class="app-icon icon-with-text customizable-icon" style="opacity: 0.6; cursor: default;">
-                <i class="ri-question-mark"></i>
-                <span>待定</span>
+            <!-- 3. iMessage (新入口) -->
+            <div id="icon-imessage" class="app-icon icon-with-text customizable-icon" style="cursor: pointer;">
+                <i class="ri-message-3-line"></i>
+                <span>iMessage</span>
             </div>
 
             <!-- 4. 占位符 -->
@@ -18880,6 +20015,221 @@ body.light-mode .island-status-text { color: #000; }
         </div>
     </div>
 </div>
+
+<!-- iMessage 应用容器 -->
+<div id="imessage-app" class="app-navigator">
+    
+    <!-- 1. 风格选择主页 (入口) -->
+    <div id="imessage-theme-select" class="app-page imessage-theme-page active">
+        
+        <!-- 顶部导航 -->
+        <div class="im-header">
+            <i class="ri-arrow-left-line back-button" data-target="desktop"></i>
+            <div class="im-header-text">
+                <h1>Interface</h1>
+                <p>SELECT YOUR ERA</p>
+            </div>
+        </div>
+
+        <!-- 滚动区域 -->
+        <div class="im-scroll-view">
+            
+            <!-- 选项 A: iOS 4 -->
+            <div id="btn-theme-ios4" class="im-theme-card theme-light">
+                <span class="im-card-no">NO.01</span>
+                <div class="im-visual-blob"><span class="im-visual-text">Aqua</span></div>
+                <div class="im-card-footer">
+                    <div class="im-card-text"><h2>iOS 4</h2><span>SKEUOMORPHISM</span></div>
+                    <i class="ri-arrow-right-line im-card-arrow"></i>
+                </div>
+            </div>
+
+            <!-- 选项 B: BlackBerry -->
+            <div id="btn-theme-bb" class="im-theme-card theme-dark">
+                <span class="im-card-no">NO.02</span>
+                <div class="im-visual-grid">
+                    <div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div>
+                    <div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div>
+                    <div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div><div class="im-grid-dot"></div>
+                </div>
+                <div class="im-card-footer">
+                    <div class="im-card-text"><h2>BlackBerry</h2><span>PHYSICAL TACTILE</span></div>
+                    <i class="ri-arrow-right-line im-card-arrow"></i>
+                </div>
+            </div>
+
+            <div class="im-footer-logo">Designed by KiKi OS</div>
+        </div>
+    </div>
+    
+    <!-- 2. iOS 4 列表页 (List View) -->
+    <div id="imessage-page-ios4" class="app-page ios4-theme-page">
+        
+        <!-- 顶部导航栏 -->
+        <div class="ios4-nav-bar">
+            <!-- ✅ 修改：把 Edit 变成了返回按钮 (Exit) -->
+            <div class="ios4-btn small back-button" data-target="imessage-theme-select">Exit</div>
+            
+            <div class="ios4-nav-title">Messages</div>
+            
+            <!-- 右侧写信按钮保持不变 -->
+            <div class="ios4-btn small"><i class="ri-edit-box-line"></i></div>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div class="ios4-search-bar">
+            <div class="ios4-search-input">
+                <i class="ri-search-line"></i>
+                <span>Search</span>
+            </div>
+        </div>
+
+        <!-- 列表容器 -->
+        <div class="ios4-scroll-view" id="ios4-chat-list">
+            <!-- JS 填充 -->
+        </div>
+    </div>
+
+    <!-- 2.1 iOS 4 对话页 (Chat View) -->
+    <div id="imessage-chat-ios4" class="app-page ios4-theme-page">
+        
+       <!-- 顶部导航栏 -->
+        <div class="ios4-nav-bar">
+            <!-- ✅ 修改：去掉了 back-btn 类，变成了普通长方形按钮 -->
+            <div class="ios4-btn back-button" data-target="imessage-page-ios4">
+                Messages
+            </div>
+            
+            <div class="ios4-nav-title" id="ios4-chat-title">Unknown</div>
+            
+            <div class="ios4-btn small" style="background: linear-gradient(#f37175, #d23235); border-color: #b02629;">Clear</div>
+        </div>
+
+        <!-- ✅ 新增：功能按钮条 -->
+        <div class="ios4-action-strip">
+            <div class="ios4-action-btn">Call</div>
+            <div class="ios4-action-btn">FaceTime</div>
+            <div class="ios4-action-btn">Contact</div>
+        </div>
+
+        <!-- 聊天背景 -->
+        <div class="ios4-chat-body" id="ios4-messages-container">
+            <!-- 静态气泡演示 (JS 会覆盖这里，但这作为预览) -->
+            <div class="ios4-time-stamp">Yesterday 10:24 PM</div>
+            <div class="ios4-bubble received">
+                <div class="ios4-bubble-text">Hello?</div>
+            </div>
+        </div>
+
+        <!-- 底部输入栏 -->
+        <div class="ios4-input-bar">
+            <div class="ios4-cam-btn"><i class="ri-camera-fill"></i></div>
+            <input type="text" class="ios4-input" placeholder="Text Message">
+            <button class="ios4-send-btn">Send</button>
+        </div>
+    </div>
+
+    <!-- 3. BlackBerry 界面 (完整 UI) -->
+    <div id="imessage-page-bb" class="app-page bb-theme-page">
+        
+        <!-- BB 状态栏 -->
+        <div class="bb-status-bar">
+            <div class="bb-signal">
+                <i class="ri-signal-tower-fill"></i> 3G <i class="ri-blackberry-line"></i>
+            </div>
+            <div class="bb-clock" id="bb-clock">12:00 PM</div>
+            <div class="bb-battery">
+                <i class="ri-battery-fill"></i>
+            </div>
+        </div>
+
+        <!-- 应用标题栏 -->
+        <div class="bb-app-header">
+            <div class="bb-header-title">
+                <i class="ri-mail-fill" style="color: #00A8DF;"></i>
+                <span>Messages</span>
+            </div>
+            <div class="bb-header-count">0 Unread</div>
+        </div>
+
+        <!-- 日期分隔条 -->
+        <div class="bb-date-strip">
+            <span id="bb-current-date">Friday, January 1</span>
+        </div>
+
+        <!-- 列表区域 -->
+        <div class="bb-scroll-view" id="bb-chat-list">
+            <!-- JS 填充 -->
+        </div>
+
+        <!-- 底部物理按键模拟 -->
+        <div class="bb-bottom-bar">
+            <div class="bb-phys-btn back-button" data-target="imessage-theme-select">
+                <i class="ri-arrow-go-back-line"></i>
+            </div>
+            <div class="bb-phys-btn">
+                <i class="ri-menu-line"></i>
+            </div>
+        </div>
+    </div>
+<!-- 3.1 BlackBerry 聊天对话页 (Chat View) -->
+    <div id="imessage-chat-bb" class="app-page bb-theme-page">
+        
+        <!-- 复用状态栏 -->
+        <div class="bb-status-bar">
+            <div class="bb-signal">
+                <i class="ri-signal-tower-fill"></i> 3G <i class="ri-blackberry-line"></i>
+            </div>
+            <div class="bb-clock" id="bb-chat-clock">12:00 PM</div>
+            <div class="bb-battery">
+                <i class="ri-battery-fill"></i>
+            </div>
+        </div>
+
+        <!-- 聊天头部 -->
+        <div class="bb-chat-header">
+            <div class="bb-user-info">
+                <div id="bb-chat-avatar" class="bb-chat-avatar"></div>
+                <div class="bb-user-text">
+                    <span id="bb-chat-name" class="bb-chat-name">Unknown</span>
+                    <span class="bb-chat-status">Connected</span>
+                </div>
+            </div>
+            <!-- 返回按钮 -->
+            <div class="bb-phys-btn back-button" data-target="imessage-page-bb" style="border:none; width:auto; font-size:14px;">
+                Close
+            </div>
+        </div>
+
+        <!-- 消息内容区 -->
+        <div id="bb-messages-container" class="bb-chat-body">
+            <!-- 静态示例 (JS 会清空这里) -->
+            <div class="bb-time-divider">MON, OCT 24</div>
+            
+            <div class="bb-msg-row left">
+                <div class="bb-msg-bubble">
+                    <span class="bb-msg-name-tag">Gossip Girl</span>
+                    I know your secret.
+                </div>
+            </div>
+
+            <div class="bb-msg-row right">
+                <div class="bb-msg-bubble">
+                    Who is this?<span class="bb-msg-status">R</span>
+                </div>
+            </div>
+        </div>
+
+       <!-- 底部输入栏 -->
+        <div class="bb-input-area">
+            <!-- ✅ 新增：相机按钮 (绑定重回) -->
+            <div class="bb-cam-btn"><i class="ri-camera-fill"></i></div>
+            
+            <input type="text" class="bb-input" placeholder="Enter message...">
+            <button class="bb-send-btn">Send</button>
+        </div>
+    </div>
+</div>
     
     <!-- 动态发布应用 -->
     <div id="moment-creator-app" class="app-navigator">
@@ -20448,7 +21798,7 @@ const backgroundKeeper = {
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
-    DB_VERSION: 25, // <-- 【核心改动】版本号提升
+    DB_VERSION: 26, // <-- 【核心改动】版本号提升
        MESSAGES_PER_PAGE: 30,
     STORE_NAMES: {
         API_PRESETS: 'api_presets',
@@ -20484,6 +21834,7 @@ COUTURE_MEMORIES:'couture_memories',
 CP_POSTS: 'cp_posts',
 CP_TAGS: 'cp_tags',
 CP_DMS: 'cp_dms',
+IM_HISTORY: 'imessage_history',
     },
 
     // vvvv 【新增】NPC 档案注册表 vvvv
@@ -21669,6 +23020,19 @@ movieScrollBottomBtn: document.getElementById('movie-scroll-bottom-btn'),
     cpTaggedList: document.getElementById('cp-tagged-list'),
     cpTagDetailModal: document.getElementById('cp-tag-detail-modal'),
     closeTagDetailBtn: document.getElementById('close-tag-detail-btn'),
+    imessageApp: document.getElementById('imessage-app'),
+    iconImessage: document.getElementById('icon-imessage'),
+    btnThemeIos4: document.getElementById('btn-theme-ios4'),
+    btnThemeBb: document.getElementById('btn-theme-bb'),
+    imessageBackBtns: document.querySelectorAll('#imessage-app .back-button'),
+    bbChatName: document.getElementById('bb-chat-name'),
+    iosInput: document.querySelector('.ios4-input'),
+    iosSendBtn: document.querySelector('.ios4-send-btn'),
+    bbInput: document.querySelector('.bb-input'),
+    bbSendBtn: document.querySelector('.bb-send-btn'),
+   iosClearBtn: document.querySelector('.ios4-nav-bar .small[style*="f37175"]'), // 那个红色的Clear按钮
+    iosCamBtn: document.querySelector('.ios4-cam-btn'),
+    bbCamBtn: document.querySelector('.bb-cam-btn'),
             // 颜色选择器
             styleInputs: {
                 normal: document.getElementById('style-color-normal'),
@@ -21797,6 +23161,10 @@ const allStores = {
             'by_dossierId': 'dossierId',
             'by_boxType': 'boxType'        
         } 
+    },
+[CONSTANTS.STORE_NAMES.IM_HISTORY]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 'by_dossierId': 'dossierId' } 
     },
 };
 
@@ -26018,6 +27386,73 @@ ${focusInstruction}
         { role: "user", content: "Generate tags." }
     ];
 },
+
+createIMessagePrompt(dossier, history, userLastInput) {
+    const charName = dossier.character.name;
+    const charPersona = dossier.character.background;
+    const userName = dossier.user.name || 'User';
+    const userPersona = dossier.user.background || '重要的人';
+
+    // 格式化历史记录 (带上翻译，方便AI回顾语境)
+    const historyText = history.slice(-15).map(m => {
+        const role = m.sender === 'user' ? 'Me' : 'You';
+        const trans = m.translation ? ` (译: ${m.translation})` : '';
+        return `${role}: ${m.content}${trans}`;
+    }).join('\n');
+
+    const systemPrompt = `
+# 核心使命：沉浸式短信交互 (Immersive SMS)
+你正在通过 iMessage/BlackBerry 与 ${userName} 发短信。
+**你的身份：** ${charName}。
+
+# 1. 深度档案 (Deep Profile)
+- **你的核心人设:** ${charPersona}
+- **你眼中的TA (${userName}):** ${userPersona}
+
+# 1.5🚫 绝对禁令 (Iron Rules)
+- **纯对话:** 这是一个老式短信界面。**绝对禁止**使用括号 \`()\`, 星号 \`*\` 来描写动作、神态或心理活动！
+- **无格式:** 不要使用 Markdown，不要加粗。
+
+# 2. 语感调校 (Texting Vibe) - 【拒绝AI味】
+- **载体特性:** 短信通常是私密、碎片化、即时性的。
+- **输入习惯:** 
+  - 不要写长篇大论！**每条短信控制在 1-2 句话。**
+  - **允许不完美:** 可以不加句号，可以用 "..." 表示无语或犹豫。
+  - **情绪化:** 生气可以只回一个字，开心可以连发好几条。
+
+# 3. 灵魂翻译机制 (Soul Translation)
+**如果你的回复是外语（英语/日语/法语等），必须提供中文翻译。**
+- **🚫 拒绝机翻:** 不要直译！要翻译**潜台词**和**氛围**。
+- **✅ 范例:**
+  - 原文: "I miss you." -> 翻译: "想见你。" (而不是"我想念你")
+  - 原文: "Whatever." -> 翻译: "随便你。" (而不是"无论如何")
+  - 原文: "You know I love you." -> 翻译: "别闹了，你知道的。" (结合语境)
+- **如果是中文:** 翻译字段填 \`null\`。
+
+# 4. 输出格式 (JSON Object Array)
+请返回一个 JSON 数组，支持多条连发。
+
+[
+  {
+    "text": "短信原文",
+    "trans": "人话翻译 (中文填 null)"
+  },
+  {
+    "text": "第二条 (可选)",
+    "trans": "..."
+  }
+]
+`;
+    
+    const userPrompt = userLastInput 
+        ? `New Message from ${userName}: "${userLastInput}"`
+        : `(User 刚刚发送了消息并停止了输入。请查看【对话历史】的最后一条，并对那条消息进行回复。)`;
+
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+    ];
+},
             
     async createChatPrompt(dossier, chatHistory, finalUserInput, quotedMessage = null) {
     
@@ -26200,6 +27635,40 @@ ${realTimeContext}
 - **【核心】对话格式**: 
 - **单气泡:** 直接输出你的回复。
 - **多气泡:**为了模仿真实的聊天节奏，你可以将一个完整的想法或一段较长的回复，拆分成多个句子，并用特殊分隔符 \`|||\` 来分隔不同的气泡。这是一种可选的高级技巧，可以让你表达更复杂的情感层次或进行连续的追问。
+
+## 🌐 语言与“灵魂翻译”法则 (Language & Soul Translation)
+**请务必返回一个 JSON 数组。如果你的回复包含外语（如英语、法语、日语），必须提供中文翻译。**
+
+**【翻译铁律：拒绝机翻 (No Machine Translation)】**
+不要做字典的搬运工，要做**情感的传递者**。翻译必须符合中文的语境美感和你的角色性格。
+- **❌ 禁止直译：** 不要逐字翻译。
+- **✅ 意译与润色：** 翻译出这句话的**潜台词**、**语气**和**微表情**。
+
+**【翻译范例 (Example)】**
+- *场景：暧昧/表白*
+  - 原文: "I miss you."
+  - ❌ 机翻: "我想念你。" (太生硬)
+  - ✅ **灵魂翻译:** "想见你。" / "今晚月色真美。" / "陌上花开了。" (根据人设选择)
+- *场景：傲娇/生气*
+  - 原文: "Whatever."
+  - ❌ 机翻: "无论如何。"
+  - ✅ **灵魂翻译:** "随你便。" / "爱咋咋地。" / "呵。"
+- *场景：日语/敬语*
+  - 原文: "好きです。"
+  - ❌ 机翻: "我喜欢你。"
+  - ✅ **灵魂翻译:** "心悦君兮。" / "这就把命给你。"
+
+**【输出格式 (JSON Array)】**
+[
+  {
+    "content": "消息原文 (外语或中文)",
+    "translation": "润色后的中文翻译 (如果原文是中文，此项填 null)"
+  },
+  {
+    "content": "第二条消息 (支持连发)...",
+    "translation": "..."
+  }
+],
 
 - # 【新增高级能力】复杂行为指令 (Advanced Action Directives)
 - **核心理念：** “引用”和“撤回”是你展现角色灵魂深度的绝佳工具。它们是你将对话从简单的信息交换，升华为充满情感张力和个性魅力的互动的关键。
@@ -26392,15 +27861,6 @@ ${realTimeContext}
 - **【核心准则】**：这些指令是你表达复杂情感的方式，请在符合角色性格和对话逻辑时自然地使用它们。
 
 - **【核心】禁止项**: 你的【聊天文本回复部分以及动态回复和发布动态部分】绝对不能包含任何引号 " "。你绝对不能暴露你是AI。
-
-- **【铁律】语言 (Language)**: 
-  - **默认规则:** 你的所有回复都必须且只能使用【简体中文】。
-  - **特殊规则:** 如果你的【角色核心档案】中明确指出了你的母语（例如“说俄语”、“母语是英语”），那么你的每一句回复都必须严格遵循【双语格式】：\`母语内容\n〘简体中文翻译〙\`。
-  1. **多气泡连发 (关键):** 绝对禁止把所有话挤在一个气泡里！如果你想表达多个意思，必须用 \`|||\` 将它们分开。**分隔后的每一个气泡，都必须独立包含“母语+翻译”**。
-  2. **正确示例 (Right):** \`Привет.\n〘你好。〙|||Как дела?\n〘最近怎么样？〙\`
-  3. **错误示例 (Wrong):** \`Привет. Как дела?\n〘你好。最近怎么样？〙\` (禁止合并)
-  - **绝对禁止:** 在特殊规则下，只输出母语或只输出中文。
-  - **你的任务是“成为”那个人，而不是一个翻译机。**
 
 ${stickerGuideSection} 
 # 表演的灵感与基石 (Inspiration & Foundation)
@@ -27968,22 +29428,31 @@ for (let i = 0; i < 5; i++) {
 
                 const bubbleEl = document.createElement('div');
                 bubbleEl.className = 'bubble';
-                bubbleEl.dataset.messageContent = content;
+                let mainText = content;
+                let transText = message.translation; // 直接读库
 
-                const isAIQuoteFormat = sender === 'character' && typeof content === 'string' && content.includes('\n') && content.startsWith('> ');
-                let replyText = content;
+                if (transText) {
+                    bubbleEl.classList.add('has-trans');
+                }
+
+                bubbleEl.dataset.messageContent = mainText; 
+
+                // ... (引用逻辑保持不变) ...
+                const isAIQuoteFormat = sender === 'character' && typeof mainText === 'string' && mainText.includes('\n') && mainText.startsWith('> ');
+                let replyText = mainText;
 
                 if (quote || isAIQuoteFormat) {
+                    // ... (引用渲染逻辑) ...
                     let quoteAuthor, quoteText;
                     if (quote) {
-                        quoteAuthor = quote.author;
-                        quoteText = quote.content;
+                         quoteAuthor = quote.author;
+                         quoteText = quote.content;
                     } else {
-                        const parts = content.split('\n');
-                        quoteText = parts[0].substring(2);
-                        replyText = parts.slice(1).join('\n');
-                        const lastUserMessage = [...appState.currentChatHistory].reverse().find(m => m.sender === 'user');
-                        quoteAuthor = lastUserMessage ? (appState.dossiers.find(d => d.id === lastUserMessage.dossierId)?.user.name || '你') : '';
+                         const parts = mainText.split('\n');
+                         quoteText = parts[0].substring(2);
+                         replyText = parts.slice(1).join('\n');
+                         const lastUserMessage = [...appState.currentChatHistory].reverse().find(m => m.sender === 'user');
+                         quoteAuthor = lastUserMessage ? (appState.dossiers.find(d => d.id === lastUserMessage.dossierId)?.user.name || '你') : '';
                     }
                     const quotedPreviewEl = document.createElement('div');
                     quotedPreviewEl.className = 'quoted-preview';
@@ -27991,32 +29460,33 @@ for (let i = 0; i < 5; i++) {
                     bubbleWrapper.appendChild(quotedPreviewEl);
                 }
                 
-                bubbleEl.textContent = replyText;
-                const bilingualRegex = /([\s\S]+)\n〘(.+)〙/s;
-                const bilingualMatch = bubbleEl.textContent.match(bilingualRegex);
-                if (bilingualMatch) {
-                bubbleEl.innerHTML = `${bilingualMatch[1].trim()}<span class="translation-text">〘${bilingualMatch[2]}〙</span>`;
-            }
+                // 设置气泡纯文本
+                bubbleEl.textContent = replyText || mainText; // 确保有内容
                 bubbleWrapper.appendChild(bubbleEl);
 
+                // === ✅ 渲染隐藏的翻译框 ===
+                if (transText) {
+                    const transBox = document.createElement('div');
+                    transBox.className = 'chat-trans-box';
+                    transBox.innerHTML = `<i class="ri-translate-2 trans-icon"></i>${transText}`;
+                    bubbleWrapper.appendChild(transBox);
+                }
+
+                // ... (时间戳逻辑保持不变) ...
                 if (message.timestamp) {
+                    // ...
                     const timestampEl = document.createElement('div');
                     timestampEl.className = 'message-timestamp';
+                    // ... (时间戳渲染)
                     const timeSpan = document.createElement('span');
                     timeSpan.textContent = new Date(message.timestamp).toLocaleTimeString('zh-CN', {
                         hour: '2-digit', minute: '2-digit', hour12: false
                     });
                     timestampEl.appendChild(timeSpan);
                     if (message.sender === 'user') {
-                        const statusSpan = document.createElement('span');
-                        statusSpan.className = 'message-status';
-                        statusSpan.textContent = '送达';
-                        timestampEl.appendChild(statusSpan);
-                    } else if (message.sender === 'character') {
-                        const statusSpan = document.createElement('span');
-                        statusSpan.className = 'message-status';
-                        statusSpan.textContent = '已读';
-                        timestampEl.appendChild(statusSpan);
+                         timestampEl.innerHTML += '<span class="message-status">送达</span>';
+                    } else {
+                         timestampEl.innerHTML += '<span class="message-status">已读</span>';
                     }
                     bubbleWrapper.appendChild(timestampEl);
                 }
@@ -28024,7 +29494,7 @@ for (let i = 0; i < 5; i++) {
             }
             
             return messageEl;
-        }
+}
     
 
         // ^^^ 新函数到此结束 ^^^
@@ -28255,11 +29725,33 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
              // ✅✅✅ 新增：隐藏灵感岛 ✅✅✅
         if (typingIsland) typingIsland.classList.remove('visible');
 
+            let responseList = [];
+            try {
+                let jsonStr = aiResponse;
+                const jsonMatch = aiResponse.match(/\[[\s\S]*\]/); 
+                if (jsonMatch) {
+                    jsonStr = jsonMatch[0];
+                    responseList = JSON.parse(jsonStr);
+                } else {
+                    // 兜底：不是 JSON 就当普通文本
+                    responseList = [{ content: aiResponse, translation: null }];
+                }
+            } catch (e) {
+                responseList = [{ content: aiResponse, translation: null }];
+            }
+
+            // 开启循环，逐条处理
+            for (const item of responseList) {
+                await new Promise(r => setTimeout(r, 800 + Math.random() * 500)); // 打字延迟
+
+                // 定义 chatContent，接管你后面所有的旧逻辑
+                let chatContent = item.content || ''; 
+                // 拿到翻译
+                const currentTranslation = item.translation || null; 
+
             // --- 【核心改动】将AI回复拆分为“聊天部分”和“动态指令部分” ---
 
 // vvv 【【【 终极修复：健壮的指令解析器 】】】 vvv
-            // a. 定义一个变量来存储“干净”的、用于聊天的文本
-            let chatContent = aiResponse;
             
             //  **最高优先级：** 检测并处理【HTML模块】指令
             const htmlActionTag = '[AI_HTML_ACTION]';
@@ -28733,7 +30225,8 @@ playNotificationSound();
                     const aiMessage = { 
                         dossierId, 
                         sender: 'character', 
-                        content: replyText, 
+                        content: replyText,
+                       translation: currentTranslation, 
                         timestamp: Date.now() 
                     };
                     
@@ -28841,8 +30334,8 @@ if (momentMatch) {
     } catch (e) {
         console.error("解析或处理动态指令失败:", e);
     }
+  }
 }
-
         } catch (error) {
             console.error("发送消息失败:", error);
             // ✅✅✅ 新增：隐藏灵感岛
@@ -44134,6 +45627,498 @@ async function handleCPInteraction(params) {
         console.error("AI 回复失败", e);
     }
 }
+
+/**
+ * 渲染 BlackBerry 风格的聊天列表
+ */
+async function renderBlackBerryList() {
+    const list = document.getElementById('bb-chat-list');
+    list.innerHTML = '';
+
+    // 更新时间
+    const now = new Date();
+    document.getElementById('bb-clock').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('bb-current-date').textContent = now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+
+    if (appState.dossiers.length === 0) {
+        list.innerHTML = `<div style="padding:20px; text-align:center; color:#666; font-size:12px;">(Empty)</div>`;
+        return;
+    }
+
+    const db = await dbHelper.dbPromise;
+
+    for (const dossier of appState.dossiers) {
+        // --- 获取真实数据 ---
+        const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossier.id);
+        let previewText = "No Message";
+        let timeStr = "";
+        let statusIcon = "";
+
+        if (history.length > 0) {
+            history.sort((a, b) => a.timestamp - b.timestamp);
+            const lastMsg = history[history.length - 1];
+            previewText = lastMsg.content;
+            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}).toLowerCase(); // 12:00p
+            
+            // 如果是我发的，显示对勾；对方发的，显示信封
+            statusIcon = lastMsg.sender === 'user' ? 'ri-check-line' : 'ri-mail-fill';
+        }
+
+        // --- 头像 ---
+        let avatarUrl = '';
+        if (dossier.character.avatarAssetId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+            if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+        }
+        const avatarStyle = avatarUrl ? `background-image: url('${avatarUrl}')` : '';
+        const avatarContent = avatarUrl ? '' : dossier.character.name[0];
+
+        const item = document.createElement('div');
+        item.className = 'bb-list-item';
+
+        item.innerHTML = `
+            <div class="bb-avatar" style="${avatarStyle}">${avatarContent}</div>
+            <div class="bb-info">
+                <div class="bb-name-row">
+                    <span class="bb-name">${dossier.character.name}</span>
+                    <span class="bb-time">${timeStr}</span>
+                </div>
+                <div class="bb-preview-row">
+                    <i class="${statusIcon} bb-icon-status"></i>
+                    <span class="bb-preview">${previewText}</span>
+                </div>
+            </div>
+        `;
+        
+        item.addEventListener('click', () => {
+            openIMessageChat(dossier.id, 'bb');
+        });
+
+        list.appendChild(item);
+    }
+}
+
+/**
+ * 3. 渲染 iOS 4 风格列表
+ */
+async function renderIOS4List() {
+    const list = document.getElementById('ios4-chat-list');
+    list.innerHTML = '';
+
+    if (appState.dossiers.length === 0) {
+        list.innerHTML = `<div style="padding:20px;text-align:center;color:#888;">No Messages</div>`;
+        return;
+    }
+
+    const db = await dbHelper.dbPromise;
+
+    for (const dossier of appState.dossiers) {
+        // --- 1. 获取该角色的最后一条短信 ---
+        const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossier.id);
+        
+        let previewText = '';
+        let timeStr = '';
+        let hasUnread = false;
+
+        if (history.length > 0) {
+            // 按时间排序，取最后一条
+            history.sort((a, b) => a.timestamp - b.timestamp);
+            const lastMsg = history[history.length - 1];
+            
+            previewText = lastMsg.content;
+            
+            // 格式化时间 (例如 10:24 PM)
+            timeStr = new Date(lastMsg.timestamp).toLocaleTimeString('en-US', {
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true
+            });
+
+            // 简单逻辑：如果是对方发的，给个蓝点提示 (模拟未读)
+            if (lastMsg.sender === 'character') {
+                hasUnread = true;
+            }
+        } 
+
+        // --- 2. 构建 HTML ---
+        const item = document.createElement('div');
+        item.className = 'ios4-list-item';
+        
+        // 蓝点标记
+        const blueDot = hasUnread 
+            ? `<div style="width:10px;height:10px;background:#007aff;border-radius:50%;margin-right:10px;box-shadow:0 1px 2px rgba(0,0,0,0.3); flex-shrink:0;"></div>` 
+            : `<div style="width:10px;margin-right:10px; flex-shrink:0;"></div>`;
+
+        item.innerHTML = `
+            ${blueDot}
+            <div class="ios4-item-content">
+                <div class="ios4-list-name">${dossier.character.name}</div>
+                <!-- ✅ 这里不再是死数据，而是真实的预览 -->
+                <div class="ios4-list-preview">${previewText}</div>
+                <div class="ios4-list-time">${timeStr}</div>
+                <div class="ios4-list-arrow">›</div>
+            </div>
+        `;
+        
+        item.addEventListener('click', () => {
+            // 传入 'ios' 主题
+            openIMessageChat(dossier.id, 'ios');
+        });
+
+        list.appendChild(item);
+    }
+}
+
+// ==========================================
+// ===   iMessage 核心逻辑 (Dual UI)      ===
+// ==========================================
+
+// 1. 全局状态记录 (当前在跟谁发短信)
+let currentIMSessionId = null;
+
+/**
+ * 【新增】公用函数：触发 AI 回复 iMessage
+ * 用于“发送按钮”和“重回按钮”
+ */
+async function triggerIMessageAIResponse(dossierId, isIOS) {
+    // UI 反馈：禁用按钮，显示状态
+    const btnEl = isIOS 
+        ? document.querySelector('.ios4-send-btn') 
+        : document.querySelector('.bb-send-btn');
+    const inputEl = isIOS 
+        ? document.querySelector('.ios4-input') 
+        : document.querySelector('.bb-input');
+        
+    const originalBtnText = btnEl.innerText;
+    btnEl.disabled = true;
+    btnEl.innerText = "...";
+
+    try {
+        const dossier = appState.dossiers.find(d => d.id === dossierId);
+        const db = await dbHelper.dbPromise;
+        
+        // 获取历史记录
+        const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossierId);
+        
+        // 这里的 userLastInput 传 null，因为我们直接读历史记录的最后一条作为语境
+        // 如果是发送触发的，用户的消息已经在 history 里了
+        // 如果是重回触发的，AI 的消息已删，history 末尾就是用户的上一条
+        const prompt = promptManager.createIMessagePrompt(dossier, history, null); 
+        
+        const aiResponse = await apiHelper.getChatCompletion(prompt);
+        
+        let jsonStr = aiResponse;
+        const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+        if (jsonMatch) jsonStr = jsonMatch[0];
+        
+        const replyList = JSON.parse(jsonStr);
+
+        for (const replyObj of replyList) {
+            await new Promise(r => setTimeout(r, 1000 + Math.random() * 800));
+            
+            const content = typeof replyObj === 'string' ? replyObj : replyObj.text;
+            const translation = typeof replyObj === 'string' ? null : replyObj.trans;
+
+            const aiMsg = {
+                dossierId,
+                sender: 'character',
+                content: content,
+                translation: translation,
+                timestamp: Date.now()
+            };
+            
+            const sid = await dbHelper.add(CONSTANTS.STORE_NAMES.IM_HISTORY, aiMsg);
+            aiMsg.id = sid;
+            
+            renderOneIMessage(aiMsg, isIOS);
+            scrollToIMBottom(isIOS);
+            
+            if (typeof playNotificationSound === 'function') playNotificationSound();
+        }
+
+    } catch (e) {
+        console.error("AI 回复失败", e);
+        utils.showToast("信号中断");
+    } finally {
+        btnEl.disabled = false;
+        btnEl.innerText = originalBtnText;
+        inputEl.focus();
+    }
+}
+
+/**
+ * 【重写】发送逻辑 (简化版，调用公用函数)
+ */
+async function handleIMessageSend(actionType) {
+    const dossierId = currentIMSessionId;
+    if (!dossierId) return;
+
+    const isIOS = document.getElementById('imessage-chat-ios4').classList.contains('active');
+    const inputEl = isIOS ? document.querySelector('.ios4-input') : document.querySelector('.bb-input');
+    const text = inputEl.value.trim();
+
+    // 1. 用户消息上屏
+    if (text) {
+        const userMsg = {
+            dossierId,
+            sender: 'user',
+            content: text,
+            timestamp: Date.now()
+        };
+        const savedId = await dbHelper.add(CONSTANTS.STORE_NAMES.IM_HISTORY, userMsg);
+        userMsg.id = savedId;
+        renderOneIMessage(userMsg, isIOS);
+        
+        inputEl.value = '';
+        scrollToIMBottom(isIOS);
+    }
+
+    // 2. 如果是 Final 模式，触发 AI
+    if (actionType === 'final') {
+        await triggerIMessageAIResponse(dossierId, isIOS);
+    }
+}
+
+/**
+ * 【新增】重回逻辑 (Retry / Regenerate)
+ */
+async function retryLastIMessage() {
+    const dossierId = currentIMSessionId;
+    if (!dossierId) return;
+    
+    const isIOS = document.getElementById('imessage-chat-ios4').classList.contains('active');
+    const db = await dbHelper.dbPromise;
+    
+    // 1. 获取历史
+    const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossierId);
+    history.sort((a, b) => a.timestamp - b.timestamp);
+    
+    if (history.length === 0) return utils.showToast("没有可重试的消息");
+    
+    // 2. 找到末尾连续的 AI 消息
+    const idsToDelete = [];
+    for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].sender === 'character') {
+            idsToDelete.push(history[i].id);
+        } else {
+            break; // 遇到用户消息停止
+        }
+    }
+    
+    if (idsToDelete.length === 0) {
+        return utils.showToast("最后一条必须是对方的消息才能重试");
+    }
+    
+    utils.showToast("正在重写...");
+
+    // 3. 删除数据库记录
+    const tx = db.transaction(CONSTANTS.STORE_NAMES.IM_HISTORY, 'readwrite');
+    await Promise.all(idsToDelete.map(id => tx.store.delete(id)));
+    await tx.done;
+    
+    // 4. 刷新 UI (重新加载整个列表最安全)
+    // 根据当前主题重新打开，实现刷新
+    openIMessageChat(dossierId, isIOS ? 'ios' : 'bb');
+    
+    // 5. 重新触发 AI 生成
+    // 注意：openIMessageChat 是异步渲染，这里稍微延迟一下再触发 AI，体验更好
+    setTimeout(() => {
+        triggerIMessageAIResponse(dossierId, isIOS);
+    }, 500);
+}
+
+/**
+ * 【新增】清空聊天记录 (Clear)
+ */
+async function clearIMessageHistory() {
+    const dossierId = currentIMSessionId;
+    if (!dossierId) return;
+
+    if (!confirm("确定要清空与该联系人的所有短信记录吗？")) return;
+
+    const db = await dbHelper.dbPromise;
+    const tx = db.transaction(CONSTANTS.STORE_NAMES.IM_HISTORY, 'readwrite');
+    const index = tx.store.index('by_dossierId');
+    
+    let cursor = await index.openCursor(IDBKeyRange.only(dossierId));
+    while (cursor) {
+        cursor.delete();
+        cursor = await cursor.continue();
+    }
+    await tx.done;
+    
+    utils.showToast("记录已清空");
+    
+    // 刷新 UI (清空容器)
+    const isIOS = document.getElementById('imessage-chat-ios4').classList.contains('active');
+    const containerId = isIOS ? 'ios4-messages-container' : 'bb-messages-container';
+    const container = document.getElementById(containerId);
+    
+    // 保留时间戳头部，清空消息
+    if (isIOS) {
+        container.innerHTML = `<div class="ios4-time-stamp">${new Date().toLocaleTimeString()}</div>`;
+    } else {
+        container.innerHTML = `<div class="bb-time-divider">CLEARED</div>`;
+    }
+}
+
+// 3. 通用入口函数 
+async function openIMessageChat(dossierId, theme) {
+    currentIMSessionId = dossierId;
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    if (!dossier) return;
+
+    // --- 1. 预加载头像 (新增) ---
+    let avatarUrl = '';
+    if (dossier.character.avatarAssetId) {
+        try {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+            if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+        } catch (e) {
+            console.error("头像加载失败", e);
+        }
+    }
+
+    // --- 2. 设置头部信息 ---
+    if (theme === 'ios') {
+        // iOS 头部通常只显示名字
+        document.getElementById('ios4-chat-title').textContent = dossier.character.name;
+    } else {
+        // BlackBerry 头部 (名字 + 头像)
+        document.getElementById('bb-chat-name').textContent = dossier.character.name;
+        
+        const bbAvatarEl = document.getElementById('bb-chat-avatar');
+        if (bbAvatarEl) {
+            if (avatarUrl) {
+                // 有图：显示图片，清空文字
+                bbAvatarEl.style.backgroundImage = `url('${avatarUrl}')`;
+                bbAvatarEl.textContent = '';
+                // 确保样式覆盖
+                bbAvatarEl.style.backgroundColor = '#fff'; 
+                bbAvatarEl.style.display = 'block';
+            } else {
+                // 无图：显示首字母
+                bbAvatarEl.style.backgroundImage = 'none';
+                bbAvatarEl.textContent = dossier.character.name[0];
+                // 修正样式以居中文字
+                bbAvatarEl.style.display = 'flex';
+                bbAvatarEl.style.justifyContent = 'center';
+                bbAvatarEl.style.alignItems = 'center';
+                bbAvatarEl.style.fontSize = '16px';
+                bbAvatarEl.style.fontWeight = 'bold';
+            }
+        }
+    }
+
+    // --- 3. 加载历史记录 (保持不变) ---
+    const db = await dbHelper.dbPromise;
+    const history = await db.getAllFromIndex(CONSTANTS.STORE_NAMES.IM_HISTORY, 'by_dossierId', dossierId);
+    history.sort((a, b) => a.timestamp - b.timestamp);
+
+    // --- 4. 渲染容器 (保持不变) ---
+    const containerId = theme === 'ios' ? 'ios4-messages-container' : 'bb-messages-container';
+    const container = document.getElementById(containerId);
+    container.innerHTML = ''; 
+
+    // 插入时间戳头
+    const timeStr = new Date().toLocaleString('en-US', {weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+    if (theme === 'ios') {
+        container.innerHTML += `<div class="ios4-time-stamp">${timeStr}</div>`;
+    } else {
+        container.innerHTML += `<div class="bb-time-divider">${timeStr.toUpperCase()}</div>`;
+    }
+
+    // 渲染每一条
+    history.forEach(msg => {
+        const html = generateIMessageHTML(msg, theme, dossier.character.name);
+        container.insertAdjacentHTML('beforeend', html);
+    });
+
+    // 跳转页面
+    const pageId = theme === 'ios' ? 'imessage-chat-ios4' : 'imessage-chat-bb';
+    navigateToPage(DOM.imessageApp, pageId);
+    
+    setTimeout(() => scrollToIMBottom(theme === 'ios'), 100);
+}
+
+// 4. 辅助：生成单条 HTML
+function generateIMessageHTML(msg, theme, charName) {
+    const isMe = msg.sender === 'user';
+    const timeShort = new Date(msg.timestamp).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+    
+    // ✅ 翻译逻辑：只有当 msg.translation 存在且不为空时，才生成 HTML
+    const hasTrans = !!msg.translation;
+    
+    // --- iOS 4 风格 ---
+    if (theme === 'ios') {
+        const sideClass = isMe ? 'right' : 'left';
+        const bubbleClass = isMe ? 'sent' : 'received';
+        const statusText = isMe ? `Read ${timeShort}` : timeShort;
+        
+        // 只有有翻译时，才加 onclick 事件
+        const clickAttr = hasTrans ? `onclick="this.parentElement.querySelector('.ios4-trans-box').classList.toggle('show-trans')"` : '';
+        
+        // 只有有翻译时，才渲染盒子
+        const transBoxHTML = hasTrans 
+            ? `<div class="ios4-trans-box">${msg.translation}</div>` 
+            : '';
+
+        return `
+            <div class="ios4-msg-wrapper ${sideClass}">
+                <div class="ios4-bubble ${bubbleClass}" ${clickAttr}>
+                    <div class="ios4-bubble-text">${msg.content}</div>
+                </div>
+                <!-- 翻译框紧跟气泡 -->
+                ${transBoxHTML}
+                <div class="ios4-status-text">${statusText}</div>
+            </div>
+        `;
+    } 
+    // --- BlackBerry 风格 ---
+    else {
+        const sideClass = isMe ? 'right' : 'left';
+        const nameTag = isMe ? '' : `<span class="bb-msg-name-tag">${charName}</span>`;
+        const statusTag = isMe ? `<span class="bb-msg-status">R</span>` : '';
+        
+        const clickAttr = hasTrans ? `onclick="this.querySelector('.bb-trans-box').classList.toggle('show-trans')"` : '';
+        
+        const transBoxHTML = hasTrans 
+            ? `<div class="bb-trans-box"><span class="bb-trans-prefix">TRANS:</span>${msg.translation}</div>` 
+            : '';
+
+        return `
+            <div class="bb-msg-row ${sideClass}">
+                <div class="bb-msg-bubble" ${clickAttr}>
+                    ${nameTag}
+                    ${msg.content}
+                    ${statusTag}
+                    ${transBoxHTML}
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 5. 辅助：单条上屏
+function renderOneIMessage(msg, isIOS) {
+    const theme = isIOS ? 'ios' : 'bb';
+    const containerId = isIOS ? 'ios4-messages-container' : 'bb-messages-container';
+    const container = document.getElementById(containerId);
+    
+    // 获取角色名 (为了 BB 显示名字)
+    const dossier = appState.dossiers.find(d => d.id === msg.dossierId);
+    const charName = dossier ? dossier.character.name : 'Unknown';
+
+    const html = generateIMessageHTML(msg, theme, charName);
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+// 6. 辅助：滚动到底部
+function scrollToIMBottom(isIOS) {
+    const containerId = isIOS ? 'ios4-messages-container' : 'bb-messages-container';
+    const container = document.getElementById(containerId);
+    if(container) container.scrollTop = container.scrollHeight;
+}
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -45521,27 +47506,65 @@ DOM.chatDialoguePage.style.backgroundPosition = 'center'; // <-- 修改目标
 
 // vvv 用下面的完整代码块，替换所有旧的菜单监听逻辑 vvv
         DOM.messagesContainer.addEventListener('click', (e) => {
-            const targetMessage = e.target.closest('.chat-message');
-            
-            // 如果在多选模式下，单击任何消息（或其内部的复选框）都视为“切换选中状态”
+            // 多选模式逻辑保持不变...
             if (appState.isMultiSelectMode) {
+                const targetMessage = e.target.closest('.chat-message');
                 if (targetMessage) {
                     const messageId = parseInt(targetMessage.dataset.messageId, 10);
-                    if (messageId) {
-                        toggleMessageSelection(messageId);
-                    }
+                    if (messageId) toggleMessageSelection(messageId);
                 }
-                return; // 在多选模式下，不执行后续的菜单逻辑
-            }
-
-            // --- 以下是正常的、非多选模式下的单击出菜单逻辑 ---
-            const targetBubble = e.target.closest('.bubble');
-            if (!targetBubble) {
-                return;
+                return; 
             }
             
-            openBubbleMenu(targetBubble);
-            e.stopPropagation(); 
+            // --- 翻译点击逻辑 ---
+            const targetBubble = e.target.closest('.bubble');
+            
+            if (targetBubble) {
+                e.stopPropagation(); // 阻止冒泡
+                
+                // 检查是否有翻译框兄弟元素
+                // 结构是: wrapper -> [quote, bubble, trans-box, time]
+                // 所以我们找 parent 的子元素
+                const wrapper = targetBubble.parentElement;
+                const transBox = wrapper.querySelector('.chat-trans-box');
+
+                if (transBox) {
+                    // ✅ 有翻译：点击切换显示
+                    transBox.classList.toggle('visible');
+                } else {
+                    // ❌ 没翻译：点击打开菜单
+                    openBubbleMenu(targetBubble);
+                }
+            }
+        });
+        
+        // --- 【新增】长按打开菜单 (辅助有翻译的消息) ---
+        let longPressTimer;
+        
+        DOM.messagesContainer.addEventListener('touchstart', (e) => {
+            const targetBubble = e.target.closest('.bubble');
+            if (!targetBubble) return;
+            
+            longPressTimer = setTimeout(() => {
+                openBubbleMenu(targetBubble);
+            }, 600); // 600ms 长按
+        }, { passive: true });
+
+        DOM.messagesContainer.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+        });
+        
+        DOM.messagesContainer.addEventListener('touchmove', () => {
+            clearTimeout(longPressTimer); // 滑动取消长按
+        });
+        
+        // 电脑端右键菜单 (作为长按替代)
+        DOM.messagesContainer.addEventListener('contextmenu', (e) => {
+            const targetBubble = e.target.closest('.bubble');
+            if (targetBubble) {
+                e.preventDefault(); // 阻止浏览器默认菜单
+                openBubbleMenu(targetBubble);
+            }
         });
 
         // --- 菜单关闭逻辑 (保持不变) ---
@@ -51251,6 +53274,87 @@ DOM.cpDmCloseBtn.addEventListener('click', () => {
             deleteCPDM(id, item);
         }
     });
+
+// === iMessage 应用监听 === // 
+
+    // 1. 桌面入口 -> 进入风格选择页
+    DOM.iconImessage.addEventListener('click', () => {
+        navigateToPage(DOM.imessageApp, 'imessage-theme-select');
+    });
+// --- 补全：iMessage 内部通用的返回按钮逻辑 ---
+    const imessageBackBtns = document.querySelectorAll('#imessage-app .back-button');
+    
+    imessageBackBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // 找到按钮上的 target 属性
+            const target = e.target.closest('.back-button').dataset.target;
+            
+            if (target === 'desktop') {
+                // 如果目标是桌面，就关闭整个 APP
+                closeNavigator(DOM.imessageApp);
+            } else {
+                // 否则就在 APP 内部跳转页面
+                navigateToPage(DOM.imessageApp, target);
+            }
+        });
+    });
+    // 2. 选择 iOS 4 风格 -> 跳转并渲染
+    DOM.btnThemeIos4.addEventListener('click', () => {
+        renderIOS4List();
+        navigateToPage(DOM.imessageApp, 'imessage-page-ios4');
+    });
+
+    // 3. 选择 BlackBerry 风格 -> 跳转并渲染
+    DOM.btnThemeBb.addEventListener('click', () => {
+        // 先渲染内容
+        renderBlackBerryList();
+        // 再跳转页面
+        navigateToPage(DOM.imessageApp, 'imessage-page-bb');
+    });
+
+    // 4. 通用返回按钮逻辑
+    DOM.imessageBackBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = e.target.closest('.back-button').dataset.target;
+            
+            if (target === 'desktop') {
+                closeNavigator(DOM.imessageApp);
+            } else {
+                navigateToPage(DOM.imessageApp, target);
+            }
+        });
+    });
+    // --- iOS 4 风格 ---
+    // 回车 -> 存入缓存 (Buffer)
+    DOM.iosInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleIMessageSend('buffer');
+    });
+    // 按钮 -> 发送并触发 AI (Final)
+    DOM.iosSendBtn.addEventListener('click', () => {
+        handleIMessageSend('final');
+    });
+
+    // --- BlackBerry 风格 ---
+    // 回车 -> 存入缓存 (Buffer)
+    DOM.bbInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleIMessageSend('buffer');
+    });
+    // 按钮 -> 发送并触发 AI (Final)
+    DOM.bbSendBtn.addEventListener('click', () => {
+        handleIMessageSend('final');
+    });
+
+// === iMessage 功能键监听 (直连版) ===
+
+    // 1. iOS Clear 按钮 -> 清空记录
+    DOM.iosClearBtn.addEventListener('click', clearIMessageHistory);
+
+    // 2. iOS 相机按钮 -> 重回 (Retry)
+    DOM.iosCamBtn.addEventListener('click', retryLastIMessage);
+
+    // 3. BlackBerry 相机按钮 -> 重回 (Retry)
+    DOM.bbCamBtn.addEventListener('click', retryLastIMessage);
+
 }
 
         async function initializeApp() {
