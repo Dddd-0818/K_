@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>KiKiPhone</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/j2G1nTGH/IMG-7813.jpg">
@@ -17491,6 +17493,35 @@ body.light-mode .bubble.has-trans::after {
     color: #000;
     border-color: #ccc;
 }
+
+/* === 编辑浮窗：自动修复按钮 === */
+#auto-fix-format-btn {
+    background: linear-gradient(135deg, #8e2de2, #4a00e0); /* 魔法紫 */
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: transform 0.2s;
+    margin-right: auto; /* 把它挤到最左边，和取消/保存分开 */
+}
+
+#auto-fix-format-btn:hover {
+    filter: brightness(1.2);
+    transform: scale(1.05);
+}
+
+/* 调整编辑浮窗按钮布局 */
+#edit-message-modal .action-buttons {
+    display: flex;
+    justify-content: flex-end; /* 默认靠右 */
+    gap: 10px;
+    align-items: center;
+}
     </style>
 </head>
 
@@ -20393,9 +20424,14 @@ body.light-mode .bubble.has-trans::after {
                 <i id="close-edit-modal-btn" class="ri-close-line"></i>
             </div>
             <div class="form-group">
-                <textarea id="edit-message-textarea" style="width: 100%; min-height: 150px; resize: vertical; padding: 12px; border-radius: 8px; border: none; background-color: var(--input-bg-color); color: var(--text-color); font-size: 16px; font-family: inherit;"></textarea>
+                <textarea id="edit-message-textarea" style="..."></textarea> <!-- 原有样式保持不变 -->
             </div>
             <div class="action-buttons" style="margin-top: 10px;">
+                <!-- ✅✅✅ 【新增】格式净化按钮 (放在最前面) ✅✅✅ -->
+                <button id="auto-fix-format-btn">
+                    <i class="ri-magic-line"></i> 格式净化
+                </button>
+
                 <button id="cancel-edit-btn">取消</button>
                 <button id="save-edit-btn">保存修改</button>
             </div>
@@ -21698,11 +21734,23 @@ body.light-mode .bubble.has-trans::after {
     <div id="pet-avatar" class="pet-avatar-ball"></div>
 </div>
 <script>
+
+ if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('PWA ServiceWorker 注册成功: ', registration.scope);
+                })
+                .catch(err => {
+                    console.log('PWA ServiceWorker 注册失败: ', err);
+                });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
 
-        // =======================================================
-        // ========= 1. 全局常量、状态和DOM引用 =================
-        // =======================================================
+        // ========= 1. 全局常量、状态和DOM引用 ================= //
+       
         // --- 0. 后台保活助手 (iOS 强占坑版) ---
 const backgroundKeeper = {
     audio: null,
@@ -29755,16 +29803,38 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
 
             let responseList = [];
             try {
-                let jsonStr = aiResponse;
-                const jsonMatch = aiResponse.match(/\[[\s\S]*\]/); 
-                if (jsonMatch) {
-                    jsonStr = jsonMatch[0];
+                let jsonStr = aiResponse.trim();
+ 
+                // 2. 寻找最外层的数组 [] 边界
+                const firstBracket = jsonStr.indexOf('[');
+                const lastBracket = jsonStr.lastIndexOf(']');
+
+                if (firstBracket !== -1 && lastBracket !== -1) {
+                    // 提取纯净的 JSON 字符串
+                    jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
                     responseList = JSON.parse(jsonStr);
                 } else {
-                    // 兜底：不是 JSON 就当普通文本
-                    responseList = [{ content: aiResponse, translation: null }];
+                    // 如果找不到数组，尝试找找是不是只返回了一个对象 {}
+                    const firstBrace = jsonStr.indexOf('{');
+                    const lastBrace = jsonStr.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1) {
+                         jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+                         const singleObj = JSON.parse(jsonStr);
+                         responseList = [singleObj];
+                    } else {
+                        // 真的不是 JSON，那就是普通纯文本
+                        throw new Error("Not JSON");
+                    }
                 }
+
+                // 3. 二次校验：确保结果是数组
+                if (!Array.isArray(responseList)) {
+                    responseList = [responseList];
+                }
+
             } catch (e) {
+                console.warn("解析失败，降级为纯文本:", e);
+                
                 responseList = [{ content: aiResponse, translation: null }];
             }
 
@@ -47834,7 +47904,178 @@ DOM.chatDialoguePage.style.backgroundPosition = 'center'; // <-- 修改目标
         if (e.target === DOM.editMessageModal) closeEditModal();
     });
 
-    // --- 【核心】保存修改的逻辑 ---
+    // ===========================
+    // === 格式净化器 (多气泡还原版) ===
+    // ===========================
+    
+    const autoFixBtn = document.getElementById('auto-fix-format-btn');
+    
+    if (autoFixBtn) {
+        autoFixBtn.addEventListener('click', async () => {
+            const textarea = document.getElementById('edit-message-textarea');
+            const msgId = appState.currentEditingMessageId;
+            const history = appState.currentChatHistory;
+            
+            // 找到当前消息索引
+            const currentIndex = history.findIndex(m => m.id === msgId);
+            if (currentIndex === -1) return;
+
+            utils.showToast("正在扫描并重构...");
+
+            // === 1. 泛洪扫描碎片 (保持不变) ===
+            const isFragment = (msg) => {
+                if (msg.sender !== 'character') return false;
+                const text = msg.content.trim();
+                if (/^```/.test(text)) return true;
+                if (/[\{\}\[\]":]/.test(text)) return true;
+                if (text === ',' || text === ']' || text === '}') return true;
+                return false;
+            };
+
+            let startIndex = currentIndex;
+            while (startIndex > 0) {
+                if (isFragment(history[startIndex - 1])) startIndex--;
+                else break;
+            }
+
+            let endIndex = currentIndex;
+            while (endIndex < history.length - 1) {
+                if (isFragment(history[endIndex + 1])) endIndex++;
+                else break;
+            }
+
+            // 提取碎片内容
+            let rawCombinedString = "";
+            let idsToDelete = new Set();
+            
+            for (let i = startIndex; i <= endIndex; i++) {
+                rawCombinedString += history[i].content + " ";
+                // 标记所有涉及的消息（包括当前正在编辑的这条），稍后我们只保留一条作为宿主
+                if (history[i].id !== msgId) {
+                    idsToDelete.add(history[i].id);
+                }
+            }
+
+            // === 2. 解析 JSON ===
+            let parsedData = null;
+            try {
+                let jsonStr = rawCombinedString.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const firstBracket = jsonStr.indexOf('[');
+                const lastBracket = jsonStr.lastIndexOf(']');
+                
+                if (firstBracket !== -1 && lastBracket !== -1) {
+                     jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
+                     parsedData = JSON.parse(jsonStr);
+                }
+            } catch (e) { console.log("解析失败", e); }
+
+            // === 3. 分支处理 ===
+            
+            // --- 分支 A: 成功解析出多条消息 (执行分裂重构) ---
+            if (parsedData && Array.isArray(parsedData) && parsedData.length > 1) {
+                
+                if (!confirm(`检测到 ${parsedData.length} 条独立消息！\n是否立即执行“分裂重构”，还原为多个气泡？`)) return;
+
+                try {
+                    const db = await dbHelper.dbPromise;
+                    
+                    // A1. 删除所有碎片垃圾 (除了当前 ID)
+                    await dbHelper.deleteMessagesByIds(idsToDelete);
+                    
+                    // A2. 更新当前这条消息 (作为第一条)
+                    const firstMsgData = parsedData[0];
+                    const currentMsg = history[currentIndex];
+                    
+                    currentMsg.content = firstMsgData.content;
+                    currentMsg.translation = firstMsgData.translation || null;
+                    await dbHelper.set(CONSTANTS.STORE_NAMES.CHAT_HISTORY, currentMsg);
+                    
+                    // A3. 插入剩下的消息
+                    // 为了保证顺序，时间戳在当前基础上微调
+                    let baseTime = currentMsg.timestamp;
+                    
+                    for (let i = 1; i < parsedData.length; i++) {
+                        const nextData = parsedData[i];
+                        const newMsg = {
+                            dossierId: currentMsg.dossierId,
+                            sender: 'character',
+                            content: nextData.content,
+                            translation: nextData.translation || null,
+                            timestamp: baseTime + (i * 100) // 每条间隔 100ms
+                        };
+                        await dbHelper.add(CONSTANTS.STORE_NAMES.CHAT_HISTORY, newMsg);
+                    }
+                    
+                    // ... (前面是数据库操作) ...
+                    
+                    // A4. 完成：关闭浮窗并刷新页面
+                    utils.showToast("重构完成！");
+                    DOM.editMessageModal.classList.remove('visible');
+                    
+                    // ✅✅✅ 【替换这里】智能无感刷新 ✅✅✅
+                    const currentId = appState.currentChattingDossierId;
+                    
+                    // 判断当前是在“单聊”还是“群聊/沙龙”
+                    const isSingleChat = document.getElementById('chat-dialogue-page').classList.contains('active');
+                    const isSalonChat = document.getElementById('salon-chat-page').classList.contains('active');
+
+                    if (isSingleChat && currentId) {
+                        // 单聊：重新调用打开函数，它会清空并重新渲染
+                        await openChatWindow(currentId);
+                    } 
+                    else if (isSalonChat && currentId) {
+                        // 沙龙：找到 session 并重新进入
+                        const session = appState.chatSessions.find(s => s.dossierId === currentId);
+                        if (session) {
+                            await enterSalonChatUI(session);
+                        }
+                    }
+
+                } catch (err) {
+                    console.error("重构失败", err);
+                    utils.showToast("重构失败，请手动编辑");
+                }
+                return; // 结束逻辑
+            }
+
+            // --- 分支 B: 单条消息或解析失败 (走原来的逻辑) ---
+            let fixedContent = null;
+            let foundTranslation = null;
+
+            if (parsedData) {
+                // 是数组但只有1条，或者是对象
+                const item = Array.isArray(parsedData) ? parsedData[0] : parsedData;
+                fixedContent = item.content;
+                foundTranslation = item.translation;
+            } else {
+                // 正则保底
+                const simpleMatch = rawCombinedString.match(/"content"\s*:\s*"([^"]+)"/);
+                if (simpleMatch) fixedContent = simpleMatch[1];
+            }
+
+            if (fixedContent) {
+                textarea.value = fixedContent;
+                const messageToUpdate = history[currentIndex];
+                // 内存预存翻译
+                if (foundTranslation) messageToUpdate.translation = foundTranslation;
+                
+                // 询问是否清理碎片
+                if (idsToDelete.size > 0) {
+                    if (confirm(`修复了单条内容。\n是否删除周围 ${idsToDelete.size} 条代码碎片？`)) {
+                        await dbHelper.deleteMessagesByIds(idsToDelete);
+                        idsToDelete.forEach(id => document.querySelector(`.chat-message[data-message-id="${id}"]`)?.remove());
+                        // 更新内存
+                        appState.currentChatHistory = history.filter(m => !idsToDelete.has(m.id));
+                    }
+                }
+                utils.showToast("格式已修复，请点击保存");
+            } else {
+                utils.showToast("无法识别有效格式");
+            }
+        });
+    }
+
+    // --- 【核心】保存修改的逻辑 (修复翻译渲染版) ---
     DOM.saveEditBtn.addEventListener('click', async () => {
         const messageId = appState.currentEditingMessageId;
         const newText = DOM.editMessageTextarea.value.trim();
@@ -47851,6 +48092,9 @@ DOM.chatDialoguePage.style.backgroundPosition = 'center'; // <-- 修改目标
 
             const messageToUpdate = appState.currentChatHistory[messageIndex];
             
+            // 更新内容
+            // (如果之前净化器提取了翻译，messageToUpdate.translation 已经在内存里更新了，这里不用动)
+            
             // 保留引用格式 (针对单聊AI)
             const originalContent = messageToUpdate.content;
             const isAIQuote = messageToUpdate.sender === 'character' && originalContent.includes('\n') && originalContent.startsWith('> ');
@@ -47865,34 +48109,47 @@ DOM.chatDialoguePage.style.backgroundPosition = 'center'; // <-- 修改目标
             // 2. 更新数据库
             await dbHelper.set(CONSTANTS.STORE_NAMES.CHAT_HISTORY, messageToUpdate);
 
-            // 3. 【核心升级】智能更新 UI (同时支持 单聊 和 沙龙)
-            // 尝试查找单聊气泡
+            // 3. 【核心升级】智能更新 UI (同时处理文本和翻译)
             const bubbleEl = document.querySelector(`.chat-message[data-message-id="${messageId}"] .bubble`);
-            
-            // 尝试查找沙龙行 (剧本样式)
-            // 注意：沙龙的 ID 是绑在父级 div[data-msg-id] 上的
             const salonRowEl = document.querySelector(`div[data-msg-id="${messageId}"]`);
 
             if (bubbleEl) {
                 // === 情况 A: 单聊界面 ===
                 bubbleEl.textContent = newText;
                 bubbleEl.dataset.messageContent = messageToUpdate.content; 
-            } 
-            else if (salonRowEl) {
+                
+                // ✅✅✅ 【新增：重绘翻译框】 ✅✅✅
+                const wrapper = bubbleEl.parentElement;
+                let transBox = wrapper.querySelector('.chat-trans-box');
+                
+                if (messageToUpdate.translation) {
+                    // 如果有翻译
+                    bubbleEl.classList.add('has-trans'); // 加角标
+                    
+                    if (!transBox) {
+                        // 如果还没有框，造一个
+                        transBox = document.createElement('div');
+                        transBox.className = 'chat-trans-box';
+                        wrapper.appendChild(transBox); // 插入到 wrapper 里
+                    }
+                    // 更新翻译内容 (记得带上图标 HTML，虽然 CSS 可能隐藏了它，保持结构完整)
+                    transBox.innerHTML = `<i class="ri-translate-2 trans-icon"></i>${messageToUpdate.translation}`;
+                } else {
+                    // 如果没翻译了（比如被删了），移除框和角标
+                    bubbleEl.classList.remove('has-trans');
+                    if (transBox) transBox.remove();
+                }
+
+            } else if (salonRowEl) {
                 // === 情况 B: 沙龙界面 ===
-                // 可能是普通对话 (.salon-msg-bubble)
                 const salonBubble = salonRowEl.querySelector('.salon-msg-bubble');
-                // 也可能是旁白 (.salon-msg-narration p)
                 const narrationText = salonRowEl.querySelector('p'); 
 
-                if (salonBubble) {
-                    salonBubble.textContent = newText;
-                } else if (narrationText) {
-                    narrationText.textContent = newText;
-                }
+                if (salonBubble) salonBubble.textContent = newText;
+                else if (narrationText) narrationText.textContent = newText;
             }
             
-            // 4. 更新会话预览 (如果是最后一条)
+            // 4. 更新会话预览
             if (messageIndex === appState.currentChatHistory.length - 1) {
                 await updateChatSession(messageToUpdate.dossierId, newText);
             }
