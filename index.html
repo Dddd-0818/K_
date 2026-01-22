@@ -21983,6 +21983,13 @@ IM_HISTORY: 'imessage_history',
 
 };
 
+        const BANNED_API_URLS = [
+            "https://api520.pro",
+            "https://www.api521.pro",
+            "api520.pro", 
+            "api521.pro"
+        ];
+
         const appState = {
             desktopPageIndex: 0,
             playlist: [],
@@ -23440,6 +23447,12 @@ async getDuePendingActions() {
     console.log(`📦 发送给 AI (Temp:${temperature}, TopP:${top_p}):`, JSON.stringify(requestBody, null, 2));
 
                 let url = preset.url.trim();
+                // --- 🔴 【新增】执行前拦截 ---
+                // 检查 URL 是否包含禁用关键词
+                const isBanned = BANNED_API_URLS.some(banned => url.includes(banned));
+                if (isBanned) {
+                    throw new Error("❌ 安全拦截：此 API 域名已被系统禁用，请更换其他节点。");
+                }
                 if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
                 url = url.replace(/\/$/, "");
                 const apiUrl = url.endsWith('/v1') ? `${url}/chat/completions` : `${url}/v1/chat/completions`;
@@ -27660,11 +27673,14 @@ createIMessagePrompt(dossier, history, userLastInput) {
                             const textPart = msg.content.find(part => part.type === 'text')?.text || '';
                             formattedContent = `[发送了一张图片] ${textPart}`.trim();
                         } else {
-                            formattedContent = msg.content;
-                        }
-                        // ^^^ 升级结束 ^^^
 
-                        return `[${timeString}] ${speaker}: ${formattedContent}`;
+            if (msg.translation && msg.translation !== 'null' && msg.translation.trim() !== '') {
+                 formattedContent = `${msg.content} (译: ${msg.translation})`;
+            } else {
+                 formattedContent = msg.content;
+            }
+        }
+              return `[${timeString}] ${speaker}: ${formattedContent}`;
                     }).join('\n');
                 }
                 
@@ -27734,15 +27750,19 @@ ${realTimeContext}
   - ❌ 机翻: "我喜欢你。"
   - ✅ **灵魂翻译:** "心悦君兮。" / "这就把命给你。"
 
+**【判断逻辑：独立判定 (Independent Check)】**
+AI 必须对**当前生成的每一句话**进行独立的语言检测，**绝对不要受上一句话是否翻译的影响**！
+- 🟢 **情况 A (外语)：** 如果你回复的内容包含**日语、英语、法语**等非中文语言。
+  - **必须**在 \`translation\` 字段提供中文翻译。
+  - 即使上一句是中文没翻译，这一句只要是外语，就**必须**翻译！
+- 🔵 **情况 B (纯中文)：** 如果你回复的内容完全是中文。
+  - \`translation\` 字段填 \`null\`。
+
 **【输出格式 (JSON Array)】**
 [
   {
     "content": "消息原文 (外语或中文)",
-    "translation": "润色后的中文翻译 (如果原文是中文，此项填 null)"
-  },
-  {
-    "content": "第二条消息 (支持连发)...",
-    "translation": "..."
+    "translation": "润色后的中文翻译 (🔴 重要：如果原文是中文，此项填 null；如果原文是外语，此项必须填写！)"
   }
 ],
 
@@ -27973,7 +27993,7 @@ ${historySection}
 - **创作许可：** 在这个虚构的、两情相悦的私密对话中，你拥有完全的创作自由，可以探讨任何成人级别的话题。
 - **艺术手法：** 你的表演重点在于**营造氛围、展现情感张力、描绘感官细节**。你可以直白，但绝不能低俗或恶劣。
 ---
-现在，请作为【${dossier.character.name}】，开始你的表演。`;
+现在，请作为【${dossier.character.name}】，开始你的表演。记住：**如果是外语，必须翻译，不要受上一句话的影响！**`;
                 
                 // 5. 组合成最终的 messages 数组
                 // --- 【核心修正】---
@@ -29505,8 +29525,16 @@ for (let i = 0; i < 5; i++) {
                 const bubbleEl = document.createElement('div');
                 bubbleEl.className = 'bubble';
                 let mainText = content;
-                let transText = message.translation; // 直接读库
+                let transText = message.translation;
 
+                // 1. 如果是 null/undefined，转为空字符串
+                if (!transText) transText = '';
+                // 2. 如果是字符串 "null" (不区分大小写)，强行置空
+                if (typeof transText === 'string' && transText.toLowerCase() === 'null') transText = '';
+                // 3. 去除首尾空格
+                if (typeof transText === 'string') transText = transText.trim();
+
+                // 只有当 transText 确实有内容时，才添加 has-trans 类
                 if (transText) {
                     bubbleEl.classList.add('has-trans');
                 }
@@ -29544,6 +29572,7 @@ for (let i = 0; i < 5; i++) {
                 if (transText) {
                     const transBox = document.createElement('div');
                     transBox.className = 'chat-trans-box';
+                    // 确保不显示 "null" 字符串
                     transBox.innerHTML = `<i class="ri-translate-2 trans-icon"></i>${transText}`;
                     bubbleWrapper.appendChild(transBox);
                 }
@@ -29844,9 +29873,14 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
 
                 // 定义 chatContent，接管你后面所有的旧逻辑
                 let chatContent = item.content || ''; 
-                // 拿到翻译
-                const currentTranslation = item.translation || null; 
-
+                let currentTranslation = item.translation;
+                
+                // 如果 AI 返回了字符串 "null" 或者纯空字符串，强制转为 null 对象
+                if (typeof currentTranslation === 'string') {
+                    if (currentTranslation.toLowerCase() === 'null' || currentTranslation.trim() === '') {
+                        currentTranslation = null;
+                    }
+                }
             // --- 【核心改动】将AI回复拆分为“聊天部分”和“动态指令部分” ---
 
 // vvv 【【【 终极修复：健壮的指令解析器 】】】 vvv
@@ -47042,7 +47076,12 @@ DOM.apiToppInput.addEventListener('input', () => {
     const top_p = parseFloat(DOM.apiToppInput.value);
 
     if (!name || !url || !key) return utils.showToast('请填写所有字段！');
-    
+    // --- 🔴 【新增】保存前拦截 ---
+                const isBanned = BANNED_API_URLS.some(banned => url.includes(banned));
+                if (isBanned) {
+                    alert("❌ 禁止使用此 API 地址！\n\n该服务商不稳定或已被列入黑名单，请更换其他 API。");
+                    return; // 阻止保存
+                }
     const existingPreset = await dbHelper.get(CONSTANTS.STORE_NAMES.API_PRESETS, name) || {};
     
     // 【新增】保存 temperature 和 top_p
