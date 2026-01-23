@@ -21334,6 +21334,11 @@ body.light-mode .bubble.has-trans::after {
             <div class="pemb-read-reply-content" id="pemb-read-reply-content">User reply...</div>
         </div>
         <div class="pemb-card-footer">
+            <!-- 🔴 新增：销毁按钮 (靠左) -->
+            <button class="pemb-btn-text" id="btn-delete-letter" style="color: #b91c1c; margin-right: auto; opacity: 0.8;">
+                <i class="ri-delete-bin-line"></i> 销毁
+            </button>
+            
             <button class="pemb-btn-text" id="btn-close-read">关闭</button>
         </div>
     </div>
@@ -22814,6 +22819,7 @@ gotoMinimaxSettings: document.getElementById('goto-minimax-settings'),
     pembReadTranslation: document.getElementById('pemb-read-translation'),
     pembReadReplyContent: document.getElementById('pemb-read-reply-content'),
     pembCloseReadBtn: document.getElementById('btn-close-read'),
+    pembDeleteLetterBtn: document.getElementById('btn-delete-letter'),
 funcListenTogether: document.getElementById('func-listen-together'),
     musicShareModal: document.getElementById('share-music-modal'),
     closeMusicShareBtn: document.getElementById('close-share-music-btn'),
@@ -40659,6 +40665,37 @@ function switchPemberleyView(viewName) {
     }
 }
 
+/**
+ * 【新增】销毁当前正在阅读的信件
+ */
+async function deletePemberleyLetter() {
+    // 获取当前正在查看的信件对象
+    const letter = appState.currentReplyingLetter;
+    if (!letter) return;
+
+    if (confirm(`【销毁确认】\n\n确定要永久销毁来自 "${letter.author}" 的这封信件吗？\n此操作不可撤销，记忆将永久消散。`)) {
+        try {
+            // 1. 从数据库删除
+            await dbHelper.delete(CONSTANTS.STORE_NAMES.PEMB_LETTERS, letter.id);
+            
+            // 2. 关闭浮窗
+            closePembReadModal();
+            
+            // 3. 刷新列表 (如果在珍藏页)
+            // 只有当珍藏视图显示时才刷新，避免不必要的渲染
+            if (DOM.pembViewColl.style.display === 'block') {
+                await renderPembCollection();
+            }
+            
+            utils.showToast("信件已销毁，随风而逝...");
+
+        } catch (e) {
+            console.error("删除信件失败", e);
+            utils.showToast("销毁失败");
+        }
+    }
+}
+
 // 打开回信浮窗
 function openPembReplyModal(letter) {
     appState.currentReplyingLetter = letter; // 存入 appState
@@ -52334,7 +52371,9 @@ document.addEventListener('click', (e) => {
 
     // 6. 阅读浮窗交互
     DOM.pembCloseReadBtn.addEventListener('click', closePembReadModal);
-
+if (DOM.pembDeleteLetterBtn) {
+        DOM.pembDeleteLetterBtn.addEventListener('click', deletePemberleyLetter);
+    }
     // 7. 浮窗遮罩点击关闭
     DOM.pembReplyModal.addEventListener('click', (e) => {
         if (e.target === DOM.pembReplyModal) closePembReplyModal();
