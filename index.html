@@ -18,6 +18,9 @@
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=La+Belle+Aurore&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,700&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&family=Noto+Serif+KR:wght@300;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Pirata+One&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -9754,140 +9757,157 @@ body.light-mode .entry-delete-btn { color: #8a1c1c; }
 }
 
 /* ============================================================
-   ===  开屏动画专属样式 (Splash Screen Styles)           ===
-   ============================================================ */
-
-/* 1. 全屏容器 */
-#app-splash-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 99999; /* 确保在最顶层 */
+       ===  [新版] 开屏动画：KIKI 巴黎邀请函 (Chanel Style)   ===
+       ============================================================ */
     
-    /* 配色变量 */
-    --splash-bg: #fdfcf8;
-    --splash-silk-1: rgba(255, 255, 255, 0.95);
-    --splash-silk-2: rgba(245, 240, 235, 0.8);
-    --splash-silk-3: rgba(235, 225, 225, 0.6);
-    --splash-ink: #2a2a2a;
-    --splash-faded: #8a8a8a;
+    /* 定义局部变量，防止污染全局 */
+    #splash-screen {
+        --splash-bg: #111111;
+        --splash-card-bg: #ffffff;
+        --splash-text: #000000;
+        --font-serif: 'Bodoni Moda', serif;
+        --font-sans: 'Inter', sans-serif;
+    }
 
-    background-color: var(--splash-bg);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    /* 开屏容器 */
+    #splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: var(--splash-bg);
+        z-index: 99999; /* 确保最高层级 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: opacity 1.2s cubic-bezier(0.65, 0, 0.35, 1), visibility 1.2s;
+    }
+
+    /* 隐藏状态 */
+    #splash-screen.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    /* 邀请函卡片 */
+    .invitation-card {
+        width: 85%;
+        max-width: 400px;
+        aspect-ratio: 3/4;
+        background-color: var(--splash-card-bg);
+        padding: 40px 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        color: var(--splash-text);
+        
+        /* 阴影与质感 */
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        opacity: 0; /* 初始隐藏，等动画 */
+        
+        /* 入场动画 */
+        animation: cardEntrance 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        position: relative;
+    }
+
+    /* 卡纸纹理 */
+    .invitation-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        pointer-events: none;
+    }
+
+    /* 内部装饰边框 (Debossed effect) */
+    .card-border {
+        position: absolute;
+        top: 15px; left: 15px; right: 15px; bottom: 15px;
+        border: 1px solid #e5e5e5;
+        pointer-events: none;
+    }
+
+    /* LOGO 区域 */
+    .logo-area { margin-top: 20px; }
     
-    /* 消失动画 */
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
-}
+    .brand-name {
+        font-family: var(--font-sans);
+        font-weight: 700;
+        font-size: 2.5rem;
+        letter-spacing: -1px;
+        margin-bottom: 5px;
+        color: #000;
+    }
 
-/* 隐藏状态 */
-#app-splash-screen.hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
+    .brand-mark {
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 300;
+        color: #000;
+    }
 
-/* 2. 内部元素样式 */
-.splash-svg-defs { position: absolute; width: 0; height: 0; pointer-events: none; }
+    /* 文本详情 */
+    .event-details {
+        font-family: var(--font-serif);
+        color: #111;
+        width: 100%;
+    }
 
-.splash-texture-bg {
-    position: absolute; inset: 0; opacity: 0.5; z-index: 0;
-    filter: contrast(120%) brightness(100%);
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.12'/%3E%3C/svg%3E");
-    pointer-events: none;
-}
+    .season {
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
 
-.splash-vignette {
-    position: absolute; inset: 0;
-    background: radial-gradient(circle at center, transparent 30%, rgba(220, 210, 200, 0.3) 100%);
-    pointer-events: none; z-index: 0;
-}
+    .collection-type {
+        font-style: italic;
+        font-size: 1rem;
+        color: #555;
+        margin-bottom: 25px;
+    }
 
-.splash-fabric-stack {
-    position: relative; width: 300px; height: 300px; z-index: 1;
-    display: flex; justify-content: center; align-items: center;
-}
+    .divider-line {
+        width: 40px;
+        height: 1px;
+        background-color: #000;
+        margin: 0 auto 25px auto;
+    }
 
-.splash-silk-layer {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--splash-silk-1);
-    filter: url('#frayed-edge') drop-shadow(0 8px 15px rgba(0,0,0,0.06));
-    border-radius: 40% 60% 50% 50% / 50% 40% 60% 50%;
-    opacity: 0;
-    animation: splashFloat 8s ease-in-out infinite alternate;
-}
-.splash-silk-layer:nth-child(1) {
-    width: 280px; height: 280px; background: var(--splash-silk-3);
-    animation-delay: 0s; transform: translate(-50%, -50%) rotate(10deg); z-index: 1;
-}
-.splash-silk-layer:nth-child(2) {
-    width: 240px; height: 220px; background: var(--splash-silk-2);
-    animation-delay: 1s; transform: translate(-50%, -50%) rotate(-5deg); z-index: 2;
-}
-.splash-silk-layer:nth-child(3) {
-    width: 180px; height: 180px; background: var(--splash-silk-1);
-    animation-delay: 2s; transform: translate(-50%, -50%) rotate(5deg); z-index: 3;
-}
+    .location {
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    
+    .date {
+        font-family: var(--font-serif);
+        font-size: 0.9rem;
+    }
 
-.splash-label-container {
-    position: absolute; z-index: 10; text-align: center;
-    mix-blend-mode: multiply; transform: translateY(5px);
-}
+    /* 底部文字 */
+    .footer-text {
+        font-family: var(--font-sans);
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        color: #888;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
 
-.splash-brand-name {
-    font-family: 'Special Elite', cursive;
-    font-size: 3.5rem; color: var(--splash-ink);
-    line-height: 1; letter-spacing: 2px;
-    opacity: 0; filter: blur(0.5px);
-    animation: splashInkReveal 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    animation-delay: 0.8s; position: relative;
-}
-.splash-brand-name::after {
-    content: ''; position: absolute; bottom: -10px; left: 50%;
-    transform: translateX(-50%); width: 40px; height: 1px;
-    background: var(--splash-ink); opacity: 0.3;
-}
-
-.splash-subtitle {
-    font-family: 'Ruthie', cursive;
-    font-size: 2rem; color: var(--splash-faded);
-    margin-top: 10px; transform: rotate(-8deg) translateX(20px);
-    opacity: 0; animation: splashHandWrite 1.5s ease-out forwards;
-    animation-delay: 1.8s;
-}
-
-.splash-thread-loader {
-    position: absolute; bottom: 12%; width: 120px; height: 40px;
-    z-index: 5; display: flex; justify-content: center;
-}
-
-.splash-thread-path {
-    fill: none; stroke: var(--splash-ink); stroke-width: 0.6;
-    stroke-dasharray: 100; stroke-dashoffset: 100; opacity: 0.7;
-    filter: url('#rough-line');
-    animation: splashStitch 2.5s ease-in-out forwards;
-    animation-delay: 0.5s;
-}
-
-/* 动画定义 */
-@keyframes splashInkReveal {
-    0% { opacity: 0; transform: scale(0.95); filter: blur(4px); }
-    100% { opacity: 0.9; transform: scale(1); filter: blur(0.5px); }
-}
-@keyframes splashHandWrite {
-    from { opacity: 0; transform: rotate(-8deg) translateX(30px); }
-    to { opacity: 0.6; transform: rotate(-8deg) translateX(20px); }
-}
-@keyframes splashFloat {
-    0% { opacity: 0.7; border-radius: 40% 60% 50% 50% / 50% 40% 60% 50%; }
-    100% { opacity: 0.9; border-radius: 50% 50% 40% 60% / 60% 50% 50% 40%; }
-}
-@keyframes splashStitch { to { stroke-dashoffset: 0; } }
+    @keyframes cardEntrance {
+        0% { opacity: 0; transform: scale(0.8) translateY(40px) rotateX(10deg); }
+        100% { opacity: 1; transform: scale(1) translateY(0) rotateX(0); }
+    }
 
 /* ============================================================
    ===  [新增] 彭伯里信箱 (Vintage Envelope Style)        ===
@@ -17596,47 +17616,28 @@ body.light-mode .bubble.has-trans::after {
     </div>
 </div>
 
-<!-- =========================================== -->
-    <!-- ===   开屏加载动画 (Splash Screen)      === -->
-    <!-- =========================================== -->
-    <div id="app-splash-screen">
-        <!-- SVG 滤镜定义 -->
-        <svg class="splash-svg-defs">
-            <defs>
-                <filter id="frayed-edge">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" />
-                    <feGaussianBlur stdDeviation="0.8" />
-                </filter>
-                <filter id="rough-line">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" />
-                </filter>
-            </defs>
-        </svg>
-
-        <!-- 背景 -->
-        <div class="splash-texture-bg"></div>
-        <div class="splash-vignette"></div>
-
-        <!-- 视觉主体 -->
-        <div class="splash-fabric-stack">
-            <div class="splash-silk-layer"></div>
-            <div class="splash-silk-layer"></div>
-            <div class="splash-silk-layer"></div>
+    <!-- ===   开屏：KIKI 巴黎邀请函 (New)       === -->
+  
+    <div id="splash-screen">
+        <div class="invitation-card">
+            <div class="card-border"></div>
             
-            <!-- 名字与文字 -->
-            <div class="splash-label-container">
-                <div class="splash-brand-name">KiKi</div>
-                <div class="splash-subtitle">atelier</div>
+            <div class="logo-area">
+                <div class="brand-name">KIKI</div>
+                <div class="brand-mark">PARIS</div>
             </div>
-        </div>
 
-        <!-- 缝线动画 -->
-        <div class="splash-thread-loader">
-            <svg width="100%" height="100%" viewBox="0 0 120 40">
-                <path class="splash-thread-path" d="M10,20 Q30,20 40,15 T60,20 T80,25 T110,20" />
-            </svg>
+            <div class="event-details">
+                <div class="season">FALL-WINTER<br>2026/27</div>
+                <div class="collection-type">Prêt-à-Porter</div>
+                
+                <div class="divider-line"></div>
+                
+                <div class="location">GRAND PALAIS ÉPHÉMÈRE</div>
+                <div class="date">Tuesday, March 5th, 10:30 AM</div>
+            </div>
+
+            <div class="footer-text">INVITATION</div>
         </div>
     </div>
 
@@ -53929,18 +53930,55 @@ ActionEngine.start();
 lucide.createIcons();
 TwilightPlayer.init();
 
+// === 【新增】开屏邀请函：自动更新为真实时间 === // 
+                const inviteDateEl = document.querySelector('.invitation-card .date');
+                if (inviteDateEl) {
+                    const now = new Date();
+                    
+                    // 1. 获取星期和月份 (英文)
+                    const datePart = now.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long' 
+                    });
+
+                    // 2. 获取日期数字并计算后缀 (st/nd/rd/th)
+                    const day = now.getDate();
+                    let suffix = 'th';
+                    if (day > 3 && day < 21) {
+                        suffix = 'th';
+                    } else {
+                        switch (day % 10) {
+                            case 1:  suffix = "st"; break;
+                            case 2:  suffix = "nd"; break;
+                            case 3:  suffix = "rd"; break;
+                            default: suffix = "th"; break;
+                        }
+                    }
+
+                    // 3. 获取时间 (10:30 AM 格式)
+                    const timePart = now.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit', 
+                        hour12: true 
+                    });
+
+                    // 格式：星期, 月份 日期+后缀, 时间
+                    inviteDateEl.textContent = `${datePart} ${day}${suffix}, ${timePart}`;
+                }
+
+                // --- 修改：开屏淡出逻辑 ---
                 setTimeout(() => {
-                    const splashScreen = document.getElementById('app-splash-screen');
+                    const splashScreen = document.getElementById('splash-screen'); // 注意 ID 变了
                     if (splashScreen) {
-                        // 1. 开始淡出
-                        splashScreen.classList.add('hidden');
+                        // 1. 添加 fade-out 类触发 CSS 过渡
+                        splashScreen.classList.add('fade-out');
                         
-                        // 2. 淡出动画(0.8s)结束后，彻底移除 DOM，释放性能
+                        // 2. 等待过渡(1.2s)结束后，彻底移除 DOM
                         setTimeout(() => {
                             splashScreen.remove();
-                        }, 800);
+                        }, 1200);
                     }
-                }, 3500);
+                }, 3500); // 3.5秒 = 1.8秒动画 + 1.7秒阅读时间
             } catch (error) {
                 console.error("Application failed to initialize:", error);
                 alert("应用启动失败，请检查控制台错误。");
