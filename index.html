@@ -16331,97 +16331,160 @@ body.light-mode #global-notification-banner #notification-title { color: #1a1a1a
 body.light-mode #global-notification-banner #notification-message { color: #555; }
 body.light-mode #global-notification-banner::after { background: rgba(0, 0, 0, 0.05); }
 
-/* ==========================================
-   ===   全新：灵动岛输入状态 (Island)    ===
-   ========================================== */
+/* ================================================= */
+/* ===   新版正在输入动画 (Somewhere / Ink Style)   === */
+/* ================================================= */
 
-#dynamic-typing-island {
+#single-chat-typing {
+    /* 定位在输入栏上方 */
     position: absolute;
-    /* 悬浮在输入栏上方 */
-    bottom: 90px; 
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    
-    /* 尺寸与形状 */
-    min-width: 180px;
-    padding: 12px 20px;
-    border-radius: 16px;
-    
-    /* 材质：深黑磨砂 + 极细边框 */
-    background: rgba(15, 15, 15, 0.9);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 10px 30px rgba(0,0,0,0.3),
-        0 0 0 1px rgba(0,0,0,0.5);
-    
-    /* 布局 */
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    bottom: 90px;
+    left: 25px;
     z-index: 100;
     
-    /* 默认隐藏 (带动画) */
+    /* 默认隐藏 */
+    display: none;
     opacity: 0;
-    pointer-events: none;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(10px);
+    transition: all 0.4s ease-out;
+
+    /* 容器样式 */
+    padding: 5px 0; 
+    flex-direction: column;
+    align-items: flex-start;
+    background: transparent;
+    pointer-events: none; /* 让点击穿透 */
 }
 
 /* 激活状态 */
-#dynamic-typing-island.visible {
+#single-chat-typing.visible {
+    display: flex;
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
 }
 
-/* 上面一行：小字 (灰色) */
-.island-row-top {
-    font-family: monospace; /* 等宽字体，更有代码感 */
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.4);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-/* 下面一行：状态 (亮色) */
-.island-row-bottom {
+/* 水滴容器 */
+.ink-wrapper {
+    position: relative;
+    width: 60px;
+    height: 25px; 
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
 }
 
-/* 那个橙色的呼吸条 */
-.island-loading-bar {
+/* 水滴本体 */
+.drop {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: 0;
+    
+    /* --- 深色模式默认值 (高亮白) --- */
+    background: #ffffff; 
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4); /* 加一点发光效果，更像发光的墨水 */
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+/* 浅色模式适配：水滴变深黑 */
+body.light-mode .drop {
+    background: #222222;
+    box-shadow: none; /* 浅色模式下不需要发光，要像墨点 */
+}
+
+/* 水滴动画 */
+.drop:nth-child(1) {
+    width: 6px;
+    height: 6px;
+    left: 50%; 
+    animation: driftLeft 3s ease-in-out infinite;
+}
+
+.drop:nth-child(2) {
     width: 8px;
     height: 8px;
-    background-color: #ff9f43; /* 经典的橙色 */
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(255, 159, 67, 0.6);
-    animation: island-pulse 1.5s infinite ease-in-out;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: pulseFade 3s ease-in-out infinite;
+    animation-delay: 0.5s;
 }
 
-@keyframes island-pulse {
-    0%, 100% { opacity: 0.5; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 15px rgba(255, 159, 67, 0.9); }
+.drop:nth-child(3) {
+    width: 6px;
+    height: 6px;
+    left: 50%;
+    animation: driftRight 3s ease-in-out infinite;
+    animation-delay: 1s;
 }
 
-/* Thinking 文字 */
-.island-status-text {
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    color: #fff;
-    letter-spacing: 0.5px;
+/* 状态文字 */
+.status-text {
+    font-size: 12px;
+    letter-spacing: 3px;
+    font-style: italic;
+    margin-left: 2px;
+    margin-top: 0; 
+    font-family: 'Times New Roman', serif;
+    animation: text-breathe 4s ease-in-out infinite;
+    transition: color 0.3s;
+
+    /* --- 深色模式默认值 (银灰色) --- */
+    color: #cccccc; 
+    text-shadow: 0 0 5px rgba(0,0,0,0.8); /* 增加文字阴影，防止背景太乱看不清 */
 }
 
-/* 浅色模式适配 */
-body.light-mode #dynamic-typing-island {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(0, 0, 0, 0.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+/* 浅色模式适配：文字变深灰 */
+body.light-mode .status-text {
+    color: #555555;
+    text-shadow: none;
 }
-body.light-mode .island-row-top { color: rgba(0,0,0,0.4); }
-body.light-mode .island-status-text { color: #000; }
+
+/* 底部细线 */
+.thread {
+    width: 0;
+    height: 1px;
+    margin-top: 4px;
+    animation: drawLine 2s ease-out forwards;
+    transition: background 0.3s;
+
+    /* --- 深色模式默认值 (亮白线) --- */
+    background: rgba(255, 255, 255, 0.3); 
+}
+
+/* 浅色模式适配：线条变暗 */
+body.light-mode .thread {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* 动画关键帧 */
+@keyframes driftLeft {
+    0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+    50% { transform: translateX(-200%) scale(1); opacity: 0.9; }
+    100% { transform: translateX(-350%) scale(0); opacity: 0; }
+}
+
+@keyframes pulseFade {
+    0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+    50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    100% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+}
+
+@keyframes driftRight {
+    0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+    50% { transform: translateX(100%) scale(1); opacity: 0.9; }
+    100% { transform: translateX(250%) scale(0); opacity: 0; }
+}
+
+@keyframes text-breathe {
+    0%, 100% { filter: blur(0.5px); opacity: 0.5; }
+    50% { filter: blur(0px); opacity: 1; letter-spacing: 4px; }
+}
+
+@keyframes drawLine {
+    0% { width: 0; opacity: 0; }
+    50% { opacity: 1; }
+    100% { width: 60px; opacity: 0.8; }
+}
 
 /* ==========================================
    ===   iMessage: 风格选择页 (Gallery UI) ===
@@ -18471,14 +18534,15 @@ body.light-mode .bubble.has-trans::after {
                 <i class="ri-more-fill right-icon" id="chat-more-btn"></i>
             </div>
             <div id="chat-messages-container"></div>
-<div id="dynamic-typing-island">
-    <div class="island-row-top">
-        <span>Reading Context...</span>
+<!-- 新版正在输入动画 (Somewhere) -->
+<div id="single-chat-typing" class="typing-container">
+    <div class="ink-wrapper">
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
     </div>
-    <div class="island-row-bottom">
-        <div class="island-loading-bar"></div>
-        <span class="island-status-text">Thinking</span>
-    </div>
+    <div class="status-text">somewhere...</div>
+    <div class="thread"></div>
 </div>
             <div id="reply-preview-container">
                 <div class="reply-content">
@@ -29816,10 +29880,10 @@ async function handleRetry(clickedMessageId) {
                                 DOM.chatDialoguePage.classList.contains('active') && 
                                 appState.currentChattingDossierId === dossierId;
 
-        // ✅✅✅ 新增：显示灵感岛 ✅✅✅
-        const typingIsland = document.getElementById('dynamic-typing-island');
-        if (isUserPresent() && typingIsland) {
-            typingIsland.classList.add('visible');
+        // ✅✅✅ 修改：显示新版输入动画 ✅✅✅
+        const typingIndicator = document.getElementById('single-chat-typing');
+        if (isUserPresent() && typingIndicator) {
+            typingIndicator.classList.add('visible');
         }
 
         try {
@@ -29915,8 +29979,8 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
             }
             
             const aiResponse = await apiHelper.getChatCompletion(messages);
-             // ✅✅✅ 新增：隐藏灵感岛 ✅✅✅
-        if (typingIsland) typingIsland.classList.remove('visible');
+             // ✅✅✅ 修改：隐藏新版输入动画 ✅✅✅
+        if (typingIndicator) typingIndicator.classList.remove('visible');
 
             let responseList = [];
             try {
