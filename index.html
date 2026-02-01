@@ -18429,21 +18429,29 @@ body.light-mode .bubble.has-trans::after {
         </div>
  </div>
     <!-- 档案应用 -->
+    <!-- 档案应用 (结构修复版) -->
     <div id="archive-app" class="app-navigator">
-        <!-- 档案主页 -->
+        
+        <!-- 页面 1: 档案主页 (列表) -->
         <div id="main-archive-page" class="app-page">
             <div class="page-header">
+                <!-- 左上角返回按钮 -->
                 <i class="ri-arrow-left-s-line left-icon back-button" data-target="desktop"></i>
+                
+                <!-- 中间标题 -->
                 <h2>档案</h2>
-               <!-- 组合按钮容器 -->
-    <div style="position: absolute; right: 10px; display: flex; gap: 15px;">
-        <i class="ri-upload-cloud-2-line" id="import-card-btn" title="导入角色卡"></i>
-        <i class="ri-add-line" id="add-dossier-btn"></i>
-    </div>
-</div>
+                
+                <!-- 右上角按钮组 (现在只剩一个添加按钮) -->
+                <div style="position: absolute; right: 15px; display: flex; align-items: center; height: 100%;">
+                    <i class="ri-add-line" id="add-dossier-btn" style="font-size: 24px; cursor: pointer;"></i>
+                </div>
+            </div>
+            
+            <!-- 档案列表容器 -->
             <div id="archive-list"></div>
         </div>
-        <!-- 档案创建/编辑页 -->
+
+        <!-- 页面 2: 档案创建/编辑页 -->
         <div id="creation-page" class="app-page">
             <div class="page-header">
                 <i class="ri-arrow-left-s-line left-icon back-button" data-target="main-archive-page"></i>
@@ -18649,22 +18657,6 @@ body.light-mode .bubble.has-trans::after {
     <span>角色音色 (Voice ID)</span>
     <!-- 显示当前音色的简略信息 -->
     <span id="current-voice-id-display" style="opacity: 0.6; font-size: 13px; margin-left: auto;">默认</span>
-</div>
-
-<div id="export-full-btn" class="settings-item">
-    <i class="ri-save-3-line"></i>
-    <div style="display:flex; flex-direction:column; align-items:flex-start;">
-        <span>导出完整备份</span>
-        <span style="font-size:10px; opacity:0.6; font-weight:normal;">含聊天记录、设置、壁纸</span>
-    </div>
-</div>
-
-<div id="export-clean-btn" class="settings-item">
-    <i class="ri-id-card-line"></i>
-    <div style="display:flex; flex-direction:column; align-items:flex-start;">
-        <span>导出角色卡 (无记录)</span>
-        <span style="font-size:10px; opacity:0.6; font-weight:normal;">仅含人设、设置、壁纸</span>
-    </div>
 </div>
 
                 <div id="set-memory-rounds-item" class="settings-item">
@@ -21840,7 +21832,6 @@ body.light-mode .bubble.has-trans::after {
     <input type="file" id="chat-image-uploader" accept="image/jpeg, image/png, image/webp" style="display: none;">
     <input type="file" id="movie-wallpaper-uploader" accept="image/jpeg, image/png, an d/webp" style="display: none;">
     <input type="file" id="vm-banner-uploader" accept="image/jpeg, image/png, image/webp" style="display: none;">
-    <input type="file" id="card-import-input" accept="image/png" style="display: none;">
       <input type="file" id="wobble-file-input" accept="image/*" style="display: none;">
 
 <!-- 🕷️ 桌面守护/寄生程序 -->
@@ -22992,11 +22983,6 @@ rsExitToDesktopBtn: document.getElementById('rs-exit-to-desktop-btn'),
     
     // 通用返回按钮 (绑定了 data-target="desktop" 的那个)
     vmAppBackBtn: document.querySelector('#voicemail-app .back-button'),
-    importCardBtn: document.getElementById('import-card-btn'),   // 档案页的云上传图标
-    cardImportInput: document.getElementById('card-import-input'), // 隐藏的文件输入框
-    exportCardItem: document.getElementById('export-card-item'),
-    exportFullBtn: document.getElementById('export-full-btn'),   // 完整备份按钮
-    exportCleanBtn: document.getElementById('export-clean-btn'),
     // === [新增] 每日早报 (Daily Prophet) 引用 ===
     dailyNewsApp: document.getElementById('daily-news-app'),
     iconDailyPaper: document.getElementById('icon-daily-paper'),
@@ -23770,95 +23756,6 @@ async function compressImageForAI(file) {
         throw error;
     }
 }
-
-const PngMetadata = {
-    // 将数据写入 PNG
-    write: async (imageBlob, key, dataString) => {
-        const buffer = await imageBlob.arrayBuffer();
-        const uint8 = new Uint8Array(buffer);
-        
-        // 1. 构建 tEXt chunk
-        // 结构: Length(4) + Type(4) + Key + NullSeparator(1) + Value + CRC(4)
-        const keyBytes = new TextEncoder().encode(key);
-        const valueBytes = new TextEncoder().encode(dataString);
-        const chunkLen = keyBytes.length + 1 + valueBytes.length;
-        
-        const chunkTotalLen = 4 + 4 + chunkLen + 4; 
-        const newBuffer = new Uint8Array(uint8.length + chunkTotalLen);
-        
-        // 2. 找到 IEND 位置 (PNG 文件的最后12个字节是 IEND 块)
-        const insertPos = uint8.length - 12;
-        
-        // 3. 复制前半部分
-        newBuffer.set(uint8.slice(0, insertPos), 0);
-        
-        // 4. 写入新 Chunk
-        const view = new DataView(newBuffer.buffer);
-        let offset = insertPos;
-        
-        // Length
-        view.setUint32(offset, chunkLen); offset += 4;
-        // Type (tEXt)
-        newBuffer.set([116, 69, 88, 116], offset); offset += 4;
-        // Key
-        newBuffer.set(keyBytes, offset); offset += keyBytes.length;
-        // Separator (Null)
-        newBuffer[offset] = 0; offset += 1;
-        // Value
-        newBuffer.set(valueBytes, offset); offset += valueBytes.length;
-        // CRC (这里填0占位，浏览器通常兼容不校验非关键块的CRC)
-        view.setUint32(offset, 0); offset += 4; 
-        
-        // 5. 复制 IEND (文件结尾)
-        newBuffer.set(uint8.slice(insertPos), offset);
-        
-        return new Blob([newBuffer], { type: 'image/png' });
-    },
-
-    // 从 PNG 读取数据
-    read: async (file, keyToFind) => {
-        const buffer = await file.arrayBuffer();
-        const view = new DataView(buffer);
-        const uint8 = new Uint8Array(buffer);
-        
-        // 检查 PNG 签名 (Magic Number)
-        if (uint8[0] !== 137 || uint8[1] !== 80) return null;
-        
-        let offset = 8; // 跳过文件头
-        
-        while (offset < buffer.byteLength) {
-            const length = view.getUint32(offset);
-            const type = String.fromCharCode(...uint8.slice(offset + 4, offset + 8));
-            
-            if (type === 'tEXt') {
-                const dataStart = offset + 8;
-                const dataEnd = dataStart + length;
-                const chunkData = uint8.slice(dataStart, dataEnd);
-                
-                // 分割 Key 和 Value (以 Null 0x00 分隔)
-                let separatorIndex = -1;
-                for (let i = 0; i < chunkData.length; i++) {
-                    if (chunkData[i] === 0) {
-                        separatorIndex = i;
-                        break;
-                    }
-                }
-                
-                if (separatorIndex !== -1) {
-                    const key = new TextDecoder().decode(chunkData.slice(0, separatorIndex));
-                    if (key === keyToFind) {
-                        const value = new TextDecoder().decode(chunkData.slice(separatorIndex + 1));
-                        return value;
-                    }
-                }
-            }
-            
-            // 移动到下一个块 (Length + Type + Data + CRC)
-            offset += 4 + 4 + length + 4;
-        }
-        return null;
-    }
-};
 
         const utils = {
             showToast(message) {
@@ -46684,261 +46581,6 @@ async function clearAllData() {
         utils.showToast('重置失败');
     }
 }
-
-/**
- * 【核心】导出角色卡片 (支持两种模式：完整备份 / 纯净角色卡)
- * @param {number} dossierId - 角色ID
- * @param {string} exportType - 'full' (含聊天记录) 或 'card' (仅档案设置)
- */
-async function exportCharacterCard(dossierId, exportType = 'full') {
-    const dossier = appState.dossiers.find(d => d.id === dossierId);
-    if (!dossier) return utils.showToast("角色档案丢失");
-
-    const typeLabel = exportType === 'full' ? '完整备份' : '纯净角色卡';
-    utils.showToast(`正在打包 ${typeLabel}...`);
-
-    try {
-        // 1. 获取角色头像 (PNG载体)
-        let characterAvatarBlob = null;
-        if (dossier.character.avatarAssetId) {
-            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
-            if (asset?.file) characterAvatarBlob = asset.file;
-        }
-        
-        if (!characterAvatarBlob) {
-            alert("导出失败：角色必须拥有头像才能生成实体卡片。");
-            return;
-        }
-
-        // 2. 获取壁纸 (Base64)
-        let wallpaperBase64 = null;
-        if (dossier.wallpaperAssetId) {
-            const wpAsset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.wallpaperAssetId);
-            if (wpAsset?.file) {
-                wallpaperBase64 = await utils.blobToBase64(wpAsset.file);
-            }
-        }
-
-        // 3. 【重点】获取 User 头像 (Base64) - 无论哪种模式都带上，防止你是分享给自己小号用
-        let userAvatarBase64 = null;
-        if (dossier.user.avatarAssetId) {
-            const userAsset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.user.avatarAssetId);
-            if (userAsset?.file) {
-                userAvatarBase64 = await utils.blobToBase64(userAsset.file);
-            }
-        }
-
-        // 4. 【核心分流】根据模式决定是否获取聊天记录
-        let history = [];
-        if (exportType === 'full') {
-            // 完整模式：打包所有记忆
-            history = await dbHelper.getHistoryForDossier(dossierId);
-        } else {
-            // 纯净模式：清空历史，只留空数组
-            // (这样导入时不会覆盖现有的聊天记录，或者作为新角色导入时是一张白纸)
-            history = [];
-        }
-        
-        // 5. 构建数据包
-        const payload = {
-            version: "1.2", // 版本号
-            app: "KiKi_OS",
-            type: exportType, // 标记类型
-            dossier: {
-                ...dossier,
-                character: { ...dossier.character, avatarAssetId: null },
-                user: { ...dossier.user, avatarAssetId: null },
-                wallpaperAssetId: null,
-                // 如果是纯净卡，可以考虑重置一些状态，但为了保留个性化设置，这里暂且保留
-            },
-            assets: {
-                wallpaper: wallpaperBase64,
-                userAvatar: userAvatarBase64 // 哪怕是纯净卡，也带上你的头像，方便你自己用
-            },
-            history: history.map(msg => {
-                const cleanMsg = { ...msg };
-                delete cleanMsg.id;
-                delete cleanMsg.dossierId;
-                return cleanMsg;
-            }),
-            settings: {
-                voiceId: dossier.voiceId,
-                memoryRounds: dossier.memoryRounds,
-                bubbleCss: dossier.bubbleCss,
-                timePerception: dossier.timePerceptionEnabled
-            }
-        };
-
-        const jsonString = JSON.stringify(payload);
-
-        // 6. 写入 PNG
-        const finalPngBlob = await PngMetadata.write(characterAvatarBlob, "KiKiData", jsonString);
-        
-        // 7. 文件名区分
-        const suffix = exportType === 'full' ? 'Backup' : 'Card';
-        saveAs(finalPngBlob, `${dossier.character.name}_${suffix}.png`);
-        
-        utils.showToast(`${typeLabel} 导出成功！`);
-
-    } catch (error) {
-        console.error("导出失败:", error);
-        utils.showToast("导出失败: " + error.message);
-    }
-}
-
-/**
- * 【核心】导入角色卡片 (终极防卡死 + 跨平台兼容版)
- */
-async function importCharacterCard(file) {
-    // 1. 开始 Loading
-    const loadingToast = document.createElement('div');
-    loadingToast.style.cssText = "position:fixed; top:40%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.8); color:white; padding:15px 25px; border-radius:8px; z-index:9999; font-size:14px;";
-    loadingToast.innerHTML = '<i class="ri-loader-4-line spin"></i> 正在解析灵魂切片...';
-    document.body.appendChild(loadingToast);
-
-    // 定义一个清理函数，无论成功失败都执行
-    const cleanup = () => {
-        if(loadingToast && loadingToast.parentNode) loadingToast.parentNode.removeChild(loadingToast);
-        // 清理 input，允许重复选同一个文件
-        const input = document.getElementById('card-import-input');
-        if(input) input.value = '';
-    };
-
-    try {
-        console.log("开始读取图片数据...");
-        
-        // 2. 读取隐写数据
-        const jsonString = await PngMetadata.read(file, "KiKiData");
-        
-        // --- 检查点 A: 元数据是否存在 ---
-        if (!jsonString) {
-            throw new Error("读取失败：这张图片里没有数据。\n\n可能原因：\n1. 图片被微信/QQ压缩了（请发‘文件’形式，或打包ZIP）\n2. Android相册可能清洗了元数据");
-        }
-
-        console.log("元数据读取成功，正在解析 JSON...");
-        let data;
-        try {
-            data = JSON.parse(jsonString);
-        } catch (e) {
-            throw new Error("数据损坏：无法解析内部 JSON。\n" + e.message);
-        }
-
-        if (data.app !== "KiKi_OS") {
-            throw new Error("版本不兼容：这不是 KiKi 的角色卡。");
-        }
-
-        // 3. 恢复资源 (图片)
-        console.log("正在恢复图片资源...");
-        const charAvatarAssetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: file });
-
-        let wallpaperAssetId = null;
-        if (data.assets && data.assets.wallpaper) {
-            const wpBlob = utils.base64ToBlob(data.assets.wallpaper);
-            if (wpBlob) {
-                wallpaperAssetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: wpBlob });
-            }
-        }
-
-        let userAvatarAssetId = null;
-        if (data.assets && data.assets.userAvatar) {
-            const userBlob = utils.base64ToBlob(data.assets.userAvatar);
-            if (userBlob) {
-                userAvatarAssetId = await dbHelper.add(CONSTANTS.STORE_NAMES.ASSETS, { file: userBlob });
-            }
-        }
-
-        // 4. 重建档案 (核心：完全剔除 ID)
-        console.log("正在重建档案...");
-        const rawDossier = data.dossier || {};
-        
-        const newDossier = {
-            // 显式构造，绝不复制 id
-            character: {
-                name: rawDossier.character?.name || '未命名',
-                background: rawDossier.character?.background || '',
-                avatarAssetId: charAvatarAssetId
-            },
-            user: {
-                name: rawDossier.user?.name || '',
-                background: rawDossier.user?.background || '',
-                avatarAssetId: userAvatarAssetId
-            },
-            aiGenerated: rawDossier.aiGenerated || {},
-            wallpaperAssetId: wallpaperAssetId,
-            voiceId: data.settings?.voiceId,
-            memoryRounds: data.settings?.memoryRounds,
-            bubbleCss: data.settings?.bubbleCss,
-            timePerceptionEnabled: data.settings?.timePerception,
-            libraryBookIds: rawDossier.libraryBookIds || [],
-            isPinned: false
-        };
-
-        const newDossierId = await dbHelper.add(CONSTANTS.STORE_NAMES.DOSSIERS, newDossier);
-        newDossier.id = newDossierId; 
-
-        // 5. 恢复聊天记录 (核心：防崩溃处理)
-        if (data.history && Array.isArray(data.history)) {
-            console.log(`正在导入 ${data.history.length} 条聊天记录...`);
-            const chatTx = (await dbHelper.dbPromise).transaction(CONSTANTS.STORE_NAMES.CHAT_HISTORY, 'readwrite');
-            const store = chatTx.store;
-
-            for (const msg of data.history) {
-                // 彻底清洗消息对象
-                const cleanMsg = {
-                    dossierId: newDossierId, // 绑定新 ID
-                    sender: msg.sender,
-                    content: msg.content,
-                    timestamp: msg.timestamp || Date.now(),
-                    type: msg.type || 'text',
-                    metadata: msg.metadata || {}
-                };
-                
-                // 可选字段
-                if(msg.authorName) cleanMsg.authorName = msg.authorName;
-                if(msg.quote) cleanMsg.quote = msg.quote;
-                if(msg.status) cleanMsg.status = msg.status;
-                if(msg.innerThought) cleanMsg.innerThought = msg.innerThought;
-
-                // 写入
-                store.add(cleanMsg);
-            }
-            await chatTx.done;
-        }
-
-        // 6. 创建会话
-        const lastMsgContent = (data.history && data.history.length > 0) 
-            ? (typeof data.history[data.history.length-1].content === 'string' ? data.history[data.history.length-1].content : '[多媒体]') 
-            : "角色已导入";
-
-        const newSession = {
-            dossierId: newDossierId,
-            lastMessage: lastMsgContent,
-            timestamp: Date.now(),
-            unreadCount: 0,
-            wallpaperAssetId: wallpaperAssetId
-        };
-        await dbHelper.set(CONSTANTS.STORE_NAMES.CHAT_SESSIONS, newSession);
-
-        cleanup(); // 成功，清理 Loading
-        
-        // 7. 成功提示 & 刷新
-        alert(`导入成功！\n欢迎回来，${newDossier.character.name}。`);
-        
-        // 刷新界面
-        if (document.getElementById('main-archive-page').classList.contains('active')) {
-            renderDossiers();
-        }
-        if (document.getElementById('chat-main-page').classList.contains('active')) {
-            renderChatList();
-        }
-
-    } catch (error) {
-        cleanup(); // 失败，清理 Loading
-        console.error("导入全流程失败:", error);
-        // 弹窗显示具体错误
-        alert(`【导入失败】\n\n错误信息: ${error.message}\n\n请尝试截图给开发者，或者让对方以“文件”形式发送图片。`);
-    }
-}
         // =======================================================
         // ============== 4. 初始化和事件监听 (完整版) ===========
         // =======================================================
@@ -52788,45 +52430,6 @@ DOM.rsDetailModal.addEventListener('click', (e) => {
         if (e.target === DOM.vmCtxModal) {
             DOM.vmCtxModal.classList.remove('active');
         }
-    });
-    
-    // === [新增] 角色卡导入/导出监听 === //
-
-    // 1. 导出完整备份 (含聊天记录)
-    DOM.exportFullBtn.addEventListener('click', () => {
-        const dossierId = appState.currentChattingDossierId;
-        // 这里的判断是为了保证数据安全，不涉及 DOM 检查
-        if (dossierId) {
-            exportCharacterCard(dossierId, 'full');
-        } else {
-            utils.showToast("无法获取当前角色信息");
-        }
-    });
-
-    // 2. 导出纯净角色卡 (无记录)
-    DOM.exportCleanBtn.addEventListener('click', () => {
-        const dossierId = appState.currentChattingDossierId;
-        if (dossierId) {
-            exportCharacterCard(dossierId, 'card');
-        } else {
-            utils.showToast("无法获取当前角色信息");
-        }
-    });
-    
-    // === [补回] 角色卡导入监听 ===   // 
-    
-    // 1. 点击“云上传”图标 -> 触发隐藏的文件框
-    DOM.importCardBtn.addEventListener('click', () => {
-        DOM.cardImportInput.click();
-    });
-
-    // 2. 选完文件后 -> 执行导入逻辑
-    DOM.cardImportInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            await importCharacterCard(file);
-        }
-        e.target.value = ''; // 重置，防止选同一个文件没反应
     });
 
 // === 每日早报 (Daily Prophet) 监听 ===
