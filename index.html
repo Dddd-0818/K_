@@ -16336,34 +16336,29 @@ body.light-mode #global-notification-banner::after { background: rgba(0, 0, 0, 0
 /* ================================================= */
 
 #single-chat-typing {
-    /* 定位在输入栏上方 */
     position: absolute;
     bottom: 90px;
     left: 25px;
     z-index: 100;
     
-    /* 默认隐藏 */
     display: none;
     opacity: 0;
     transform: translateY(10px);
     transition: all 0.4s ease-out;
 
-    /* 容器样式 */
     padding: 5px 0; 
     flex-direction: column;
     align-items: flex-start;
     background: transparent;
-    pointer-events: none; /* 让点击穿透 */
+    pointer-events: none;
 }
 
-/* 激活状态 */
 #single-chat-typing.visible {
     display: flex;
     opacity: 1;
     transform: translateY(0);
 }
 
-/* 水滴容器 */
 .ink-wrapper {
     position: relative;
     width: 60px;
@@ -16373,51 +16368,42 @@ body.light-mode #global-notification-banner::after { background: rgba(0, 0, 0, 0
     justify-content: center;
 }
 
-/* 水滴本体 */
+/* --- 水滴本体 (颜色修改) --- */
 .drop {
     position: absolute;
     border-radius: 50%;
     filter: blur(2px);
     opacity: 0;
     
-    /* --- 深色模式默认值 (高亮白) --- */
-    background: #ffffff; 
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4); /* 加一点发光效果，更像发光的墨水 */
+    /* ✅ 强制干枯玫瑰色 (Dried Rose) */
+    background: #E09E9E !important; 
+    
+    /* ✅ 加一点微弱的光晕，增加层次感 */
+    box-shadow: 0 0 6px rgba(224, 158, 158, 0.6) !important; 
+    
     transition: background 0.3s, box-shadow 0.3s;
 }
 
-/* 浅色模式适配：水滴变深黑 */
+/* 覆盖浅色模式 (确保浅色系统下也是玫瑰色) */
 body.light-mode .drop {
-    background: #222222;
-    box-shadow: none; /* 浅色模式下不需要发光，要像墨点 */
+    background: #E09E9E !important;
+    box-shadow: 0 0 6px rgba(224, 158, 158, 0.6) !important; 
 }
 
-/* 水滴动画 */
 .drop:nth-child(1) {
-    width: 6px;
-    height: 6px;
-    left: 50%; 
+    width: 6px; height: 6px; left: 50%; 
     animation: driftLeft 3s ease-in-out infinite;
 }
-
 .drop:nth-child(2) {
-    width: 8px;
-    height: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    animation: pulseFade 3s ease-in-out infinite;
-    animation-delay: 0.5s;
+    width: 8px; height: 8px; left: 50%; transform: translateX(-50%);
+    animation: pulseFade 3s ease-in-out infinite; animation-delay: 0.5s;
 }
-
 .drop:nth-child(3) {
-    width: 6px;
-    height: 6px;
-    left: 50%;
-    animation: driftRight 3s ease-in-out infinite;
-    animation-delay: 1s;
+    width: 6px; height: 6px; left: 50%;
+    animation: driftRight 3s ease-in-out infinite; animation-delay: 1s;
 }
 
-/* 状态文字 */
+/* --- 状态文字 (颜色修改 + 投影增强) --- */
 .status-text {
     font-size: 12px;
     letter-spacing: 3px;
@@ -16428,18 +16414,20 @@ body.light-mode .drop {
     animation: text-breathe 4s ease-in-out infinite;
     transition: color 0.3s;
 
-    /* --- 深色模式默认值 (银灰色) --- */
-    color: #cccccc; 
-    text-shadow: 0 0 5px rgba(0,0,0,0.8); /* 增加文字阴影，防止背景太乱看不清 */
+    /* ✅ 强制干枯玫瑰色 */
+    color: #E09E9E !important;
+    
+    /* ✅ 关键：加上黑色文字阴影，防止在浅色/复杂壁纸上看不清 */
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
 }
 
-/* 浅色模式适配：文字变深灰 */
+/* 覆盖浅色模式 */
 body.light-mode .status-text {
-    color: #555555;
-    text-shadow: none;
+    color: #E09E9E !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9) !important;
 }
 
-/* 底部细线 */
+/* --- 底部细线 (颜色修改) --- */
 .thread {
     width: 0;
     height: 1px;
@@ -16447,13 +16435,13 @@ body.light-mode .status-text {
     animation: drawLine 2s ease-out forwards;
     transition: background 0.3s;
 
-    /* --- 深色模式默认值 (亮白线) --- */
-    background: rgba(255, 255, 255, 0.3); 
+    /* ✅ 半透明的干枯玫瑰色 */
+    background: rgba(224, 158, 158, 0.5) !important;
 }
 
-/* 浅色模式适配：线条变暗 */
+/* 覆盖浅色模式 */
 body.light-mode .thread {
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(224, 158, 158, 0.5) !important;
 }
 
 /* 动画关键帧 */
@@ -17649,6 +17637,60 @@ body.light-mode .bubble.has-trans::after {
     justify-content: flex-end; /* 默认靠右 */
     gap: 10px;
     align-items: center;
+}
+
+/* ============================================================
+   ===   正在输入动画配色修正：干枯玫瑰/巧克力色 (#620E2C)   ===
+   ============================================================ */
+
+/* 1. 水滴 (Ink Drops) - 强制改色 */
+#single-chat-typing .drop {
+    /* 无论深浅模式，统一使用色卡颜色 */
+    background: #620E2C !important; 
+    
+    /* 为了在深色壁纸上也能看清，加一点点柔和的白色外发光 */
+    box-shadow: 0 0 3px rgba(255, 255, 255, 0.4) !important; 
+    
+    /* 稍微降低透明度，让质感更像液体 */
+    opacity: 0.95 !important;
+}
+
+/* 2. 状态文字 (somewhere...) - 强制改色 */
+#single-chat-typing .status-text {
+    /* 统一颜色 */
+    color: #620E2C !important;
+    
+    /* 加一点白色文字阴影（描边），防止在黑色背景上隐身 */
+    text-shadow: 
+        0 0 2px rgba(255, 255, 255, 0.6),
+        0 0 5px rgba(255, 255, 255, 0.3) !important;
+        
+    /* 稍微加粗，让颜色更明显 */
+    font-weight: 600 !important;
+    
+    /* 移除之前的模糊滤镜，保持清晰 */
+    filter: none !important;
+}
+
+/* 3. 底部细线 (Thread) - 强制改色 */
+#single-chat-typing .thread {
+    background: #620E2C !important;
+    opacity: 0.8 !important;
+    box-shadow: 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 4. 暴力覆盖浅色模式 (Light Mode Override) */
+/* 防止 body.light-mode 的权重覆盖上面的设置 */
+body.light-mode #single-chat-typing .drop {
+    background: #620E2C !important;
+    box-shadow: 0 0 3px rgba(255, 255, 255, 0.4) !important;
+}
+body.light-mode #single-chat-typing .status-text {
+    color: #620E2C !important;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.6) !important;
+}
+body.light-mode #single-chat-typing .thread {
+    background: #620E2C !important;
 }
     </style>
 </head>
