@@ -46440,96 +46440,111 @@ function scrollToIMBottom(isIOS) {
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
-
 /**
- * 【修复版】导出所有数据为 ZIP 压缩包
- * 修复了 user_settings 和 player_state 丢失键导致无法导入的问题
+ * 【性能优化版】导出数据 (防止 iOS 内存崩溃)
+ * 优化策略：图片不转 Base64，直接以二进制文件存入 Zip，大幅降低内存占用。
  */
 async function exportAllData() {
     try {
-        utils.showToast('正在打包数据，请稍候...');
+        utils.showToast('正在准备数据...');
         const zip = new JSZip();
         const db = await dbHelper.dbPromise;
-
-        // 1. 准备一个大对象来存放所有数据
         const backupData = {};
 
-        // 2. 遍历所有 IndexedDB 表
+        // 1. 处理普通数据表 (除了 ASSETS)
         for (const storeName of Object.values(CONSTANTS.STORE_NAMES)) {
-            
-            // --- 针对 Key-Value 类型表的特殊处理 (修复核心) ---
+            if (storeName === CONSTANTS.STORE_NAMES.ASSETS) continue; // 跳过资源表
+
             if (storeName === CONSTANTS.STORE_NAMES.USER_SETTINGS || storeName === CONSTANTS.STORE_NAMES.PLAYER_STATE) {
                 const keys = await db.getAllKeys(storeName);
                 const values = await db.getAll(storeName);
-                // 将键和值配对保存，并打上标记
-                backupData[storeName] = keys.map((key, i) => ({ 
-                    __isKV: true, // 标记这是键值对数据
-                    key: key, 
-                    value: values[i] 
+                backupData[storeName] = keys.map((key, i) => ({
+                    __isKV: true,
+                    key: key,
+                    value: values[i]
                 }));
-            }
-            // --- 针对 ASSETS 表的特殊处理 (转 Base64) ---
-            else if (storeName === CONSTANTS.STORE_NAMES.ASSETS) {
-                const records = await db.getAll(storeName);
-                const processedAssets = [];
-                for (const asset of records) {
-                    if (asset.file instanceof Blob) {
-                        const base64 = await utils.blobToBase64(asset.file);
-                        processedAssets.push({ ...asset, file: base64, isBlob: true });
-                    } else {
-                        processedAssets.push(asset);
-                    }
-                }
-                backupData[storeName] = processedAssets;
-            } 
-            // --- 普通表的处理 ---
-            else {
+            } else {
                 backupData[storeName] = await db.getAll(storeName);
             }
         }
-
-        // 3. 备份 LocalStorage
+        
+        // 2. 备份 LocalStorage
         backupData['localStorage'] = { ...localStorage };
 
-        // 4. 生成并下载
-        const jsonString = JSON.stringify(backupData);
-        zip.file("gossip_scroll_backup.json", jsonString);
-        const content = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
+        // 3. 【核心优化】流式处理 ASSETS 表
+        utils.showToast('正在打包图片资源 (此步较慢)...');
+        const assets = await db.getAll(CONSTANTS.STORE_NAMES.ASSETS);
+        const assetMetaList = [];
+        const assetsFolder = zip.folder("assets"); // 在zip里建一个文件夹
+
+        for (const asset of assets) {
+            if (asset.file instanceof Blob) {
+                // 直接把 Blob 塞进 Zip，不转字符串！
+                const fileName = `asset_${asset.id}`; 
+                
+                // 只在 JSON 里记录元数据
+                assetMetaList.push({
+                    id: asset.id,
+                    isFile: true,       // 标记：这是一个独立文件
+                    fileName: fileName, // 文件名引用
+                    type: asset.file.type // 记录文件类型 (如 image/jpeg)
+                });
+                
+                // 将二进制数据直接放入 zip
+                assetsFolder.file(fileName, asset.file);
+            } else {
+                // 兼容旧的非Blob数据（如果有）
+                assetMetaList.push(asset);
+            }
+        }
+        backupData[CONSTANTS.STORE_NAMES.ASSETS] = assetMetaList;
+
+        // 4. 生成索引文件
+        zip.file("gossip_scroll_backup.json", JSON.stringify(backupData));
+
+        // 5. 生成最终文件 (使用 STORE 模式仅存储不压缩，速度最快且最省内存)
+        utils.showToast('正在生成压缩包...');
+        const content = await zip.generateAsync({ 
+            type: "blob", 
+            compression: "STORE" // 关键：不压缩，防止手机CPU过载
+        }, (metadata) => {
+            // 可选：你可以在这里打印进度 console.log(metadata.percent);
+        });
         
         const date = new Date();
         const timestamp = date.getFullYear() +
                           String(date.getMonth() + 1).padStart(2, '0') +
                           String(date.getDate()).padStart(2, '0');
                           
-        saveAs(content, `GossipScroll_Backup_${timestamp}.zip`);
-        utils.showToast('导出成功！这个备份可以正常恢复了。');
+        saveAs(content, `KikiOS_Backup_${timestamp}.zip`);
+        utils.showToast('导出成功！');
 
     } catch (error) {
         console.error("导出失败:", error);
-        utils.showToast('导出失败，请检查控制台');
+        alert(`导出失败: ${error.message}\n(如果是iOS，请尝试减少图片数量后重试)`);
+        utils.showToast('导出失败');
     }
 }
 
 /**
- * 【修复版】从 ZIP 文件导入恢复数据 (保留本机激活状态)
- * 无论备份文件来自哪台机器，导入后都保持当前机器的激活状态
+ * 【兼容版】从 ZIP 导入数据
+ * 支持读取新版结构 (assets文件夹) 和旧版结构 (Base64)
  */
 async function importAllData(file) {
     try {
-        utils.showToast('正在解析备份文件...');
+        utils.showToast('正在解压备份...');
         const zip = await JSZip.loadAsync(file);
         
         if (!zip.file("gossip_scroll_backup.json")) {
-            throw new Error("无效的备份文件：找不到数据文件");
+            throw new Error("无效备份：找不到索引文件");
         }
+
         const jsonString = await zip.file("gossip_scroll_backup.json").async("string");
         const backupData = JSON.parse(jsonString);
 
-        utils.showToast('正在恢复数据，请勿关闭页面...');
+        utils.showToast('正在写入数据库...');
         
-        // 1. 【关键步骤】先备份当前机器的“身份证”和“通行证”
-        // 这一点非常重要！因为备份文件里可能存的是别人的机器码
-        // 我们必须强制保留当前机器的身份，否则验签会失败
+        // 备份当前设备的身份信息 (防止导入别人的备份导致锁机)
         const currentDeviceId = localStorage.getItem('kiki_device_id');
         const currentActivation = localStorage.getItem('kiki_is_activated');
 
@@ -46537,40 +46552,61 @@ async function importAllData(file) {
         const storeNames = Object.values(CONSTANTS.STORE_NAMES);
         const tx = db.transaction(storeNames, 'readwrite');
 
-        // 2. 恢复数据库 (逻辑不变)
+        // 1. 清空旧数据
         for (const storeName of storeNames) {
             await tx.objectStore(storeName).clear();
-            if (backupData[storeName]) {
-                for (const record of backupData[storeName]) {
-                    try {
-                        if (record.__isKV === true) {
-                            await tx.objectStore(storeName).put(record.value, record.key);
-                        } else if (storeName === CONSTANTS.STORE_NAMES.ASSETS && record.isBlob) {
-                            record.file = utils.base64ToBlob(record.file);
-                            delete record.isBlob;
-                            await tx.objectStore(storeName).add(record);
-                        } else if ((storeName === CONSTANTS.STORE_NAMES.USER_SETTINGS || storeName === CONSTANTS.STORE_NAMES.PLAYER_STATE) && !record.key) {
-                            // 跳过坏数据
-                        } else {
-                            await tx.objectStore(storeName).add(record);
+        }
+
+        // 2. 恢复数据
+        for (const storeName of storeNames) {
+            const records = backupData[storeName];
+            if (!records) continue;
+
+            const store = tx.objectStore(storeName);
+
+            for (const record of records) {
+                // 特殊处理 ASSETS 表
+                if (storeName === CONSTANTS.STORE_NAMES.ASSETS) {
+                    if (record.isFile && record.fileName) {
+                        // === 新版逻辑：从 zip 的 assets 文件夹读取 ===
+                        const fileInZip = zip.file(`assets/${record.fileName}`);
+                        if (fileInZip) {
+                            const blob = await fileInZip.async("blob");
+                            // 恢复 Blob 类型
+                            const newBlob = new Blob([blob], { type: record.type || 'image/jpeg' });
+                            await store.add({ id: record.id, file: newBlob });
                         }
-                    } catch (err) { }
+                    } else if (record.isBlob && typeof record.file === 'string') {
+                        // === 旧版逻辑：Base64 转 Blob ===
+                        const blob = utils.base64ToBlob(record.file);
+                        await store.add({ id: record.id, file: blob });
+                    } else {
+                        // 其他情况直接存
+                        await store.add(record);
+                    }
+                } 
+                // 特殊处理 KV 表
+                else if (record.__isKV === true) {
+                    await store.put(record.value, record.key);
+                } 
+                // 普通数据
+                else {
+                    try { await store.add(record); } catch(e) {}
                 }
             }
         }
+        
         await tx.done;
 
         // 3. 恢复 LocalStorage
         if (backupData['localStorage']) {
-            localStorage.clear(); // 先清空
+            localStorage.clear();
             for (const [key, value] of Object.entries(backupData['localStorage'])) {
-                // 这里会把备份里的旧机器码也导进来，所以下一步很关键
                 localStorage.setItem(key, value);
             }
         }
 
-        // 4. 【关键步骤】强制覆盖回当前机器的“身份证”和“通行证”
-        // 这样即使你导入了别人的存档，也不会这就变成别人的机器码，导致需要重新激活
+        // 4. 还原身份信息
         if (currentDeviceId) localStorage.setItem('kiki_device_id', currentDeviceId);
         if (currentActivation) localStorage.setItem('kiki_is_activated', currentActivation);
 
@@ -46579,7 +46615,7 @@ async function importAllData(file) {
 
     } catch (error) {
         console.error("导入失败:", error);
-        utils.showToast(`导入失败: ${error.message}`);
+        alert(`导入失败: ${error.message}`);
     }
 }
 
