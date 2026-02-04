@@ -46525,14 +46525,14 @@ async function exportAllData() {
         utils.showToast('导出失败');
     }
 }
-
 /**
- * 【兼容版】从 ZIP 导入数据
- * 支持读取新版结构 (assets文件夹) 和旧版结构 (Base64)
+ * 【最终稳定版】从 ZIP 导入数据
+ * 修复：解决 "Transaction inactive" 错误
+ * 策略：分离解压与存储逻辑，图片资源采取“随解压随存”模式，避免事务超时。
  */
 async function importAllData(file) {
     try {
-        utils.showToast('正在解压备份...');
+        utils.showToast('正在解析备份文件...');
         const zip = await JSZip.loadAsync(file);
         
         if (!zip.file("gossip_scroll_backup.json")) {
@@ -46542,7 +46542,7 @@ async function importAllData(file) {
         const jsonString = await zip.file("gossip_scroll_backup.json").async("string");
         const backupData = JSON.parse(jsonString);
 
-        utils.showToast('正在写入数据库...');
+        utils.showToast('正在准备数据库...');
         
         // 备份当前设备的身份信息 (防止导入别人的备份导致锁机)
         const currentDeviceId = localStorage.getItem('kiki_device_id');
@@ -46550,55 +46550,100 @@ async function importAllData(file) {
 
         const db = await dbHelper.dbPromise;
         const storeNames = Object.values(CONSTANTS.STORE_NAMES);
-        const tx = db.transaction(storeNames, 'readwrite');
 
-        // 1. 清空旧数据
-        for (const storeName of storeNames) {
-            await tx.objectStore(storeName).clear();
+        // ==========================================
+        // 步骤 1: 清空旧数据 (使用一个独立事务)
+        // ==========================================
+        {
+            const clearTx = db.transaction(storeNames, 'readwrite');
+            await Promise.all(storeNames.map(name => clearTx.objectStore(name).clear()));
+            await clearTx.done;
         }
 
-        // 2. 恢复数据
-        for (const storeName of storeNames) {
-            const records = backupData[storeName];
-            if (!records) continue;
+        // ==========================================
+        // 步骤 2: 恢复普通数据 (非 ASSETS 表)
+        // ==========================================
+        {
+            const normalStoreNames = storeNames.filter(name => name !== CONSTANTS.STORE_NAMES.ASSETS);
+            if (normalStoreNames.length > 0) {
+                const dataTx = db.transaction(normalStoreNames, 'readwrite');
+                
+                for (const storeName of normalStoreNames) {
+                    const records = backupData[storeName];
+                    if (!records) continue;
 
-            const store = tx.objectStore(storeName);
+                    const store = dataTx.objectStore(storeName);
+                    for (const record of records) {
+                        // 特殊处理 KV 表 (User Settings / Player State)
+                        if (record.__isKV === true) {
+                            // 忽略没有 key 的坏数据
+                            if (record.key) await store.put(record.value, record.key);
+                        } else {
+                            await store.add(record);
+                        }
+                    }
+                }
+                await dataTx.done;
+            }
+        }
 
-            for (const record of records) {
-                // 特殊处理 ASSETS 表
-                if (storeName === CONSTANTS.STORE_NAMES.ASSETS) {
+        // ==========================================
+        // 步骤 3: 恢复图片资源 (ASSETS 表) - 核心修复点
+        // ==========================================
+        const assetRecords = backupData[CONSTANTS.STORE_NAMES.ASSETS];
+        if (assetRecords && assetRecords.length > 0) {
+            utils.showToast(`正在恢复 ${assetRecords.length} 张图片...`);
+            
+            // 逐个处理，避免大事务超时
+            for (let i = 0; i < assetRecords.length; i++) {
+                const record = assetRecords[i];
+                let blobToStore = null;
+
+                // --- A. 准备数据 (耗时操作，不开启事务) ---
+                try {
                     if (record.isFile && record.fileName) {
-                        // === 新版逻辑：从 zip 的 assets 文件夹读取 ===
+                        // 新版备份：从 assets 文件夹解压
                         const fileInZip = zip.file(`assets/${record.fileName}`);
                         if (fileInZip) {
-                            const blob = await fileInZip.async("blob");
-                            // 恢复 Blob 类型
-                            const newBlob = new Blob([blob], { type: record.type || 'image/jpeg' });
-                            await store.add({ id: record.id, file: newBlob });
+                            // 这里 await 会导致之前的事务超时，所以我们在循环里每次只开启短事务
+                            const rawBlob = await fileInZip.async("blob");
+                            // 恢复正确的 MIME 类型
+                            blobToStore = new Blob([rawBlob], { type: record.type || 'image/jpeg' });
                         }
                     } else if (record.isBlob && typeof record.file === 'string') {
-                        // === 旧版逻辑：Base64 转 Blob ===
-                        const blob = utils.base64ToBlob(record.file);
-                        await store.add({ id: record.id, file: blob });
-                    } else {
-                        // 其他情况直接存
-                        await store.add(record);
+                        // 旧版备份：Base64 转 Blob
+                        blobToStore = utils.base64ToBlob(record.file);
                     }
-                } 
-                // 特殊处理 KV 表
-                else if (record.__isKV === true) {
-                    await store.put(record.value, record.key);
-                } 
-                // 普通数据
-                else {
-                    try { await store.add(record); } catch(e) {}
+                } catch (err) {
+                    console.warn(`跳过损坏的图片 record ${record.id}:`, err);
+                    continue; 
+                }
+
+                // --- B. 写入数据库 (瞬间操作，开启独立微型事务) ---
+                // 注意：如果 blob 没解析出来，但也需要把记录存进去(可能是不带file的旧数据)，防止ID错乱
+                const assetData = { 
+                    id: record.id, 
+                    file: blobToStore || record.file // 如果没图，就存原始内容
+                };
+
+                // db.add / db.put 会自动管理一个微型事务，不会超时
+                try {
+                    await db.add(CONSTANTS.STORE_NAMES.ASSETS, assetData);
+                } catch (e) {
+                    // 如果ID冲突(极少见)，尝试用 put 覆盖
+                    await db.put(CONSTANTS.STORE_NAMES.ASSETS, assetData);
+                }
+
+                // (可选) 每恢复 10 张更新一下提示，防止用户以为卡死了
+                if (i % 10 === 0) {
+                    utils.showToast(`正在恢复图片 (${i + 1}/${assetRecords.length})...`);
                 }
             }
         }
-        
-        await tx.done;
 
-        // 3. 恢复 LocalStorage
+        // ==========================================
+        // 步骤 4: 恢复 LocalStorage & 身份
+        // ==========================================
         if (backupData['localStorage']) {
             localStorage.clear();
             for (const [key, value] of Object.entries(backupData['localStorage'])) {
@@ -46606,7 +46651,7 @@ async function importAllData(file) {
             }
         }
 
-        // 4. 还原身份信息
+        // 还原身份信息
         if (currentDeviceId) localStorage.setItem('kiki_device_id', currentDeviceId);
         if (currentActivation) localStorage.setItem('kiki_is_activated', currentActivation);
 
@@ -46616,9 +46661,9 @@ async function importAllData(file) {
     } catch (error) {
         console.error("导入失败:", error);
         alert(`导入失败: ${error.message}`);
+        utils.showToast('导入失败');
     }
 }
-
 /**
  * 【修复版】清除所有数据 (保留激活状态)
  */
