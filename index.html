@@ -29954,41 +29954,84 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
              // ✅✅✅ 修改：隐藏新版输入动画 ✅✅✅
         if (typingIndicator) typingIndicator.classList.remove('visible');
 
+            // --- 步骤 4.5: 【核心修复】智能拆箱与解析 (增强版) ---
             let responseList = [];
+            
+            // 1. 暴力清洗：去掉 markdown 标记
+            let cleanStr = aiResponse.trim()
+                .replace(/^```json/i, '') // 去掉开头的 ```json
+                .replace(/^```/, '')      // 去掉开头的 ```
+                .replace(/```$/, '')      // 去掉结尾的 ```
+                .trim();
+
             try {
-                let jsonStr = aiResponse.trim();
- 
-                // 2. 寻找最外层的数组 [] 边界
-                const firstBracket = jsonStr.indexOf('[');
-                const lastBracket = jsonStr.lastIndexOf(']');
+                // 2. 尝试标准 JSON 解析
+                const firstBracket = cleanStr.indexOf('[');
+                const lastBracket = cleanStr.lastIndexOf(']');
 
                 if (firstBracket !== -1 && lastBracket !== -1) {
-                    // 提取纯净的 JSON 字符串
-                    jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
-                    responseList = JSON.parse(jsonStr);
+                    const jsonCandidate = cleanStr.substring(firstBracket, lastBracket + 1);
+                    responseList = JSON.parse(jsonCandidate);
                 } else {
-                    // 如果找不到数组，尝试找找是不是只返回了一个对象 {}
-                    const firstBrace = jsonStr.indexOf('{');
-                    const lastBrace = jsonStr.lastIndexOf('}');
+                    // 没找到数组括号，尝试找对象括号 {}
+                    const firstBrace = cleanStr.indexOf('{');
+                    const lastBrace = cleanStr.lastIndexOf('}');
                     if (firstBrace !== -1 && lastBrace !== -1) {
-                         jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-                         const singleObj = JSON.parse(jsonStr);
+                         const singleObj = JSON.parse(cleanStr.substring(firstBrace, lastBrace + 1));
                          responseList = [singleObj];
                     } else {
-                        // 真的不是 JSON，那就是普通纯文本
                         throw new Error("Not JSON");
                     }
                 }
+            } catch (e) {
+                console.warn("JSON解析失败，启用正则暴力提取:", e);
+                
+                // === 3. 【关键补丁】正则暴力提取 (RegEx Fallback) ===
+                
+                // 匹配模式： "content": "任意字符"
+                const contentRegex = /"content"\s*:\s*"((?:[^"\\]|\\.)*)"/g;
+                let match;
+                let extracted = false;
+                
+                while ((match = contentRegex.exec(cleanStr)) !== null) {
+                    extracted = true;
+                    // 处理转义字符 (比如把 \" 变回 ")
+                    let contentTxt = match[1].replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                    
+                    // 尝试提取对应的 translation
+                    let transTxt = null;
+                    const remainder = cleanStr.substring(match.index + match[0].length);
+                    const transMatch = remainder.match(/"translation"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+                    if (transMatch) {
+                        transTxt = transMatch[1].replace(/\\"/g, '"');
+                    }
 
-                // 3. 二次校验：确保结果是数组
-                if (!Array.isArray(responseList)) {
-                    responseList = [responseList];
+                    responseList.push({ 
+                        content: contentTxt, 
+                        translation: transTxt 
+                    });
                 }
 
-            } catch (e) {
-                console.warn("解析失败，降级为纯文本:", e);
-                
-                responseList = [{ content: aiResponse, translation: null }];
+                // 4. 如果连正则都提取不到，说明 AI 真的没按格式回，那就当纯文本处理
+                if (!extracted) {
+                    // 如果看起来像代码，尽量清洗一下
+                    let fallbackText = cleanStr
+                        .replace(/[\[\]\{\}"]/g, '') // 去掉括号和引号
+                        .replace(/content:/g, '')    // 去掉 key
+                        .replace(/translation:null/g, '') // 去掉 null
+                        .replace(/,/g, '\n')         // 逗号变换行
+                        .trim();
+                    
+                    // 如果清洗后太短，还是用原始的吧
+                    if (fallbackText.length < 2) fallbackText = aiResponse;
+
+                    responseList = [{ content: fallbackText, translation: null }];
+                }
+            }
+
+            // 5. 二次校验：确保结果是数组
+            if (!Array.isArray(responseList)) {
+                responseList = [responseList];
             }
 
             // 开启循环，逐条处理
