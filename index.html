@@ -17692,6 +17692,8 @@ body.light-mode #single-chat-typing .status-text {
 body.light-mode #single-chat-typing .thread {
     background: #620E2C !important;
 }
+
+
     </style>
 </head>
 
@@ -27777,23 +27779,46 @@ createIMessagePrompt(dossier, history, userLastInput) {
                 
                 let timeContextSection = '';
                 const isTimePerceptionEnabled = dossier.timePerceptionEnabled !== false;
+                
                 if (isTimePerceptionEnabled) {
                     const now = new Date();
                     const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
                     const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
                     const realTimeContext = `当前时空: ${now.toLocaleDateString('zh-CN', dateOptions)} ${now.toLocaleTimeString('zh-CN', timeOptions)}`;
+                    
+                    // === 核心修复开始：计算时间差 ===
+                    let timeGapInstruction = "";
+                    
+                    if (chatHistory.length > 0) {
+                        const lastMsg = chatHistory[chatHistory.length - 1];
+                        const lastTime = lastMsg.timestamp;
+                        const timeDiff = now.getTime() - lastTime;
+                        
+                        // 阈值：2小时 (7200000毫秒)
+                        // 如果距离上一句话超过2小时，就视为“断层”
+                        if (timeDiff > 2 * 60 * 60 * 1000) {
+                            const hoursPassed = (timeDiff / (1000 * 60 * 60)).toFixed(1);
+                            
+                            timeGapInstruction = `
+**【⚠️ 强制逻辑：时间断层检测】**
+系统检测到：距离上一条消息已经过去了 **${hoursPassed} 小时**。
+这意味着**之前的对话场景（如正在吃饭、正在路上、正在工作）已经结束了！**
+
+**你的反应必须遵循：**
+1. **切断旧场景：** 绝对不要顺着上一句的“正在进行时”往下说。
+   - *错误示范：* 上一句是下午2点说“我去吃饭”，现在是晚上8点，你回复“吃完了吗？”（错！吃了6个小时吗？）
+   - *正确示范：* “这么晚了，刚才一直在忙吗？” 或者开启一个晚上的新话题。
+2. **感知当下：** 第一句话必须体现出**“重新建立连接”**的感觉，或者对当前时间点（${now.getHours()}点）做出反应。
+`;
+                        }
+                    }
+                    // === 核心修复结束 ===
+
                     timeContextSection = `
 ## 1.5 补充背景：当前时空 (Supplementary Context: Current Spacetime)
-以下是你所处的现实时空背景。
-**核心准则：** 这种感知应当是内在的，不要像报时鸟一样刻意提及。
+${realTimeContext}
 
-${realTimeContext} 
-
-**【⚠️ 强制逻辑：时间断层检测】**
-你必须对比**【最后一条聊天记录的时间】**与**【当前时空】**：
-1. **如果相隔超过 2 小时**：默认上一轮对话的事件（如正在送饭、正在路上）**已经结束了**。
-2. **严禁接续旧动作**：比如昨晚说“我去买夜宵”，现在是下午，你**绝对不能**回复“我买回来了”。
-3. **正确反应**：应该像开启新话题一样，回应用户现在的状态。
+${timeGapInstruction}
 `; 
                 }
 
@@ -27846,19 +27871,21 @@ AI 必须对**当前生成的每一句话**进行独立的语言检测，**绝�
 - 🟢 **情况 A (外语)：** 如果你回复的内容包含**日语、英语、法语**等非中文语言。
   - **必须**在 \`translation\` 字段提供中文翻译。
   - 即使上一句是中文没翻译，这一句只要是外语，就**必须**翻译！
-- 🔵 **情况 B (纯中文)：** 如果你回复的内容完全是中文。
-  - \`translation\` 字段填 \`null\`。
+- 🔵 **情况 B (纯中文)：**如果是中文 (Chinese)：** 
+   - **绝对禁止翻译！** 不要把中文翻译成中文，也不要翻译成英文。
+   - \`translation\` 字段**必须**为 \`null\` (不是字符串 "null"，是 JSON 的 null 值)。
 
 **【输出格式 (JSON Array)】**
 
 \`\`\`json
 [
   {
-    "content": "消息原文 (外语或中文)",
-    "translation": "润色后的中文翻译 (🔴 重要：如果原文是中文，此项填 null；如果原文是外语，此项必须填写！)"
+    "content": "这里是你的回复内容",
+    "translation": null 
   }
 ]
 \`\`\`
+*(注意：如果 content 是中文，translation 必须是 null)*
 
 - # 【新增高级能力】复杂行为指令 (Advanced Action Directives)
 - **核心理念：** “引用”和“撤回”是你展现角色灵魂深度的绝佳工具。它们是你将对话从简单的信息交换，升华为充满情感张力和个性魅力的互动的关键。
@@ -29622,18 +29649,21 @@ for (let i = 0; i < 5; i++) {
                 let transText = message.translation;
 
                 // 1. 如果是 null/undefined，转为空字符串
-                if (!transText) transText = '';
-                // 2. 如果是字符串 "null" (不区分大小写)，强行置空
-                if (typeof transText === 'string' && transText.toLowerCase() === 'null') transText = '';
-                // 3. 去除首尾空格
-                if (typeof transText === 'string') transText = transText.trim();
+                if (transText && typeof transText === 'string') {
+        if (transText.toLowerCase() === 'null' || transText.trim() === '') {
+            transText = null;
+        }
+    } else {
+        // 如果不是字符串且不是真值（例如 null/undefined），视为无
+        transText = null;
+    }
 
-                // 只有当 transText 确实有内容时，才添加 has-trans 类
-                if (transText) {
-                    bubbleEl.classList.add('has-trans');
-                }
+    // 只有当 transText 真的有内容时，才添加样式类
+    if (transText) {
+        bubbleEl.classList.add('has-trans');
+    }
 
-                bubbleEl.dataset.messageContent = mainText; 
+    bubbleEl.dataset.messageContent = mainText; 
 
                 // ... (引用逻辑保持不变) ...
                 const isAIQuoteFormat = sender === 'character' && typeof mainText === 'string' && mainText.includes('\n') && mainText.startsWith('> ');
@@ -29970,11 +30000,17 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                 let currentTranslation = item.translation;
                 
                 // 如果 AI 返回了字符串 "null" 或者纯空字符串，强制转为 null 对象
-                if (typeof currentTranslation === 'string') {
-                    if (currentTranslation.toLowerCase() === 'null' || currentTranslation.trim() === '') {
-                        currentTranslation = null;
-                    }
-                }
+                if (currentTranslation) {
+        if (typeof currentTranslation === 'string') {
+            const lowerTrans = currentTranslation.toLowerCase().trim();
+            if (lowerTrans === 'null' || lowerTrans === 'undefined' || lowerTrans === '') {
+                currentTranslation = null;
+            }
+        }
+    } else {
+        // undefined 也要转为 null
+        currentTranslation = null;
+    }
             // --- 【核心改动】将AI回复拆分为“聊天部分”和“动态指令部分” ---
 
 // vvv 【【【 终极修复：健壮的指令解析器 】】】 vvv
