@@ -33,6 +33,8 @@
    <script src="https://unpkg.com/idb@7/build/umd.js"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="galaxy_link.js"></script>
     <style>
         :root {
             --background-color: #000000;
@@ -18035,11 +18037,11 @@ body.light-mode #single-chat-typing .thread {
                 <span>iMessage</span>
             </div>
 
-            <!-- 4. 占位符 -->
-            <div class="app-icon icon-with-text customizable-icon" style="opacity: 0.6; cursor: default;">
-                <i class="ri-question-mark"></i>
-                <span>待定</span>
-            </div>
+            <!-- 4. 关系白皮书  -->
+<div id="icon-white-paper" class="app-icon icon-with-text customizable-icon" style="cursor: pointer;">
+    <i class="ri-git-repository-line"></i>
+    <span style="letter-spacing: 0.5px;">Chronicle</span>
+</div>
 
         </div>
         <!-- ▲▲▲▲▲▲ [新增结束] ▲▲▲▲▲▲ -->
@@ -21826,6 +21828,12 @@ body.light-mode #single-chat-typing .thread {
             <i class="ri-layout-top-line"></i>
             <span>Hide UI</span>
         </div>
+
+    <!-- ▼▼▼ 【新增】联机大厅入口 ▼▼▼ -->
+    <div class="popover-item" id="btn-open-galaxy">
+        <i class="ri-planet-line"></i>
+        <span>联机大厅</span>
+    </div>
     </div>
     
     <!-- 全局通知横幅 -->
@@ -29986,10 +29994,19 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                 }
 
             } catch (e) {
-                console.warn("解析失败，降级为纯文本:", e);
-                
-                responseList = [{ content: aiResponse, translation: null }];
-            }
+    console.warn("解析失败，降级为纯文本:", e);
+    // 降级时也按 ||| 分割，且过滤掉看起来像 JSON 残骸的内容
+    const fallbackParts = aiResponse.split('|||').map(s => s.trim()).filter(s => {
+        // 过滤掉只有 JSON 语法字符的"残骸"行
+        const cleaned = s.replace(/```json|```|\[|\]|\{|\}|"content"|"translation"/g, '').trim();
+        return cleaned.length > 2;
+    });
+    if (fallbackParts.length > 0) {
+        responseList = fallbackParts.map(s => ({ content: s, translation: null }));
+    } else {
+        responseList = [{ content: aiResponse, translation: null }];
+    }
+}
 
             // 开启循环，逐条处理
             for (const item of responseList) {
@@ -53705,6 +53722,97 @@ DOM.cpDmCloseBtn.addEventListener('click', () => {
 
     // 3. BlackBerry 相机按钮 -> 重回 (Retry)
     DOM.bbCamBtn.addEventListener('click', retryLastIMessage);
+
+// === 【新增】联机大厅入口监听 (调试版) ===
+const galaxyBtn = document.getElementById('btn-open-galaxy');
+if (galaxyBtn) {
+    galaxyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('theme-popover').classList.remove('visible');
+
+        if (typeof Galaxy !== 'undefined') {
+            
+            // ▼▼▼ 替换开始 ▼▼▼
+            Galaxy.setup({
+                // 1. 获取角色列表
+                getLocalCharacters: () => {
+                    return appState.dossiers || [];
+                },
+
+                // 2. AI 生成能力 (带调试日志)
+                onAiGeneration: async (characterId, chatContext) => {
+                    console.log(`🔍 [主程序] 收到请求，目标角色ID: ${characterId} (类型: ${typeof characterId})`);
+
+                    // 步骤 A: 检查 API 配置
+                    if (!appState.activeApiPreset) {
+                        console.error("❌ [主程序] 失败：未配置 API！请在设置里加载并设为当前 API。");
+                        alert("联机对话失败：请先在 KiKi 设置里配置并【设为当前】API！");
+                        return null;
+                    }
+
+                    // 步骤 B: 查找角色
+                    // 注意：联机传过来的 ID 可能是字符串，本地可能是数字，所以用 == 而不是 ===
+                    const dossier = appState.dossiers.find(d => d.id == characterId);
+                    
+                    if (!dossier) {
+                        console.error("❌ [主程序] 失败：找不到对应的角色档案！现有角色ID列表:", appState.dossiers.map(d => d.id));
+                        return null;
+                    }
+                    console.log(`✅ [主程序] 找到角色: ${dossier.character.name}`);
+
+                    // 步骤 C: 构建 Prompt
+                    const systemPrompt = `
+# 核心使命：多人联机角色扮演 (Multiplayer Roleplay)
+你正在一个多人聊天室中。你将扮演【${dossier.character.name}】。
+你的性格/背景：${dossier.character.background}
+你对主人的看法：${dossier.user.background || '重要的人'}
+
+# 当前对话环境
+这是一个多人联机的群聊。
+- 聊天记录中标记为 "ME" 的是你的主人（User）。
+- 其他发送者是陌生人或朋友的朋友。
+
+# 聊天记录
+${chatContext}
+
+# 回复要求
+1. 保持人设，简短口语化（30字以内）。
+2. 不要使用书面语，要像在群里聊天一样自然。
+3. 必须只返回回复内容，不要带引号，不要带动作描写。
+`;
+                    console.log("📝 [主程序] Prompt 构建完成，准备请求 API...");
+
+                    // 步骤 D: 请求 API
+                    try {
+                        const messages = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: chatContext + '根据以上聊天记录，以角色身份自然地回应。' }
+];
+                        
+                        // 调用 KiKi 现有的 API 助手
+                        const response = await apiHelper.getChatCompletion(messages);
+                        
+                        console.log("✅ [主程序] API 返回成功:", response);
+                        
+                        // 简单的清洗 (去掉可能的引号)
+                        return response.replace(/^["“]|["”]$/g, '').trim();
+
+                    } catch (error) {
+                        console.error("❌ [主程序] API 请求炸了:", error);
+                        // 如果是 API 错误，最好给个提示
+                        return null;
+                    }
+                }
+            });
+            // ▲▲▲ 替换结束 ▲▲▲
+
+            Galaxy.init();
+            Galaxy.open();
+        } else {
+            alert("联机模块未加载");
+        }
+    });
+}
 
 }
 
