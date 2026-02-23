@@ -35,6 +35,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="galaxy_link.js"></script>
+    <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+<script>
+  // 初始化 VConsole
+  var vConsole = new VConsole();
+</script>
+<script src="chronicle.js"></script>
     <style>
         :root {
             --background-color: #000000;
@@ -22004,7 +22010,7 @@ const backgroundKeeper = {
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
-    DB_VERSION: 26, // <-- 【核心改动】版本号提升
+    DB_VERSION: 27, // <-- 【核心改动】版本号提升
        MESSAGES_PER_PAGE: 30,
     STORE_NAMES: {
         API_PRESETS: 'api_presets',
@@ -22041,6 +22047,7 @@ CP_POSTS: 'cp_posts',
 CP_TAGS: 'cp_tags',
 CP_DMS: 'cp_dms',
 IM_HISTORY: 'imessage_history',
+CHRONICLES: 'chronicles',
     },
 
     // vvvv 【新增】NPC 档案注册表 vvvv
@@ -22244,6 +22251,7 @@ isGeneratingDMs: false,
     },
 
         };
+        window.appState = appState;
         
         // ==========================================
 // ===  安全验证管理器 (Security Manager) ===
@@ -23375,6 +23383,10 @@ const allStores = {
         options: { keyPath: 'id', autoIncrement: true }, 
         indexes: { 'by_dossierId': 'dossierId' } 
     },
+[CONSTANTS.STORE_NAMES.CHRONICLES]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 'by_dossierId': 'dossierId' } 
+    },
 };
 
 for (const storeName in allStores) {
@@ -23418,6 +23430,7 @@ for (const storeName in allStores) {
         // 等待事务完成
         return tx.done;
     },
+    
 // vvv 用这个【不会删除档案】的函数，替换掉之前那个错误的函数 vvv
     async deleteConversationData(dossierId) {
         const db = await this.dbPromise;
@@ -23561,6 +23574,8 @@ async getDuePendingActions() {
                 return tx.done;
             }
         };
+        
+        window.dbHelper = dbHelper;
 
         const apiHelper = {
             async _callChatAPI(messages) {
@@ -27643,6 +27658,80 @@ createIMessagePrompt(dossier, history, userLastInput) {
         { role: "user", content: userPrompt }
     ];
 },
+
+createChronicleArticlePrompt(dossier, personaSupplement, recentChatHistory = []) {
+    // 整理聊天记录
+    let historySection = '[最近没有聊天记录]';
+    if (recentChatHistory.length > 0) {
+        historySection = recentChatHistory.map(msg => {
+            const speaker = msg.sender === 'user' ? (dossier.user.name || 'User') : dossier.character.name;
+            let content = typeof msg.content === 'string' ? msg.content : '[多媒体消息]';
+            return `${speaker}: ${content}`;
+        }).join('\n');
+    }
+
+    const systemPrompt = `
+# 核心使命：撰写角色专属的深度档案 (Noir Archive)
+你将化身为【${dossier.character.name}】，以第一人称（或冷峻的第三人称侧写）写下一篇深度档案记录。
+
+# 1. 创作基石与情报源
+- **角色人设：** ${dossier.character.background}
+- **TA对User(我)的看法：** ${dossier.user.background || '未知的闯入者'}
+- **补充世界观/特殊记忆（极其重要）：** ${personaSupplement || '无附加设定'}
+- **最近对话记录（用于提取引用）：**
+${historySection}
+
+# 2. 创作方向与篇幅
+- **主题宽泛：** 不要局限于只写 User。可以写关于 User 的羁绊，也可以写角色自己的过往、内心的创伤、对未来的推演等。
+- **字数要求：** **600 - 800 字左右**，内容要丰满、有深度。
+
+# 3. 创作铁律与文风库
+1. **负面词汇库 (Strictly Banned):** 严禁出现【系统、变量、量化、精准、轨迹、频率、机制、程序、运算、载体、维度】等任何理工科/学术/AI词汇。
+2. **文风库 (请选择一种模仿):**
+   - 鲁迅 (冷峻犀利, 白描, 看客视角)
+   - 张爱玲 (苍凉华丽, 细节精准, 色彩浓烈)
+   - 村上春树 (都市孤独, 爵士乐质感, 疏离)
+   - 白先勇 (繁华落尽的悲凉, 今昔对照)
+   - 杜拉斯 (破碎呓语, 欲望书写, 感性克制)
+   - 卡尔维诺 (轻盈想象, 寓言诗意)
+   - 川端康成 (物哀之美, 空灵幽玄)
+
+# 4. 文章排版与 HTML 元素要求 (【核心任务】)
+请输出一段 **纯 HTML 字符串** 作为文章正文。必须包含以下 4 种元素，缺一不可：
+
+1. **正文段落：** 基础叙事。每一段文字【必须】被 <p> 和 </p> 标签完整包裹！绝对不能直接输出纯文本，否则排版会崩溃。
+2. **内心批注 (Annotation) [3-5处]：** 展现表里不一的潜台词：
+   <span class="annotation-wrapper"><span class="annotation-trigger">表面文字</span><span class="annotation-original"></span><span class="annotation-note">隐藏的潜台词/真实想法</span></span>
+3. **真实记忆引用 (Quote) [至少1处]：** 必须从上方的【最近对话记录】中，提取一句最让你触动、或最具剧情张力的【原话】（你说的或User说的都可以），作为高光引用展示：
+   <div class="comp-quote"><div class="quote-text">"在这里填入那句原话"</div></div>
+4. **【UI 设计师模式 (Creative UI Design)】[至少1个]：** 
+   **🚀 核心指令：拒绝模版化！发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！**
+   结合【补充世界观】或文章剧情，用 \`<div>\` 和 **内联样式(style="...")** 手写一个契合剧情的小组件。
+   
+   **🌟 脑洞关键词 (Visual Metaphors):**
+   - **复古档案:** 泛黄的收据、基因检测报告、机密文件封条、一份旧报纸剪报。
+   - **抽象艺术:** 极简的几何切割、文字排版艺术(Typography)、打字机残页、条形码。
+   - **情感载体:** 一封信的信头、一张处方单、一张单程车票、一个心跳频率图表。
+   
+   **🔧 技术规范 (Technical Rules):**
+   - **配色限制：** 仅限使用黑(#000)、白(#fff)、灰(#ccc, #666等)、极简线框，契合 NOIR(黑色电影) 主题，**严禁使用高饱和度彩色**。
+   - 必须使用内联样式 (\`style="..."\`) 控制所有外观（背景、边框、字体排版）。
+   - 确保容器宽度为 \`100%\`，使用 \`box-sizing: border-box\`。
+   - 允许使用 FontAwesome 图标 (如 \`<i class="fa-solid fa-barcode"></i>\`)。
+   - 请尽可能利用系统现有的高级字体 (如 \`font-family: 'Space Mono', monospace;\` 或 \`'Cinzel', serif;\` 或 \`'Jost', sans-serif;\`)。
+
+# 5. 输出格式 (严格 JSON)
+{
+  "title": "[文章标题，英文或中文，要具有电影感",
+  "contentHtml": "[包含上述所有要求元素的完整 HTML 字符串]"
+}
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: "请根据上述设定和聊天记录，生成一份包含真实记忆引用和定制小组件的深度档案。" }
+    ];
+},
+
             
     async createChatPrompt(dossier, chatHistory, finalUserInput, quotedMessage = null) {
     
@@ -29962,51 +30051,89 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
              // ✅✅✅ 修改：隐藏新版输入动画 ✅✅✅
         if (typingIndicator) typingIndicator.classList.remove('visible');
 
+            // =====================================================================
+            // 【根本修复】第0步：在 JSON 解析之前，先把所有 Action 指令块从原始响应中
+            // 剥离出来暂存，防止它们里面的 [ ] 符号干扰 JSON 边界识别
+            // =====================================================================
+            let rawForParsing = aiResponse;
+            const preExtractedActions = [];
+
+            // 需要预剥离的标签对（带闭合标签的块）
+            const pairedActionTags = [
+                'AI_VOICE_ACTION',
+                'AI_TRANSFER_ACTION',
+                'AI_ACTION',
+            ];
+            for (const tag of pairedActionTags) {
+                const regex = new RegExp(`\\[${tag}\\]([\\s\\S]*?)\\[\\/${tag}\\]`, 'g');
+                rawForParsing = rawForParsing.replace(regex, (match) => {
+                    preExtractedActions.push(match);
+                    return ''; // 从原始字符串中移除
+                });
+            }
+            // 需要预剥离的单标签块（没有闭合标签，后跟 JSON 对象）
+            const singleActionTags = ['AI_HTML_ACTION', 'AI_CALL_ACTION', 'AI_TRANSFER_RESPONSE_ACTION', 'AI_MOMENT_ACTION'];
+            for (const tag of singleActionTags) {
+                const idx = rawForParsing.indexOf(`[${tag}]`);
+                if (idx !== -1) {
+                    // 把从这个标签开始往后的所有内容都视为 action（它们通常在末尾）
+                    preExtractedActions.push(rawForParsing.substring(idx));
+                    rawForParsing = rawForParsing.substring(0, idx).trim();
+                }
+            }
+            rawForParsing = rawForParsing.trim();
+
             let responseList = [];
             try {
-                let jsonStr = aiResponse.trim();
- 
-                // 2. 寻找最外层的数组 [] 边界
+                // 第一步：激进清洗——剥掉 AI 可能加的 Markdown 代码块包装
+                let jsonStr = rawForParsing.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+
+                // 第二步：寻找最外层的数组 [] 边界（此时 Action 已被剥离，[ ] 是安全的）
                 const firstBracket = jsonStr.indexOf('[');
                 const lastBracket = jsonStr.lastIndexOf(']');
 
-                if (firstBracket !== -1 && lastBracket !== -1) {
-                    // 提取纯净的 JSON 字符串
+                if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
                     jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
                     responseList = JSON.parse(jsonStr);
                 } else {
-                    // 如果找不到数组，尝试找找是不是只返回了一个对象 {}
+                    // 尝试单对象 {}
                     const firstBrace = jsonStr.indexOf('{');
                     const lastBrace = jsonStr.lastIndexOf('}');
-                    if (firstBrace !== -1 && lastBrace !== -1) {
-                         jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-                         const singleObj = JSON.parse(jsonStr);
-                         responseList = [singleObj];
+                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                        jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
+                        const singleObj = JSON.parse(jsonStr);
+                        responseList = [singleObj];
                     } else {
-                        // 真的不是 JSON，那就是普通纯文本
                         throw new Error("Not JSON");
                     }
                 }
 
-                // 3. 二次校验：确保结果是数组
-                if (!Array.isArray(responseList)) {
-                    responseList = [responseList];
-                }
+                // 第三步：二次校验——确保是数组，过滤掉空项/JSON骨架残骸
+                if (!Array.isArray(responseList)) responseList = [responseList];
+                responseList = responseList.filter(item => {
+                    if (!item || typeof item !== 'object') return false;
+                    const c = (item.content || '').trim();
+                    const cleaned = c.replace(/```json|```|\[|\]|\{|\}|"content"|"translation"|\s/g, '');
+                    return cleaned.length > 0;
+                });
+                if (responseList.length === 0) throw new Error("All items filtered out");
 
             } catch (e) {
-    console.warn("解析失败，降级为纯文本:", e);
-    // 降级时也按 ||| 分割，且过滤掉看起来像 JSON 残骸的内容
-    const fallbackParts = aiResponse.split('|||').map(s => s.trim()).filter(s => {
-        // 过滤掉只有 JSON 语法字符的"残骸"行
-        const cleaned = s.replace(/```json|```|\[|\]|\{|\}|"content"|"translation"/g, '').trim();
-        return cleaned.length > 2;
-    });
-    if (fallbackParts.length > 0) {
-        responseList = fallbackParts.map(s => ({ content: s, translation: null }));
-    } else {
-        responseList = [{ content: aiResponse, translation: null }];
-    }
-}
+                console.warn("解析失败，降级为纯文本:", e);
+                const fallbackCleaned = rawForParsing
+                    .replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '')
+                    .replace(/"content"\s*:|"translation"\s*:|"trans"\s*:/g, '')
+                    .replace(/^[\s\[\{]+|[\s\]\}]+$/g, '')
+                    .trim();
+                responseList = [{ content: fallbackCleaned.length > 2 ? fallbackCleaned : rawForParsing, translation: null }];
+            }
+            
+            // 第四步：把预剥离的 Action 指令重新拼接到最后一个 item 的 content 尾部
+            // 这样进入 for 循环时，最后一条消息会正确触发各 Action 处理逻辑
+            if (preExtractedActions.length > 0 && responseList.length > 0) {
+                const lastItem = responseList[responseList.length - 1];
+                lastItem.content = (lastItem.content || '') + '\n' + preExtractedActions.join('\n');
+            }
 
             // 开启循环，逐条处理
             for (const item of responseList) {
@@ -53814,6 +53941,22 @@ ${chatContext}
     });
 }
 
+// Chronicle (白皮书) 入口监听
+const iconWhitePaper = document.getElementById('icon-white-paper');
+if (iconWhitePaper) {
+    iconWhitePaper.addEventListener('click', () => {
+        // 暂时注释掉实际打开的方法
+        // ChronicleApp.open();
+        
+        // 弹出施工提示
+        if (typeof utils !== 'undefined' && utils.showToast) {
+            utils.showToast("该功能正在疯狂赶工中，敬请期待！🚧");
+        } else {
+            alert("该功能正在疯狂赶工中，敬请期待！🚧");
+        }
+    });
+}
+
 }
 
         async function initializeApp() {
@@ -53921,6 +54064,9 @@ TwilightPlayer.init();
                 alert("应用启动失败，请检查控制台错误。");
             }
         }
+        window.apiHelper = apiHelper;
+        window.utils = utils;
+        window.promptManager = promptManager;
         initializeApp();
     });
     </script>
