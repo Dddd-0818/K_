@@ -2,6 +2,12 @@
 const ChronicleApp = {
     rootId: 'chronicle-app-container',
     currentData: null,
+
+neteaseApiBase: 'https://api-enhanced-phi.vercel.app', 
+    currentAudio: null,
+
+vipCookie: 'MUSIC_U=0083DBEBBBE43BB0D5B4BD18E5FAB80C5A1205AF561EE73EF1E3FE563D6773EF4657F18F2114D6AD197664866FB97B9F1F09034B907DEA55DF5B1967389692EC5FB8220DAC58220E71404EEE9EEA497C81F12393F9099D9D1622FDF029BBEF973B7A44B5143352C0350D7C3633013E55D7E44E432C5EA867C9EB1B52D1395C4BFBDBE4A60BAF8EB48D5140A374AD73CA77F59B1CD35A30BE19FDC1C6590CC49CFA3616B67564A9E08C13946756330A0421E813ECA1E331742284C5EF9D5609DAB9C734C6AA8841B1E8B646443E4AC31A99DCFC3A69EFE16996C14A60BB7699D68AC9ADE42CF85DFAF6CEE42E3A4027CCE1740156540CAAD95DDBAD9CF0689C5C1A21BCC538EE8084FE81AAF7FE14920443BB8037C1F55257B9BEFEA1C511DFEAB7ED8F189832D15093D8A92EBD0E9DC7839751546E222FAE9CFA4710E372A9C60D38E3EDB54CDEB19AA43606F6053805E60DA548BD0326E307CC887A82546598D7440A843AD6BBE59EED28D09BCB2FEBFCF99A90377E8DE26A96DD4F5BFF8D3E9CA231B8888E7B4653F436A23372F77AD23A73C2ECC95AC81DF2BD28640DF97827;', 
+    currentAudio: null,
     
     // 静态章节模板 (这里直接写死那篇 404 文章)
     staticChaptersTemplate: [
@@ -71,10 +77,83 @@ const ChronicleApp = {
             ` 
         }
     ],
-    
-     toggleNote(element) {
+
+toggleNote(element) {
         // 因为全局事件代理已经处理了点击逻辑，这里只需留空，或者安全地返回即可
         return; 
+    },
+
+// 👇 新增：网易云音乐搜索解析引擎 (GET 请求 + Cookie 瘦身 + 防缓存兼容版)
+    async fetchNeteaseMusic(keyword) {
+        if (!keyword || keyword === 'null') return null;
+        try {
+            console.log(`🎵 [网易云] 开始检索关键词: "${keyword}"`);
+            
+            // 1. Cookie 瘦身：只取 MUSIC_U，防止 URL 过长报错
+            let cleanCookie = '';
+            if (this.vipCookie) {
+                const match = this.vipCookie.match(/MUSIC_U=[^;]+/);
+                cleanCookie = match ? match[0] : this.vipCookie;
+            }
+            
+            // 2. 组装基础参数 (加上 timestamp 防止缓存导致链接失效)
+            const baseParams = `timerstamp=${Date.now()}`;
+            const cookieParam = cleanCookie ? `&cookie=${encodeURIComponent(cleanCookie)}` : '';
+
+            // 3. 搜索歌曲 (GET 请求)
+            const searchUrl = `${this.neteaseApiBase}/search?keywords=${encodeURIComponent(keyword)}&limit=5&${baseParams}${cookieParam}`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
+            const songs = searchData.result?.songs;
+            
+            if (!songs || songs.length === 0) {
+                console.warn(`⚠️ [网易云] 未找到歌曲: ${keyword}`);
+                return null;
+            }
+
+            // 4. 批量获取 URL (GET 请求，请求 exhigh 无损)
+            const songIds = songs.map(s => s.id).join(',');
+            const audioUrlPath = `${this.neteaseApiBase}/song/url/v1?id=${songIds}&level=exhigh&${baseParams}${cookieParam}`;
+            
+            const urlRes = await fetch(audioUrlPath);
+            const urlData = await urlRes.json();
+
+            // 5. 找到第一个能用的链接
+            const validUrlObj = urlData.data?.find(item => item.url && item.url.trim() !== '');
+            
+            if (!validUrlObj) {
+                console.warn(`⚠️ [网易云] 搜索结果全部无效: ${keyword}`);
+                window.utils.showToast(`歌曲暂无音源`);
+                return null;
+            }
+
+            const finalSongId = validUrlObj.id;
+            const audioUrl = validUrlObj.url;
+
+            // 6. 匹配歌曲信息
+            const finalSongMeta = songs.find(s => s.id === finalSongId);
+            const title = finalSongMeta.name;
+            const artist = finalSongMeta.artists?.[0]?.name || 'Unknown';
+
+            console.log(`🎵 [网易云VIP] 锁定歌曲: ${title} - ${artist}`);
+
+            // 7. 获取封面
+            const detailUrl = `${this.neteaseApiBase}/song/detail?ids=${finalSongId}&${baseParams}${cookieParam}`;
+            const detailRes = await fetch(detailUrl);
+            const detailData = await detailRes.json();
+            const coverUrl = detailData.songs?.[0]?.al?.picUrl || '';
+
+            console.log(`✅ [网易云VIP] 音乐加载成功！`);
+            return { id: finalSongId, title, artist, audioUrl, coverUrl };
+            
+        } catch (e) {
+            console.error("❌ [网易云] 网络请求失败:", e);
+            // 只有网络真断了才会报这个错
+            if (e.message.includes('Load failed')) {
+                window.utils.showToast("网络连接被阻断，请检查代理设置");
+            }
+            return null;
+        }
     },
 
     // 初始化
@@ -348,6 +427,159 @@ const ChronicleApp = {
             @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 0.9; } }
             @keyframes ripple { 0% { width: 0%; height: 0%; opacity: 1; border-width: 2px; } 100% { width: 250%; height: 250%; opacity: 0; border-width: 0px; } }
             @keyframes fadeText { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
+/* === 音乐播放器卡片 (BGM Widget) === */
+            .chronicle-music-player {
+                display: flex; align-items: center; gap: 15px; margin-top: 30px;
+                padding: 12px; background: rgba(0,0,0,0.03); border-radius: 8px;
+                border: 1px dashed rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s;
+                max-width: 350px;
+            }
+            .chronicle-music-player:hover { background: rgba(0,0,0,0.06); border-style: solid; }
+            .cmp-cover {
+                width: 44px; height: 44px; border-radius: 4px; background-size: cover;
+                background-color: #333; display: flex; justify-content: center; align-items: center;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+            .cmp-btn { color: #fff; font-size: 16px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+            .cmp-info { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+            .cmp-title { font-family: 'Jost', sans-serif; font-weight: 600; font-size: 14px; color: #111; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+            .cmp-artist { font-family: 'Jost', sans-serif; font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+            
+            /* 播放时的声波跳动动画 */
+            .cmp-wave { display: flex; gap: 3px; height: 15px; align-items: flex-end; opacity: 0; transition: opacity 0.3s; padding-right: 10px;}
+            .cmp-wave.playing { opacity: 1; }
+            .cmp-bar { width: 2px; background: #111; animation: cmp-eq 1s infinite ease-in-out; border-radius: 1px; }
+            .cmp-bar:nth-child(2) { animation-delay: 0.2s; }
+            .cmp-bar:nth-child(3) { animation-delay: 0.4s; }
+            @keyframes cmp-eq { 0%, 100% { height: 4px; } 50% { height: 100%; } }
+
+/* === Reader Menu (右上角菜单) === */
+            .nav-paginator { 
+                cursor: pointer; 
+                position: relative; /* 为了定位菜单 */
+                transition: opacity 0.3s;
+                z-index: 50;
+            }
+            .nav-paginator:hover { opacity: 0.6; text-decoration: underline; }
+            
+            .reader-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                width: 120px;
+                background: #fff;
+                border: 1px solid #1a1a1a;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                display: none; /* 默认隐藏 */
+                flex-direction: column;
+                margin-top: 10px;
+                opacity: 0;
+                transform: translateY(-10px);
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+            .reader-menu.active {
+                display: flex;
+                opacity: 1;
+                transform: translateY(0);
+            }
+            
+            .reader-menu-item {
+                padding: 12px 15px;
+                font-family: 'Jost', sans-serif;
+                font-size: 10px;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                color: #333;
+                border-bottom: 1px solid #eee;
+                cursor: pointer;
+                transition: background 0.2s;
+                text-align: right;
+            }
+            .reader-menu-item:last-child { border-bottom: none; }
+            .reader-menu-item:hover { background: #f4f4f4; color: #000; }
+            .reader-menu-item.danger:hover { background: #fff0f0; color: #b91c1c; }
+
+/* === 🔮 MAGIC CIRCLE LOADING (华丽满屏版) === */
+            #magic-loading-overlay {
+                position: fixed;
+                top: 0; left: 0; width: 100vw; height: 100vh;
+                background-color: #fcfbf9; /* 更复古的羊皮纸色 */
+                background-image: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.03) 100%), 
+                                  url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+                overflow: hidden;
+            }
+
+            #magic-loading-overlay.active { opacity: 1; pointer-events: auto; }
+
+            /* 1. 顶部 HUD 信息栏 */
+            .magic-top-hud {
+                position: absolute;
+                top: 50px; left: 0; width: 100%;
+                padding: 0 40px;
+                display: flex;
+                justify-content: space-between;
+                font-family: 'Space Mono', monospace;
+                font-size: 9px;
+                color: #888;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                z-index: 10;
+            }
+            .hud-left span { display: block; margin-bottom: 4px; }
+            .hud-right { text-align: right; }
+            .hud-red-dot { display: inline-block; width: 6px; height: 6px; background: #c0392b; border-radius: 50%; margin-right: 5px; animation: blink 1s infinite; vertical-align: middle; }
+
+            /* 2. 背景超大暗纹星盘 */
+            .magic-bg-watermark {
+                position: absolute;
+                top: 50%; left: 50%;
+                width: 150vw; height: 150vw;
+                max-width: 800px; max-height: 800px;
+                transform: translate(-50%, -50%);
+                opacity: 0.04; /* 若隐若现 */
+                pointer-events: none;
+                animation: spin 120s linear infinite;
+            }
+
+            /* 3. 核心中央魔法阵 */
+            .magic-svg {
+                width: 320px;
+                height: 320px;
+                max-width: 90vw;
+                position: relative;
+                z-index: 5;
+                filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.1));
+            }
+
+            /* --- 动画图层控制 --- */
+            .mg-layer-1 { transform-origin: center; animation: spin 40s linear infinite; } /* 最外层文字环 */
+            .mg-layer-2 { transform-origin: center; animation: spin-rev 25s linear infinite; } /* 次外层刻度 */
+            .mg-layer-3 { transform-origin: center; animation: spin 15s cubic-bezier(0.4, 0, 0.2, 1) infinite; } /* 几何交叉环 */
+            .mg-layer-4 { transform-origin: center; animation: spin-rev 10s linear infinite; } /* 内测天体轨道 */
+            .mg-pulse { animation: magic-breathe 3s ease-in-out infinite; } /* 核心月亮 */
+            .mg-star { animation: twinkle 2s ease-in-out infinite; }
+            .mg-star:nth-child(even) { animation-delay: 1s; }
+
+            /* 4. 底部动态文字 */
+            .magic-text-box { margin-top: 40px; text-align: center; position: relative; z-index: 10; }
+            .magic-title { font-family: 'Cinzel', serif; font-size: 20px; letter-spacing: 6px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; animation: fadeText 2s infinite; }
+            .magic-sub { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 4px; color: #d4af37; text-transform: uppercase; }
+
+            /* 动画定义 */
+            @keyframes spin { 100% { transform: rotate(360deg); } }
+            @keyframes spin-rev { 100% { transform: rotate(-360deg); } }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+            @keyframes magic-breathe { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.02); opacity: 1; } }
+            @keyframes twinkle { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
         `;
         document.head.appendChild(style);
 
@@ -409,9 +641,17 @@ const ChronicleApp = {
 
             <!-- PAGE 3: READER -->
             <div id="chronicle-page-read" class="page-read hidden">
-                <nav class="read-nav">
+               <nav class="read-nav">
                     <div class="nav-back-text" id="chronicle-back-to-index">Index</div>
-                    <div class="nav-paginator">Reader</div>
+                    <!-- 给 Reader 加了 id 和 onclick -->
+                    <div class="nav-paginator" id="chronicle-reader-trigger">
+                        Reader
+                        <!-- 下拉菜单结构 -->
+                        <div class="reader-menu" id="chronicle-reader-menu">
+                            <div class="reader-menu-item" id="btn-reader-collect">Collection</div>
+                            <div class="reader-menu-item danger" id="btn-reader-delete">Delete Log</div>
+                        </div>
+                    </div>
                 </nav>
 
                 <div class="read-scroll-area" id="chronicle-read-scroll-area">
@@ -456,6 +696,106 @@ const ChronicleApp = {
                     <div class="letter-body" id="chronicle-letter-body"><span class="cursor"></span></div>
                 </div>
             </div>
+<!-- 🔮 MAGIC LOADING OVERLAY (华丽饱满版) -->
+            <div id="magic-loading-overlay">
+                
+                <!-- 1. 顶部 HUD (填补上半部分空白) -->
+                <div class="magic-top-hud">
+                    <div class="hud-left">
+                        <span><span class="hud-red-dot"></span>NEURAL LINK ACTIVE</span>
+                        <span style="opacity:0.5;">ARCHIVE.SYS.V2</span>
+                    </div>
+                    <div class="hud-right">
+                        <span>LAT: 41°24'N</span>
+                        <span style="opacity:0.5;">LON: 2°10'E</span>
+                    </div>
+                </div>
+
+                <!-- 2. 巨大背景暗纹 (填补四周空白) -->
+                <svg class="magic-bg-watermark" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="300" cy="300" r="280" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="2 10"/>
+                    <circle cx="300" cy="300" r="240" fill="none" stroke="#000" stroke-width="0.5"/>
+                    <path d="M 20 300 L 580 300 M 300 20 L 300 580" stroke="#000" stroke-width="0.5" stroke-dasharray="5 5"/>
+                    <circle cx="300" cy="300" r="150" fill="none" stroke="#000" stroke-width="2" stroke-dasharray="50 20"/>
+                </svg>
+
+                <!-- 3. 核心高精度魔法阵 (400x400 超大视口，细节翻倍) -->
+                <svg class="magic-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#d4af37" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="#d4af37" stop-opacity="1"/>
+                        </linearGradient>
+                        <!-- 定义文字环绕的路径 -->
+                        <path id="text-path" d="M 200, 40 A 160,160 0 1,1 199.9,40" />
+                    </defs>
+
+                    <!-- Layer 1: 最外层咒语环与刻度 -->
+                    <g class="mg-layer-1">
+                        <circle cx="200" cy="200" r="180" fill="none" stroke="#d4af37" stroke-width="0.5" stroke-dasharray="4 6"/>
+                        <circle cx="200" cy="200" r="170" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+                        <!-- 环绕的拉丁文/代码文字 -->
+                        <text font-family="'Cinzel', serif" font-size="12" fill="#d4af37" letter-spacing="8">
+                            <textPath href="#text-path" startOffset="5%">DECRYPTING ARCHIVE · SEEKING THE TRUTH IN THE VOID · COGITOS ERGO SUM ·</textPath>
+                        </text>
+                        <text font-family="'Cinzel', serif" font-size="12" fill="#d4af37" letter-spacing="8">
+                            <textPath href="#text-path" startOffset="55%">SYSTEM OVERRIDE PROTOCOL INITIATED · NOIR CHRONICLE SYSTEM ·</textPath>
+                        </text>
+                    </g>
+
+                    <!-- Layer 2: 复杂的交叉射线与天体支架 -->
+                    <g class="mg-layer-2">
+                        <circle cx="200" cy="200" r="145" fill="none" stroke="#1a1a1a" stroke-width="0.5"/>
+                        <!-- 八芒星骨架 -->
+                        <path d="M 55 55 L 345 345 M 55 345 L 345 55 M 200 10 L 200 390 M 10 200 L 390 200" stroke="#1a1a1a" stroke-width="0.5" opacity="0.3"/>
+                        <!-- 轨道节点 -->
+                        <circle cx="200" cy="55" r="4" fill="#1a1a1a"/>
+                        <circle cx="200" cy="345" r="4" fill="#1a1a1a"/>
+                        <circle cx="55" cy="200" r="4" fill="#1a1a1a"/>
+                        <circle cx="345" cy="200" r="4" fill="#1a1a1a"/>
+                        <!-- 外围细碎装饰线 -->
+                        <circle cx="200" cy="200" r="130" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="1 10"/>
+                    </g>
+
+                    <!-- Layer 3: 核心几何 (六芒星交叠) -->
+                    <g class="mg-layer-3">
+                        <circle cx="200" cy="200" r="100" fill="none" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+                        <!-- 两个倒置的等边三角形构成六芒星 -->
+                        <polygon points="200,80 304,260 96,260" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+                        <polygon points="200,320 304,140 96,140" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+                        <!-- 六个顶点上的小金点 -->
+                        <circle cx="200" cy="80" r="3" fill="#d4af37" class="mg-star"/>
+                        <circle cx="304" cy="260" r="3" fill="#d4af37" class="mg-star"/>
+                        <circle cx="96" cy="260" r="3" fill="#d4af37" class="mg-star"/>
+                        <circle cx="200" cy="320" r="3" fill="#d4af37" class="mg-star"/>
+                        <circle cx="304" cy="140" r="3" fill="#d4af37" class="mg-star"/>
+                        <circle cx="96" cy="140" r="3" fill="#d4af37" class="mg-star"/>
+                    </g>
+
+                    <!-- Layer 4: 内侧天体运转轨道 -->
+                    <g class="mg-layer-4">
+                        <circle cx="200" cy="200" r="65" fill="none" stroke="#1a1a1a" stroke-width="0.8" stroke-dasharray="15 5"/>
+                        <circle cx="135" cy="200" r="6" fill="#1a1a1a"/>
+                        <circle cx="265" cy="200" r="4" fill="none" stroke="#d4af37" stroke-width="2"/>
+                    </g>
+
+                    <!-- 核心: 会呼吸的新月与金球 -->
+                    <g class="mg-pulse">
+                        <circle cx="200" cy="200" r="40" fill="none" stroke="#d4af37" stroke-width="0.5"/>
+                        <!-- 黑月 -->
+                        <path d="M 180 170 A 45 45 0 1 0 180 230 A 32 32 0 1 1 180 170" fill="#1a1a1a"/>
+                        <!-- 垂挂的金球 -->
+                        <line x1="200" y1="200" x2="200" y2="250" stroke="#d4af37" stroke-width="1"/>
+                        <circle cx="200" cy="250" r="4" fill="url(#gold-grad)"/>
+                    </g>
+                </svg>
+
+                <!-- 4. 底部文字 -->
+                <div class="magic-text-box">
+                    <div class="magic-title" id="magic-loading-text">DECRYPTING</div>
+                    <div class="magic-sub">Establishing Neural Link</div>
+                </div>
+            </div>
         `;
         document.body.appendChild(container);
 
@@ -479,12 +819,130 @@ const ChronicleApp = {
         document.getElementById('chronicle-editor-publish').onclick = () => this.shareToCharacter();
         document.getElementById('chronicle-close-letter').onclick = () => this.closeLetter();
 
+document.getElementById('chronicle-reader-trigger').onclick = (e) => this.toggleReaderMenu(e);
+        document.getElementById('btn-reader-delete').onclick = (e) => {
+            e.stopPropagation(); // 防止菜单立刻关闭导致点击无效
+            this.deleteCurrentLog();
+        };
+        document.getElementById('btn-reader-collect').onclick = (e) => {
+            e.stopPropagation();
+            this.toggleCollection();
+        };
+
+        // 👇 新增：点击页面其他地方关闭菜单
         document.addEventListener('click', (e) => {
+            const menu = document.getElementById('chronicle-reader-menu');
+            const trigger = document.getElementById('chronicle-reader-trigger');
+            if (menu && menu.classList.contains('active') && !trigger.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+        document.addEventListener('click', (e) => {
+            // 1. 批注点击逻辑
             const wrapper = e.target.closest('.annotation-wrapper');
             if (wrapper && document.getElementById('chronicle-app-container').contains(wrapper)) {
                 wrapper.classList.toggle('active');
             }
+            
+            // 2. 👇 新增：音乐播放器点击逻辑
+            const musicPlayer = e.target.closest('.chronicle-music-player');
+            if (musicPlayer && document.getElementById('chronicle-app-container').contains(musicPlayer)) {
+                this.toggleMusic(musicPlayer);
+            }
         });
+    },
+
+// === 新增功能区 ===
+
+    // 1. 切换菜单显示/隐藏
+    toggleReaderMenu(e) {
+        if (e) e.stopPropagation(); // 阻止冒泡
+        const menu = document.getElementById('chronicle-reader-menu');
+        if (menu.classList.contains('active')) {
+            menu.classList.remove('active');
+        } else {
+            menu.classList.add('active');
+        }
+    },
+
+    // 2. 删除当前文章逻辑
+    async deleteCurrentLog() {
+        const id = this.currentReadingId;
+        if (!id) return;
+
+        // 保护静态模板 (404那篇) 不被删除
+        if (String(id).startsWith('static_')) {
+            window.utils.showToast("System File: Access Denied.");
+            return;
+        }
+
+        if (confirm("【CONFIRM DELETION】\n\n此操作将永久销毁这份档案记录。\n确定要执行吗？")) {
+            try {
+                // 1. 从数据库删除
+                await window.dbHelper.delete('chronicles', parseInt(id));
+                
+                // 2. 从当前内存数据中移除
+                this.currentData.chapters = this.currentData.chapters.filter(c => c.id !== id);
+                
+                window.utils.showToast("Log destroyed.");
+                
+                // 3. 返回目录并刷新列表
+                this.navTo('index');
+                // 强制重新渲染目录列表
+                this.loadAndRenderChapters(); 
+
+            } catch (e) {
+                console.error(e);
+                window.utils.showToast("Deletion failed.");
+            }
+        }
+    },
+
+    // 3. 收藏逻辑 (占位)
+    toggleCollection() {
+        window.utils.showToast("已加入收藏队列 (Feature coming soon)");
+        // 这里的逻辑以后再写
+    },
+
+// 👇 新增：播放控制引擎
+    toggleMusic(playerEl) {
+        const src = playerEl.dataset.src;
+        if (!src) return;
+
+        if (!this.currentAudio) {
+            this.currentAudio = new Audio();
+            this.currentAudio.loop = true; // 循环播放 BGM
+        }
+
+        const icon = playerEl.querySelector('.cmp-btn');
+        const wave = playerEl.querySelector('.cmp-wave');
+
+        // 如果点击的是一首新歌
+        if (this.currentAudio.src !== src) {
+            this.currentAudio.src = src;
+            this.currentAudio.play();
+            
+            // 把页面上其他的播放器都重置为暂停状态
+            document.querySelectorAll('.chronicle-music-player').forEach(p => {
+                p.querySelector('.cmp-btn').className = 'fa-solid fa-play cmp-btn';
+                p.querySelector('.cmp-wave').classList.remove('playing');
+            });
+            
+            icon.className = 'fa-solid fa-pause cmp-btn';
+            wave.classList.add('playing');
+        } 
+        // 如果点击的是当前正在播放的歌 (暂停/继续)
+        else {
+            if (this.currentAudio.paused) {
+                this.currentAudio.play();
+                icon.className = 'fa-solid fa-pause cmp-btn';
+                wave.classList.add('playing');
+            } else {
+                this.currentAudio.pause();
+                icon.className = 'fa-solid fa-play cmp-btn';
+                wave.classList.remove('playing');
+            }
+        }
     },
 
     // 核心逻辑：渲染角色列表
@@ -578,6 +1036,9 @@ const ChronicleApp = {
     },
 
     openChapter(chapId) {
+
+this.currentReadingId = chapId; 
+
         const chap = this.currentData.chapters.find(c => String(c.id) === String(chapId));
         if(!chap) return;
 
@@ -599,18 +1060,28 @@ const ChronicleApp = {
         this.navTo('read');
     },
 
-    // === AI 核心生成逻辑 ===
+    // === AI 核心生成逻辑 (带魔法阵动画 + 音乐 + 智能容错) ===
     async generateCharacterLog() {
         const btn = document.getElementById('chronicle-ai-gen-btn');
-        btn.innerText = "ACCESSING NEURAL NETWORK...";
-        btn.style.pointerEvents = 'none';
+        btn.style.pointerEvents = 'none'; // 禁用按钮防止重复点击
+        
+        // 1. 🔮 启动魔法阵动画
+        const overlay = document.getElementById('magic-loading-overlay');
+        const statusText = document.getElementById('magic-loading-text');
+        overlay.classList.add('active');
+        
+        // 模拟神秘学文字变化 (校准星辰 -> 读取灵魂 -> 编织命运)
+        statusText.textContent = "ALIGNING STARS"; 
+        // 使用一个标志位，防止关闭动画后文字还在变
+        this.loadingTimer1 = setTimeout(() => { if(overlay.classList.contains('active')) statusText.textContent = "READING SOUL"; }, 2000); 
+        this.loadingTimer2 = setTimeout(() => { if(overlay.classList.contains('active')) statusText.textContent = "WEAVING FATE"; }, 4500); 
 
         try {
-            // 获取最近聊天记录 (最近20条，供AI参考)
+            // 获取最近聊天记录
             const history = await window.dbHelper.getHistoryForDossier(this.currentData.id);
             const recentHistory = history.slice(-20); 
 
-            // 调用主系统里新加的究极 Prompt
+            // 调用 AI
             const prompt = window.promptManager.createChronicleArticlePrompt(
                 this.currentData.dossierRef, 
                 this.currentData.personaNote,
@@ -619,22 +1090,64 @@ const ChronicleApp = {
             
             const aiResponse = await window.apiHelper.getChatCompletion(prompt);
             
-            // 解析 JSON
+            // --- JSON 解析 (保留你现在的智能容错逻辑) ---
             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) throw new Error("档案解析失败");
-            const result = JSON.parse(jsonMatch[0]);
+            if (!jsonMatch) throw new Error("AI未返回JSON数据");
+            
+            let jsonString = jsonMatch[0];
+            let result;
+            
+            try {
+                result = JSON.parse(jsonString); // 尝试标准解析
+            } catch (err) {
+                console.warn("⚠️ 标准 JSON 解析失败，尝试强制清除违规换行符...");
+                try {
+                    let cleanedJson = jsonString.replace(/[\n\r\t]/g, ""); // 暴力清洗
+                    result = JSON.parse(cleanedJson);
+                } catch (err2) {
+                    console.error("❌ 原始 AI 返回的坏数据:", aiResponse);
+                    throw new Error("AI 生成格式严重损坏，请重试");
+                }
+            }
 
-            // 拼装完整的 HTML
+            // --- 网易云音乐逻辑 (在动画覆盖下静默执行) ---
+            let bgmHtml = '';
+            if (result.bgm_keyword && result.bgm_keyword !== 'null') {
+                // 此时还在转圈，我们悄悄改一下 loading 文字，显得很智能
+                statusText.textContent = "TUNING RESONANCE"; 
+                
+                const musicData = await this.fetchNeteaseMusic(result.bgm_keyword);
+                
+                if (musicData) {
+                    bgmHtml = `
+                        <div class="chronicle-music-player" data-src="${musicData.audioUrl}">
+                            <div class="cmp-cover" style="background-image: url('${musicData.coverUrl}')">
+                                <i class="fa-solid fa-play cmp-btn"></i>
+                            </div>
+                            <div class="cmp-info">
+                                <div class="cmp-title">${musicData.title}</div>
+                                <div class="cmp-artist">${musicData.artist}</div>
+                            </div>
+                            <div class="cmp-wave">
+                                <div class="cmp-bar"></div><div class="cmp-bar"></div><div class="cmp-bar"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // --- 拼装 HTML ---
             const chapIndex = (this.currentData.chapters?.length || 0) + 1;
             const fullHtml = `
                 <div class="chapter-header">
                     <span class="ch-num">FILE_${String(chapIndex).padStart(2,'0')}</span>
                     <h2 class="ch-title">${result.title}</h2>
+                    ${bgmHtml}
                 </div>
                 <div class="article-text">${result.contentHtml}</div>
             `;
 
-            // 保存到主数据库 CHRONICLES 表
+            // --- 存入数据库 ---
             const newLog = {
                 dossierId: this.currentData.id,
                 title: result.title,
@@ -645,16 +1158,26 @@ const ChronicleApp = {
             const newId = await window.dbHelper.add('chronicles', newLog);
             newLog.id = newId;
             
-            // 刷新列表
+            // --- 刷新界面 ---
             await this.loadAndRenderChapters();
-            window.utils.showToast("角色新档案已解密");
+            
+            // 2. ✅✅✅ 一切就绪，关闭魔法阵动画！✅✅✅
+            overlay.classList.remove('active');
+            
+            window.utils.showToast("档案解密完成");
 
         } catch (e) {
             console.error(e);
-            window.utils.showToast("解密失败，请检查连接");
+            // ❌ 发生错误，也要记得关闭动画，否则用户会卡死在转圈界面
+            overlay.classList.remove('active');
+            window.utils.showToast("解密中断：星轨错位 (请检查网络)");
         } finally {
+            // 恢复按钮状态
             btn.innerText = "+ DECRYPT CHARACTER LOG (AI)";
             btn.style.pointerEvents = 'auto';
+            // 清理定时器
+            clearTimeout(this.loadingTimer1);
+            clearTimeout(this.loadingTimer2);
         }
     },
 

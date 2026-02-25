@@ -9760,157 +9760,162 @@ body.light-mode .entry-delete-btn { color: #8a1c1c; }
 }
 
 /* ============================================================
-       ===  [新版] 开屏动画：KIKI 巴黎邀请函 (Chanel Style)   ===
-       ============================================================ */
-    
+   ===  [还原版] 开屏动画：炼金魔法阵 (Alchemy Circle)       ===
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Noto+Serif+SC:wght@300;400&display=swap');
+
+#alchemy-splash {
     /* 定义局部变量，防止污染全局 */
-    #splash-screen {
-        --splash-bg: #111111;
-        --splash-card-bg: #ffffff;
-        --splash-text: #000000;
-        --font-serif: 'Bodoni Moda', serif;
-        --font-sans: 'Inter', sans-serif;
-    }
-
-    /* 开屏容器 */
-    #splash-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-color: var(--splash-bg);
-        z-index: 99999; /* 确保最高层级 */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: opacity 1.2s cubic-bezier(0.65, 0, 0.35, 1), visibility 1.2s;
-    }
-
-    /* 隐藏状态 */
-    #splash-screen.fade-out {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-    }
-
-    /* 邀请函卡片 */
-    .invitation-card {
-        width: 85%;
-        max-width: 400px;
-        aspect-ratio: 3/4;
-        background-color: var(--splash-card-bg);
-        padding: 40px 30px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        text-align: center;
-        color: var(--splash-text);
-        
-        /* 阴影与质感 */
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        opacity: 0; /* 初始隐藏，等动画 */
-        
-        /* 入场动画 */
-        animation: cardEntrance 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        position: relative;
-    }
-
-    /* 卡纸纹理 */
-    .invitation-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 3h1v1H1V3zm2-2h1v1H3V1z' fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
-        pointer-events: none;
-    }
-
-    /* 内部装饰边框 (Debossed effect) */
-    .card-border {
-        position: absolute;
-        top: 15px; left: 15px; right: 15px; bottom: 15px;
-        border: 1px solid #e5e5e5;
-        pointer-events: none;
-    }
-
-    /* LOGO 区域 */
-    .logo-area { margin-top: 20px; }
+    --splash-bg: #050505;
+    --text-primary: #e0e0e0;
+    --circle-light: rgba(255, 255, 255, 0.85);
+    --circle-dim: rgba(255, 255, 255, 0.25);
+    --circle-dark: rgba(255, 255, 255, 0.08);
     
-    .brand-name {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 2.5rem;
-        letter-spacing: -1px;
-        margin-bottom: 5px;
-        color: #000;
-    }
-
-    .brand-mark {
-        font-family: var(--font-sans);
-        font-size: 0.8rem;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        font-weight: 300;
-        color: #000;
-    }
-
-    /* 文本详情 */
-    .event-details {
-        font-family: var(--font-serif);
-        color: #111;
-        width: 100%;
-    }
-
-    .season {
-        font-size: 1.1rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 10px;
-        font-weight: 600;
-    }
-
-    .collection-type {
-        font-style: italic;
-        font-size: 1rem;
-        color: #555;
-        margin-bottom: 25px;
-    }
-
-    .divider-line {
-        width: 40px;
-        height: 1px;
-        background-color: #000;
-        margin: 0 auto 25px auto;
-    }
-
-    .location {
-        font-family: var(--font-sans);
-        font-size: 0.75rem;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 5px;
-    }
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100dvh;
+    background-color: var(--splash-bg);
+    color: var(--text-primary);
+    z-index: 99999; /* 确保在最顶层 */
+    overflow: hidden;
     
-    .date {
-        font-family: var(--font-serif);
-        font-size: 0.9rem;
-    }
+    /* 核心字体还原 */
+    font-family: 'Cinzel', 'Noto Serif SC', serif;
+    perspective: 1000px;
+    
+    /* 退出时的过渡 */
+    transition: opacity 2s ease, visibility 2s;
+}
 
-    /* 底部文字 */
-    .footer-text {
-        font-family: var(--font-sans);
-        font-size: 0.7rem;
-        letter-spacing: 1px;
-        color: #888;
-        text-transform: uppercase;
-        margin-bottom: 10px;
-    }
+/* 1. 噪点背景 */
+#alchemy-splash .film-grain {
+    position: absolute; inset: 0; z-index: 20;
+    opacity: 0.06; pointer-events: none;
+    background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+}
 
-    @keyframes cardEntrance {
-        0% { opacity: 0; transform: scale(0.8) translateY(40px) rotateX(10deg); }
-        100% { opacity: 1; transform: scale(1) translateY(0) rotateX(0); }
-    }
+/* 2. 手稿文字背景 */
+#alchemy-splash .manuscript-bg {
+    position: absolute; inset: -20%; width: 140%; height: 140%; z-index: 1;
+    opacity: 0.05;
+    font-family: 'Times New Roman', serif; font-size: 14px;
+    line-height: 1.5; word-wrap: break-word; overflow: hidden;
+    transform: rotate(-5deg); pointer-events: none; filter: blur(2px);
+}
+
+/* 3. 粒子画布 */
+#alchemy-splash #stardust-canvas {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    opacity: 0; transition: opacity 3s ease;
+}
+
+/* 4. 魔法阵容器 */
+#alchemy-splash .svg-container {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 100vw; height: 100vw; max-width: 800px; max-height: 800px; z-index: 3;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.1; 
+    transition: all 4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* 绽放状态 */
+#alchemy-splash .svg-container.bloom {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+}
+
+/* 5. 动画关键帧 */
+#alchemy-splash .spin-slow { animation: spinSplash 60s linear infinite; transform-origin: center; }
+#alchemy-splash .spin-slow-reverse { animation: spinSplashReverse 80s linear infinite; transform-origin: center; }
+#alchemy-splash .spin-fast { animation: spinSplash 30s linear infinite; transform-origin: center; }
+#alchemy-splash .spin-fast-reverse { animation: spinSplashReverse 40s linear infinite; transform-origin: center; }
+#alchemy-splash .pulse-core { animation: pulseSplashCore 4s ease-in-out infinite alternate; transform-origin: center; }
+
+@keyframes spinSplash { 100% { transform: rotate(360deg); } }
+@keyframes spinSplashReverse { 100% { transform: rotate(-360deg); } }
+@keyframes pulseSplashCore { 0% { transform: scale(0.97); filter: brightness(0.8); } 100% { transform: scale(1.03); filter: brightness(1.2); } }
+
+/* 6. 叙事文字层 */
+#alchemy-splash .narrative-layer {
+    position: absolute; inset: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, transparent 60%);
+}
+#alchemy-splash .line-container {
+    position: absolute; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+#alchemy-splash .en-text {
+    font-family: 'Cinzel', serif; font-size: 1.3rem; letter-spacing: 0.2em;
+    color: #fff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.5); text-transform: uppercase;
+}
+#alchemy-splash .zh-text {
+    font-family: 'Noto Serif SC', serif; font-size: 0.9rem; letter-spacing: 0.5em;
+    color: rgba(255, 255, 255, 0.6); margin-right: -0.5em;
+}
+#alchemy-splash .char {
+    display: inline-block; opacity: 0; filter: blur(12px);
+    transform: translateZ(50px) scale(1.2);
+}
+
+@keyframes cinematicRevealSplash { 0% { opacity: 0; filter: blur(12px); transform: translateZ(50px) scale(1.2); } 100% { opacity: 1; filter: blur(0); transform: translateZ(0) scale(1); } }
+@keyframes cinematicFadeSplash { 0% { opacity: 1; filter: blur(0); } 100% { opacity: 0; filter: blur(10px); transform: scale(0.95); } }
+
+/* 7. 品牌层 (Logo & Button) */
+#alchemy-splash .brand-layer {
+    position: absolute; inset: 0; z-index: 15;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    pointer-events: none; opacity: 0;
+    transform: translateY(30px) scale(0.95);
+    transition: opacity 3s ease, transform 3s cubic-bezier(0.1, 0.8, 0.2, 1);
+    background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%);
+}
+#alchemy-splash .brand-layer.active { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+#alchemy-splash .logo {
+    font-family: 'Cinzel', serif; font-size: 4.5rem; font-weight: 700;
+    letter-spacing: 0.2em; margin-right: -0.2em; margin-bottom: 0.5rem; color: #fff;
+    text-shadow: 0 0 30px rgba(255,255,255,0.4), 0 0 10px rgba(255,255,255,0.2);
+    transition: letter-spacing 4s cubic-bezier(0.1, 0.8, 0.2, 1);
+}
+#alchemy-splash .brand-layer.active .logo { letter-spacing: 0.35em; margin-right: -0.35em; }
+
+#alchemy-splash .subtitle {
+    font-size: 0.8rem; letter-spacing: 1em; margin-right: -1em; color: rgba(255,255,255,0.5);
+    text-transform: uppercase; margin-bottom: 5rem; position: relative;
+}
+#alchemy-splash .subtitle::after {
+    content: ''; position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%);
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+    transition: width 2.5s ease 1s;
+}
+#alchemy-splash .brand-layer.active .subtitle::after { width: 200%; }
+
+#alchemy-splash .enter-btn {
+    font-size: 1rem; letter-spacing: 0.5em; color: #fff; padding: 18px 50px;
+    border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 2px;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    cursor: pointer; position: relative; overflow: hidden;
+    transition: all 0.5s ease; text-transform: uppercase;
+}
+#alchemy-splash .enter-btn:hover {
+    background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+#alchemy-splash .enter-btn:active { transform: scale(0.95); }
+
+/* 8. 离开特效 (点击后的高亮模糊消失) */
+#alchemy-splash.leave-sequence {
+    opacity: 0 !important;
+    visibility: hidden;
+    filter: blur(30px) brightness(3) !important;
+    transform: scale(1.8) rotate(15deg) !important;
+    transition: all 2s cubic-bezier(0.7, 0, 0.3, 1) !important;
+    pointer-events: none;
+}
 
 /* ============================================================
    ===  [新增] 彭伯里信箱 (Vintage Envelope Style)        ===
@@ -17726,30 +17731,109 @@ body.light-mode #single-chat-typing .thread {
     </div>
 </div>
 
-    <!-- ===   开屏：KIKI 巴黎邀请函 (New)       === -->
-  
-    <div id="splash-screen">
-        <div class="invitation-card">
-            <div class="card-border"></div>
-            
-            <div class="logo-area">
-                <div class="brand-name">KIKI</div>
-                <div class="brand-mark">PARIS</div>
-            </div>
+    <!-- ===   开屏：炼金魔法阵 (Alchemy Splash) 还原版       === -->
+<div id="alchemy-splash">
+    <!-- 电影感噪点 -->
+    <div class="film-grain"></div>
+    <!-- 模拟古籍手稿背景 -->
+    <div class="manuscript-bg" id="splash-manuscriptBg"></div>
+    <!-- 粒子系统 -->
+    <canvas id="splash-stardust-canvas"></canvas>
 
-            <div class="event-details">
-                <div class="season">FALL-WINTER<br>2026/27</div>
-                <div class="collection-type">Prêt-à-Porter</div>
-                
-                <div class="divider-line"></div>
-                
-                <div class="location">GRAND PALAIS ÉPHÉMÈRE</div>
-                <div class="date">Tuesday, March 5th, 10:30 AM</div>
-            </div>
+    <!-- 魔法阵 SVG -->
+    <div class="svg-container" id="splash-svgContainer">
+        <svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <path id="textPathOut" d="M 400,100 A 300,300 0 1,1 399.9,100" />
+                <path id="textPathMid" d="M 400,200 A 200,200 0 1,1 399.9,200" />
+                <path id="textPathIn" d="M 400,280 A 120,120 0 1,1 399.9,280" />
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+            </defs>
+            <circle cx="400" cy="400" r="380" fill="none" stroke="var(--circle-dark)" stroke-width="2"/>
+            <circle cx="400" cy="400" r="375" fill="none" stroke="var(--circle-dim)" stroke-width="0.5"/>
 
-            <div class="footer-text">INVITATION</div>
-        </div>
+            <g class="spin-slow-reverse">
+                <circle cx="400" cy="400" r="350" fill="none" stroke="var(--circle-light)" stroke-width="4"/>
+                <circle cx="400" cy="400" r="340" fill="none" stroke="var(--circle-dim)" stroke-width="1"/>
+                <g transform="translate(400, 50)">
+                    <circle cx="0" cy="0" r="45" fill="var(--splash-bg)" stroke="var(--circle-light)" stroke-width="3"/>
+                    <circle cx="0" cy="0" r="35" fill="none" stroke="var(--circle-dim)" stroke-width="1" stroke-dasharray="4 4"/>
+                    <polygon points="0,-20 17,10 -17,10" fill="none" stroke="var(--text-primary)" stroke-width="1"/>
+                </g>
+                <g transform="translate(750, 400) rotate(90)">
+                    <circle cx="0" cy="0" r="40" fill="var(--splash-bg)" stroke="var(--circle-light)" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="30" fill="none" stroke="var(--circle-dim)" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="10" fill="var(--circle-light)"/>
+                </g>
+                <g transform="translate(400, 750) rotate(180)">
+                    <circle cx="0" cy="0" r="50" fill="var(--splash-bg)" stroke="var(--circle-light)" stroke-width="4"/>
+                    <circle cx="0" cy="0" r="40" fill="none" stroke="var(--circle-dim)" stroke-width="1" stroke-dasharray="2 6"/>
+                    <rect x="-15" y="-15" width="30" height="30" fill="none" stroke="var(--text-primary)" stroke-width="1" transform="rotate(45)"/>
+                </g>
+                <g transform="translate(50, 400) rotate(270)">
+                    <circle cx="0" cy="0" r="40" fill="var(--splash-bg)" stroke="var(--circle-light)" stroke-width="2"/>
+                    <circle cx="0" cy="0" r="25" fill="none" stroke="var(--text-primary)" stroke-width="1"/>
+                    <path d="M-15,0 Q0,-20 15,0 Q0,20 -15,0" fill="none" stroke="var(--circle-light)" stroke-width="1.5"/>
+                </g>
+                <circle cx="152" cy="152" r="8" fill="var(--circle-light)" filter="url(#glow)"/>
+                <circle cx="648" cy="648" r="8" fill="var(--circle-dim)"/>
+            </g>
+
+            <g class="spin-slow">
+                <circle cx="400" cy="400" r="300" fill="none" stroke="var(--circle-dim)" stroke-width="1" stroke-dasharray="10 5"/>
+                <text fill="var(--circle-dim)" font-size="16" letter-spacing="8" font-family="'Cinzel', serif">
+                    <textPath href="#textPathOut" startOffset="5%">
+                        INCANTATIO · AETERNUS · VERITAS · LUX · TENEBRAE · INFINITUM · MYSTERIUM ·
+                        INCANTATIO · AETERNUS · VERITAS · LUX · TENEBRAE · INFINITUM · MYSTERIUM ·
+                    </textPath>
+                </text>
+                <polygon points="400,100 660,550 140,550" fill="none" stroke="var(--circle-dim)" stroke-width="1.5"/>
+                <polygon points="400,700 140,250 660,250" fill="none" stroke="var(--circle-dim)" stroke-width="1.5"/>
+                <rect x="188" y="188" width="424" height="424" fill="none" stroke="var(--circle-dark)" stroke-width="1" transform="rotate(45 400 400)"/>
+            </g>
+
+            <g class="spin-fast-reverse">
+                <circle cx="400" cy="400" r="200" fill="none" stroke="var(--circle-light)" stroke-width="6"/>
+                <circle cx="400" cy="400" r="190" fill="none" stroke="var(--text-primary)" stroke-width="1"/>
+                <circle cx="400" cy="400" r="180" fill="none" stroke="var(--circle-dim)" stroke-width="8" stroke-dasharray="2 8"/>
+                <text fill="var(--circle-light)" font-size="12" letter-spacing="6" font-family="'Cinzel', serif">
+                    <textPath href="#textPathMid" startOffset="0%">
+                        ✦ ALCHEMY ✦ TRANSMUTATION ✦ KIKI OS ✦ SINGULARITY ✦ 
+                        ✦ ALCHEMY ✦ TRANSMUTATION ✦ KIKI OS ✦ SINGULARITY ✦ 
+                    </textPath>
+                </text>
+                <path d="M 400,180 L 400,220 M 400,580 L 400,620 M 180,400 L 220,400 M 580,400 L 620,400" stroke="var(--circle-light)" stroke-width="2"/>
+            </g>
+
+            <g class="spin-fast pulse-core">
+                <circle cx="400" cy="400" r="120" fill="none" stroke="var(--circle-dim)" stroke-width="2"/>
+                <circle cx="400" cy="400" r="100" fill="none" stroke="var(--circle-light)" stroke-width="15" stroke-dasharray="1 10"/>
+                <text fill="var(--circle-dim)" font-size="10" letter-spacing="4">
+                    <textPath href="#textPathIn" startOffset="10%">V O I D · N U L L · Z E R O</textPath>
+                </text>
+                <circle cx="400" cy="400" r="60" fill="var(--splash-bg)" stroke="var(--circle-light)" stroke-width="3"/>
+                <circle cx="400" cy="400" r="45" fill="none" stroke="var(--circle-dim)" stroke-width="1"/>
+                <path d="M 400,340 Q 430,400 400,460 Q 370,400 400,340" fill="none" stroke="var(--circle-light)" stroke-width="1.5"/>
+                <path d="M 340,400 Q 400,430 460,400 Q 400,370 340,400" fill="none" stroke="var(--circle-light)" stroke-width="1.5"/>
+                <circle cx="400" cy="400" r="20" fill="var(--text-primary)" filter="url(#glow)"/>
+                <circle cx="400" cy="400" r="10" fill="var(--splash-bg)"/>
+            </g>
+        </svg>
     </div>
+
+    <!-- 叙事层 -->
+    <div class="narrative-layer" id="splash-narrativeLayer"></div>
+
+    <!-- 品牌层与进入按钮 -->
+    <div class="brand-layer" id="splash-brandLayer">
+        <h1 class="logo">KIKI OS</h1>
+        <p class="subtitle">Singularity of senses</p>
+        <div class="enter-btn" id="splash-enter-btn">INITIALIZE SYSTEM</div>
+    </div>
+</div>
 
     <!-- ======================================================= -->
     <!-- ==== 图层一：核心桌面 UI (应用的“地基”)            ==== -->
@@ -21906,6 +21990,209 @@ body.light-mode #single-chat-typing .thread {
         });
     }
 
+ // ===   新增：炼金开屏动画控制器        === // 
+
+const AlchemySplashController = {
+    canvas: null, ctx: null, particlesArray:[],
+    // 👇 在这里放入网易云歌曲ID (默认填了 Blade Runner 的 Tears in Rain)
+    musicId: '3313555607', 
+    audio: null,
+
+    scriptLines: [
+        { en: "All those moments will be lost in time...", zh: "所有时刻终将消逝在时间里..." },
+        { en: "Like tears in rain.", zh: "就像雨中的泪水" },
+        { en: "Time to die? No, time to live.", zh: "不是结束，而是新生。" }
+    ],
+    sleep: (ms) => new Promise(res => setTimeout(res, ms)),
+
+    init() {
+        const splashEl = document.getElementById('alchemy-splash');
+        if (!splashEl) return;
+
+        // --- 🎵 新增：音乐初始化与播放 ---
+        this.playMusic(); 
+
+        // 1. 生成古籍背景文字
+        const bg = document.getElementById('splash-manuscriptBg');
+        // ... (保持原样)
+        const words =["Alchemy", "Transmutation", "Equivalent Exchange", "Truth", "Gate", "Elements", "Philosopher", "Stone", "Circle", "Geometry", "Soul", "KIKI", "System", "Void", "Quantum", "Singularity", "Magic", "Arcane"];
+        let html = "";
+        for(let i=0; i<400; i++) html += words[Math.floor(Math.random() * words.length)] + " ";
+        bg.innerText = html;
+
+        // 2. 初始化粒子 (保持原样)
+        this.canvas = document.getElementById('splash-stardust-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        window.addEventListener('resize', () => this.resizeCanvas());
+        this.resizeCanvas();
+        this.initParticles();
+        this.animateParticles();
+
+        // 3. 开始剧情
+        this.playNarrative();
+
+        // 4. 绑定进入系统按钮
+        document.getElementById('splash-enter-btn').addEventListener('click', () => {
+            // --- 🎵 新增：点击进入时，音乐渐弱 ---
+            this.fadeOutMusic();
+
+            // 添加 css 类名触发飞升/模糊动画
+            splashEl.classList.add('leave-sequence');
+            
+            // 3秒动画结束后，彻底移除 DOM
+            setTimeout(() => {
+                splashEl.remove();
+                // 确保音乐彻底停止并释放内存
+                if(this.audio) {
+                    this.audio.pause();
+                    this.audio = null;
+                }
+            }, 3000);
+        });
+    },
+
+    // --- 🎵 新增：播放音乐逻辑 ---
+    playMusic() {
+        const url = `https://music.163.com/song/media/outer/url?id=${this.musicId}.mp3`;
+        this.audio = new Audio(url);
+        this.audio.loop = true; // 循环播放
+        this.audio.volume = 0.6; // 初始音量 60%
+
+        // 尝试自动播放
+        const promise = this.audio.play();
+        if (promise !== undefined) {
+            promise.catch(error => {
+                // ⚠️ 浏览器策略：如果未交互就禁止自动播放
+                console.log("Autoplay prevented by browser. Waiting for interaction.");
+                
+                // 解决方案：用户点击屏幕任何地方时开始播放
+                const playOnInteraction = () => {
+                    this.audio.play();
+                    document.removeEventListener('click', playOnInteraction);
+                    document.removeEventListener('touchstart', playOnInteraction);
+                };
+                document.addEventListener('click', playOnInteraction);
+                document.addEventListener('touchstart', playOnInteraction);
+            });
+        }
+    },
+
+    // --- 🎵 新增：音乐渐弱逻辑 ---
+    fadeOutMusic() {
+        if (!this.audio) return;
+        const fadeAudio = setInterval(() => {
+            if (this.audio.volume > 0.05) {
+                this.audio.volume -= 0.05; // 每次降低 5%
+            } else {
+                this.audio.volume = 0;
+                this.audio.pause();
+                clearInterval(fadeAudio);
+            }
+        }, 100); // 每 100ms 降低一次
+    },
+
+    resizeCanvas() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    },
+
+    initParticles() {
+        // ... (保持原样)
+        this.particlesArray =[];
+        const numParticles = window.innerWidth > 768 ? 150 : 60;
+        for (let i = 0; i < numParticles; i++) {
+            this.particlesArray.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height,
+                size: Math.random() * 1.5 + 0.2,
+                speedY: Math.random() * -0.5 - 0.1,
+                speedX: (Math.random() - 0.5) * 0.4,
+                opacity: 0,
+                maxOpacity: Math.random() * 0.4 + 0.1,
+                fadeIn: true
+            });
+        }
+        this.canvas.style.opacity = 1;
+    },
+
+    animateParticles() {
+        // ... (保持原样)
+        if(!document.getElementById('alchemy-splash')) return; 
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        for (let i = 0; i < this.particlesArray.length; i++) {
+            let p = this.particlesArray[i];
+            p.y += p.speedY; p.x += p.speedX;
+            if (p.fadeIn) {
+                p.opacity += 0.005;
+                if (p.opacity >= p.maxOpacity) p.fadeIn = false;
+            } else {
+                p.opacity -= 0.003;
+                if (p.opacity <= 0) {
+                    p.y = this.canvas.height + 10;
+                    p.x = Math.random() * this.canvas.width;
+                    p.fadeIn = true;
+                }
+            }
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${Math.max(0, p.opacity)})`;
+            this.ctx.fill();
+        }
+        requestAnimationFrame(() => this.animateParticles());
+    },
+
+    async playNarrative() {
+        // ... (保持原样，没有任何逻辑变动，直接复制即可)
+        const narrativeLayer = document.getElementById('splash-narrativeLayer');
+        await this.sleep(500); 
+
+        for (let i = 0; i < this.scriptLines.length; i++) {
+            const line = this.scriptLines[i];
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line-container';
+            narrativeLayer.appendChild(lineDiv);
+
+            const enDiv = document.createElement('div'); enDiv.className = 'en-text'; lineDiv.appendChild(enDiv);
+            const zhDiv = document.createElement('div'); zhDiv.className = 'zh-text'; lineDiv.appendChild(zhDiv);
+
+            line.en.split('').forEach((char, index) => {
+                const span = document.createElement('span'); span.className = 'char';
+                span.innerHTML = char === ' ' ? '&nbsp;' : char; 
+                span.style.animation = `cinematicRevealSplash 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${index * 0.05}s`;
+                enDiv.appendChild(span);
+            });
+
+            const zhDelayBase = 0.4; 
+            line.zh.split('').forEach((char, index) => {
+                const span = document.createElement('span'); span.className = 'char'; span.textContent = char;
+                span.style.animation = `cinematicRevealSplash 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${zhDelayBase + index * 0.1}s`;
+                zhDiv.appendChild(span);
+            });
+
+            const displayTime = Math.max(line.en.length * 50, line.zh.length * 100) + 2000;
+            await this.sleep(displayTime);
+
+            if (i < this.scriptLines.length - 1) {
+                lineDiv.querySelectorAll('.char').forEach((span, index) => {
+                    span.style.animation = `cinematicFadeSplash 1.2s ease forwards ${index * 0.02}s`;
+                });
+                await this.sleep(1200);
+                lineDiv.remove();
+            } else {
+                lineDiv.style.transition = 'all 1.5s ease';
+                lineDiv.style.opacity = '0'; lineDiv.style.filter = 'blur(15px)'; lineDiv.style.transform = 'scale(1.2)';
+                await this.sleep(1500);
+                lineDiv.remove();
+            }
+        }
+
+        // 终极绽放
+        document.getElementById('splash-svgContainer').classList.add('bloom');
+        setTimeout(() => {
+            document.getElementById('splash-brandLayer').classList.add('active');
+        }, 800);
+    }
+};
     document.addEventListener('DOMContentLoaded', async () => {
 
         // ========= 1. 全局常量、状态和DOM引用 ================= //
@@ -27716,11 +28003,14 @@ ${historySection}
    - 请尽可能利用系统现有的高级字体 (如 \`font-family: 'Space Mono', monospace;\` 或 \`'Cinzel', serif;\` 或 \`'Jost', sans-serif;\`)。
 
 # 5. 输出格式 (严格 JSON)
+你必须严格返回一个合法的 JSON 对象。
+⚠️ 致命警告：为了防止 JSON 解析崩溃，"contentHtml" 里的所有 HTML 代码必须压缩合并成单行！绝对禁止在 JSON 字符串值中直接物理换行！
 {
-  "title": "[文章标题，英文或中文，要具有电影感",
-  "contentHtml": "[包含上述所有要求元素的完整 HTML 字符串]"
+  "title": "[文章标题，英文或中文，要具有电影感]",
+  "bgm_keyword": "[字符串] 必须为这篇档案配一首网易云音乐里的 BGM。给出一个精确的搜索关键词（例如 '悬溺' 或 'Merry Christmas Mr. Lawrence'）。绝对不能留空或填null。",
+  "contentHtml": "[包含上述所有要求的完整 HTML 代码，必须在同一行内完成]"
 }
-`;
+`; 
     return [
         { role: "system", content: systemPrompt },
         { role: "user", content: "请根据上述设定和聊天记录，生成一份包含真实记忆引用和定制小组件的深度档案。" }
@@ -53940,15 +54230,8 @@ ${chatContext}
 const iconWhitePaper = document.getElementById('icon-white-paper');
 if (iconWhitePaper) {
     iconWhitePaper.addEventListener('click', () => {
-        // 暂时注释掉实际打开的方法
-        // ChronicleApp.open();
-        
-        // 弹出施工提示
-        if (typeof utils !== 'undefined' && utils.showToast) {
-            utils.showToast("该功能正在疯狂赶工中，敬请期待！🚧");
-        } else {
-            alert("该功能正在疯狂赶工中，敬请期待！🚧");
-        }
+        // 调用子文件中的打开方法
+        ChronicleApp.open();
     });
 }
 
@@ -53956,6 +54239,11 @@ if (iconWhitePaper) {
 
         async function initializeApp() {
         
+try {
+        AlchemySplashController.init(); 
+    } catch(e) {
+        console.error("Animation init failed:", e);
+    }
         // vvv 【新增】安全检查 vvv
             const isAllowed = await SecurityManager.checkAccess();
             if (!isAllowed) {
@@ -54005,55 +54293,6 @@ ActionEngine.start();
 lucide.createIcons();
 TwilightPlayer.init();
 
-// === 【新增】开屏邀请函：自动更新为真实时间 === // 
-                const inviteDateEl = document.querySelector('.invitation-card .date');
-                if (inviteDateEl) {
-                    const now = new Date();
-                    
-                    // 1. 获取星期和月份 (英文)
-                    const datePart = now.toLocaleDateString('en-US', { 
-                        weekday: 'long', 
-                        month: 'long' 
-                    });
-
-                    // 2. 获取日期数字并计算后缀 (st/nd/rd/th)
-                    const day = now.getDate();
-                    let suffix = 'th';
-                    if (day > 3 && day < 21) {
-                        suffix = 'th';
-                    } else {
-                        switch (day % 10) {
-                            case 1:  suffix = "st"; break;
-                            case 2:  suffix = "nd"; break;
-                            case 3:  suffix = "rd"; break;
-                            default: suffix = "th"; break;
-                        }
-                    }
-
-                    // 3. 获取时间 (10:30 AM 格式)
-                    const timePart = now.toLocaleTimeString('en-US', { 
-                        hour: 'numeric', 
-                        minute: '2-digit', 
-                        hour12: true 
-                    });
-
-                    // 格式：星期, 月份 日期+后缀, 时间
-                    inviteDateEl.textContent = `${datePart} ${day}${suffix}, ${timePart}`;
-                }
-
-                // --- 修改：开屏淡出逻辑 ---
-                setTimeout(() => {
-                    const splashScreen = document.getElementById('splash-screen'); // 注意 ID 变了
-                    if (splashScreen) {
-                        // 1. 添加 fade-out 类触发 CSS 过渡
-                        splashScreen.classList.add('fade-out');
-                        
-                        // 2. 等待过渡(1.2s)结束后，彻底移除 DOM
-                        setTimeout(() => {
-                            splashScreen.remove();
-                        }, 1200);
-                    }
-                }, 3500); // 3.5秒 = 1.8秒动画 + 1.7秒阅读时间
             } catch (error) {
                 console.error("Application failed to initialize:", error);
                 alert("应用启动失败，请检查控制台错误。");
