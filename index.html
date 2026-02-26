@@ -17784,7 +17784,8 @@ body.light-mode #single-chat-typing .thread {
 
             <g class="spin-slow">
                 <circle cx="400" cy="400" r="300" fill="none" stroke="var(--circle-dim)" stroke-width="1" stroke-dasharray="10 5"/>
-                <text fill="var(--circle-dim)" font-size="16" letter-spacing="8" font-family="'Cinzel', serif">
+                
+<text fill="var(--circle-light)" filter="url(#glow)" font-size="18" letter-spacing="8" font-family="'Cinzel', serif">
                     <textPath href="#textPathOut" startOffset="5%">
                         INCANTATIO · AETERNUS · VERITAS · LUX · TENEBRAE · INFINITUM · MYSTERIUM ·
                         INCANTATIO · AETERNUS · VERITAS · LUX · TENEBRAE · INFINITUM · MYSTERIUM ·
@@ -17833,6 +17834,9 @@ body.light-mode #single-chat-typing .thread {
         <p class="subtitle">Singularity of senses</p>
         <div class="enter-btn" id="splash-enter-btn">INITIALIZE SYSTEM</div>
     </div>
+
+    <!-- 🎵 iOS PWA 音频元素：muted 模式可自动播放，用户触摸后再取消静音 -->
+    <audio id="splash-audio-el" loop muted playsinline preload="none"></audio>
 </div>
 
     <!-- ======================================================= -->
@@ -22005,12 +22009,12 @@ const AlchemySplashController = {
     ],
     sleep: (ms) => new Promise(res => setTimeout(res, ms)),
 
-    init() {
+    async init() {
         const splashEl = document.getElementById('alchemy-splash');
         if (!splashEl) return;
 
-        // --- 🎵 新增：音乐初始化与播放 ---
-        this.playMusic(); 
+        // --- 🎵 通过自建 API 获取音频 URL 并播放 ---
+        this.playMusic(); // 不 await，让音频在后台加载，不阻塞动画
 
         // 1. 生成古籍背景文字
         const bg = document.getElementById('splash-manuscriptBg');
@@ -22051,44 +22055,62 @@ const AlchemySplashController = {
         });
     },
 
-    // --- 🎵 新增：播放音乐逻辑 ---
-    playMusic() {
-        const url = `https://music.163.com/song/media/outer/url?id=${this.musicId}.mp3`;
-        this.audio = new Audio(url);
-        this.audio.loop = true; // 循环播放
-        this.audio.volume = 0.6; // 初始音量 60%
+    // --- 🎵 播放音乐逻辑（PWA修复版）---
+    async playMusic() {
+        // 【核心修复】通过自建网易云 API 获取真实可跨域的音频 URL
+        const NETEASE_API = 'https://api-enhanced-phi.vercel.app';
+        const audioEl = document.getElementById('splash-audio-el');
+        if (!audioEl) return;
+        this.audio = audioEl;
+        this.audio.loop = true;
+        this.audio.volume = 0.6;
 
-        // 尝试自动播放
-        const promise = this.audio.play();
-        if (promise !== undefined) {
-            promise.catch(error => {
-                // ⚠️ 浏览器策略：如果未交互就禁止自动播放
-                console.log("Autoplay prevented by browser. Waiting for interaction.");
-                
-                // 解决方案：用户点击屏幕任何地方时开始播放
-                const playOnInteraction = () => {
-                    this.audio.play();
-                    document.removeEventListener('click', playOnInteraction);
-                    document.removeEventListener('touchstart', playOnInteraction);
-                };
-                document.addEventListener('click', playOnInteraction);
-                document.addEventListener('touchstart', playOnInteraction);
-            });
+        try {
+            const res = await fetch(`${NETEASE_API}/song/url/v1?id=${this.musicId}&level=exhigh`);
+            const data = await res.json();
+            const audioUrl = data.data?.[0]?.url;
+            if (!audioUrl) throw new Error('API 未返回 url');
+
+            this.audio.src = audioUrl;
+            this.audio.muted = true; // 显式设置，防止部分浏览器忽略 HTML 属性
+
+            // muted 自动播放（绕过所有浏览器/PWA 自动播放策略）
+            // 用户首次触摸 → 取消静音
+            this.audio.play().then(() => {
+                console.log('🎵 静音播放中，等待触摸取消静音...');
+            }).catch(e => console.warn('🎵 静音播放失败:', e));
+
+            const unmute = () => {
+                if (!this.audio) return;
+                try {
+                    const ac = new (window.AudioContext || window.webkitAudioContext)();
+                    ac.resume().catch(() => {});
+                } catch(e) {}
+                this.audio.muted = false;
+                console.log('🎵 已取消静音！');
+            };
+            const splashEl = document.getElementById('alchemy-splash');
+            if (splashEl) {
+                splashEl.addEventListener('touchstart', unmute, { once: true, passive: true });
+                splashEl.addEventListener('mousedown',  unmute, { once: true });
+            }
+
+        } catch(e) {
+            console.warn('🎵 获取音频 URL 失败，跳过开屏音乐:', e);
         }
     },
 
-    // --- 🎵 新增：音乐渐弱逻辑 ---
+    // --- 🎵 音乐渐弱逻辑 ---
     fadeOutMusic() {
         if (!this.audio) return;
         const fadeAudio = setInterval(() => {
-            if (this.audio.volume > 0.05) {
-                this.audio.volume -= 0.05; // 每次降低 5%
+            if (this.audio && this.audio.volume > 0.05) {
+                this.audio.volume -= 0.05;
             } else {
-                this.audio.volume = 0;
-                this.audio.pause();
+                if (this.audio) this.audio.pause();
                 clearInterval(fadeAudio);
             }
-        }, 100); // 每 100ms 降低一次
+        }, 100);
     },
 
     resizeCanvas() {
@@ -54230,11 +54252,17 @@ ${chatContext}
 const iconWhitePaper = document.getElementById('icon-white-paper');
 if (iconWhitePaper) {
     iconWhitePaper.addEventListener('click', () => {
-        // 调用子文件中的打开方法
-        ChronicleApp.open();
+        // 暂时注释掉实际打开的方法
+        // ChronicleApp.open();
+        
+        // 弹出施工提示
+        if (typeof utils !== 'undefined' && utils.showToast) {
+            utils.showToast("该功能正在疯狂赶工中，敬请期待！🚧");
+        } else {
+            alert("该功能正在疯狂赶工中，敬请期待！🚧");
+        }
     });
 }
-
 }
 
         async function initializeApp() {
