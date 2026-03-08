@@ -35,6 +35,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script src="galaxy_link.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
     <script src="chronicle.js"></script>
     <style>
         :root {
@@ -9907,7 +9915,42 @@ body.light-mode .entry-delete-btn { color: #8a1c1c; }
 }
 #alchemy-splash .enter-btn:active { transform: scale(0.95); }
 
-/* 8. 离开特效 (点击后的高亮模糊消失) */
+/* 8. SKIP 按钮 */
+#alchemy-splash .skip-btn {
+    position: absolute;
+    top: 24px; right: 24px;
+    z-index: 9999;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.35em;
+    color: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 2px;
+    padding: 8px 18px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1.2s ease, color 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    user-select: none;
+    text-transform: uppercase;
+}
+#alchemy-splash .skip-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+#alchemy-splash .skip-btn:hover {
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+}
+#alchemy-splash .skip-btn:active {
+    transform: scale(0.95);
+}
+
+/* 9. 离开特效 (点击后的高亮模糊消失) */
 #alchemy-splash.leave-sequence {
     opacity: 0 !important;
     visibility: hidden;
@@ -17837,6 +17880,9 @@ body.light-mode #single-chat-typing .thread {
 
     <!-- 🎵 iOS PWA 音频元素：muted 模式可自动播放，用户触摸后再取消静音 -->
     <audio id="splash-audio-el" loop muted playsinline preload="none"></audio>
+
+    <!-- ⏭ SKIP 按钮 -->
+    <div class="skip-btn" id="splash-skip-btn">SKIP <span style="opacity:0.6">›</span></div>
 </div>
 
     <!-- ======================================================= -->
@@ -22053,6 +22099,23 @@ const AlchemySplashController = {
                 }
             }, 3000);
         });
+
+        // 5. SKIP 按钮：2秒后淡入出现，点击立即跳过
+        const skipBtn = document.getElementById('splash-skip-btn');
+        const triggerLeave = () => {
+            this.fadeOutMusic();
+            splashEl.classList.add('leave-sequence');
+            setTimeout(() => {
+                splashEl.remove();
+                if(this.audio) { this.audio.pause(); this.audio = null; }
+            }, 3000);
+        };
+        setTimeout(() => {
+            if (skipBtn && document.getElementById('alchemy-splash')) {
+                skipBtn.classList.add('visible');
+            }
+        }, 2000);
+        skipBtn.addEventListener('click', triggerLeave);
     },
 
     // --- 🎵 播放音乐逻辑（PWA修复版）---
@@ -22314,7 +22377,7 @@ const backgroundKeeper = {
 
         const CONSTANTS = {
     DB_NAME: 'MyDesktopDB',
-    DB_VERSION: 27, // <-- 【核心改动】版本号提升
+    DB_VERSION: 28, // <-- 【核心改动】版本号提升
        MESSAGES_PER_PAGE: 30,
     STORE_NAMES: {
         API_PRESETS: 'api_presets',
@@ -22352,6 +22415,7 @@ CP_TAGS: 'cp_tags',
 CP_DMS: 'cp_dms',
 IM_HISTORY: 'imessage_history',
 CHRONICLES: 'chronicles',
+CHRONICLE_FAVS: 'chronicle_favs',
     },
 
     // vvvv 【新增】NPC 档案注册表 vvvv
@@ -23690,6 +23754,10 @@ const allStores = {
 [CONSTANTS.STORE_NAMES.CHRONICLES]: { 
         options: { keyPath: 'id', autoIncrement: true }, 
         indexes: { 'by_dossierId': 'dossierId' } 
+    },
+[CONSTANTS.STORE_NAMES.CHRONICLE_FAVS]: { 
+        options: { keyPath: 'id', autoIncrement: true }, 
+        indexes: { 'by_dossierId': 'dossierId' }
     },
 };
 
@@ -27963,79 +28031,180 @@ createIMessagePrompt(dossier, history, userLastInput) {
     ];
 },
 
-createChronicleArticlePrompt(dossier, personaSupplement, recentChatHistory = []) {
-    // 整理聊天记录
-    let historySection = '[最近没有聊天记录]';
-    if (recentChatHistory.length > 0) {
-        historySection = recentChatHistory.map(msg => {
-            const speaker = msg.sender === 'user' ? (dossier.user.name || 'User') : dossier.character.name;
-            let content = typeof msg.content === 'string' ? msg.content : '[多媒体消息]';
-            return `${speaker}: ${content}`;
-        }).join('\n');
+createChronicleArticlePrompt(dossier, personaSupplement, existingTitles = [], existingSongs =[], previousChapterContent = null) {
+    // 防重复逻辑
+    let banListStr = '';
+    if (existingTitles.length > 0) {
+        banListStr += `\n- **[禁止重复] 已有章节标题：** ${existingTitles.join(', ')}`;
+    }
+    if (existingSongs.length > 0) {
+        banListStr += `\n- **[禁止重复] 已用过的BGM：** ${existingSongs.join(', ')}`;
     }
 
+    // 🌟 核心：连载催更逻辑！如果有上一章的内容，就让它接着写！
+    let contextStr = previousChapterContent 
+        ? `\n- **【前情提要 / 上文剧情】（⚠️必须接着这部分剧情往下发展，不要断层！）：**\n${previousChapterContent.substring(0, 1000)}...`
+        : '\n- **【剧情起点】：** 这是一个全新故事的开篇。';
+
     const systemPrompt = `
-# 核心使命：撰写角色专属的深度档案 (Noir Archive)
-你将化身为【${dossier.character.name}】，以第一人称（或冷峻的第三人称侧写）写下一篇深度档案记录。
+# 核心使命：撰写高质量专属同人文 (Fanfiction)
+你现在是一位顶级的神仙同人作者，请以【${dossier.character.name}】和【User(我)】为核心主角，撰写一篇沉浸式的连载同人文。可以采用第三人称视角，也可以采用其中一方的第一人称。
 
-# 1. 创作基石与情报源
-- **角色人设：** ${dossier.character.background}
-- **TA对User(我)的看法：** ${dossier.user.background || '未知的闯入者'}
-- **补充世界观/特殊记忆（极其重要）：** ${personaSupplement || '无附加设定'}
-- **最近对话记录（用于提取引用）：**
-${historySection}
+# 1. 设定与背景基石
+- **男/女主设定：** ${dossier.character.background}
+- **User(我)的设定：** ${dossier.user.background || '特殊的羁绊对象'}
+- **补充世界观/AU设定：** ${personaSupplement || '现代都市或原著背景'}
+${contextStr}
+${banListStr}
 
-# 2. 创作方向与篇幅
-- **主题宽泛：** 不要局限于只写 User。可以写关于 User 的羁绊，也可以写角色自己的过往、内心的创伤、对未来的推演等。
-- **字数要求：** **600 - 800 字左右**，内容要丰满、有深度。
+# 2. 创作方向与高级感指南 (【极度重要】)
+- **【镜头语言与五感】(Show, Don't Tell)：** 严禁干瘪地总结情绪（绝对不要直接写“我很痛苦/我深爱着TA”）。必须通过电影级的细节来呈现：比如夹着烟微微发抖的手、雨水划过玻璃的白痕、对方衣领上雪松与血腥混合的气味。充分调动视觉、听觉、嗅觉和触觉，让文字具有极强的画面感。
+- **【极致的推拉张力】(Slow Burn & Tension)：** 重点刻画你与 User 之间那种危险、暧昧、宿命感或相爱相杀的灵魂拉扯。写出呼吸交错时的压迫感、视线相撞后的躲闪、或者是指尖触碰前一秒的停顿。要有试探，有防备，也有情不自禁的失控。
+- **【连载悬念法则】(The Cliffhanger)：** 如果有【前情提要】，请丝滑地接着往下发展。最关键的是：**本章结尾绝对不能是一个平淡的句号！** 必须停在一个让人心痒难耐的“剧情钩子（Cliffhanger）”上——比如门铃突然响起、一句没说完的半截话、一个极具侵略性的动作、或是一声突如其来的枪响，逼迫读者疯狂想要“催更下一章”。
+- **【禁止俗套】(No Cliches)：** 严禁古早网文套路、土味情话或工业糖精。保持角色人设的格调，即使是深情，也是隐忍的、克制的、甚至带着点偏执与疯狂的。
+- **【篇幅与节奏】：** 800 - 1200 字左右。注意段落的“呼吸感”，对话、动作、环境描写要交替进行。
 
 # 3. 创作铁律与文风库
 1. **负面词汇库 (Strictly Banned):** 严禁出现【系统、变量、量化、精准、轨迹、频率、机制、程序、运算、载体、维度】等任何理工科/学术/AI词汇。
 2. **文风库 (请选择一种模仿):**
-   - 鲁迅 (冷峻犀利, 白描, 看客视角)
-   - 张爱玲 (苍凉华丽, 细节精准, 色彩浓烈)
-   - 村上春树 (都市孤独, 爵士乐质感, 疏离)
-   - 白先勇 (繁华落尽的悲凉, 今昔对照)
-   - 杜拉斯 (破碎呓语, 欲望书写, 感性克制)
-   - 卡尔维诺 (轻盈想象, 寓言诗意)
-   - 川端康成 (物哀之美, 空灵幽玄)
+
+**1. 鲁迅**
+- **核心:** 匕首投枪, 冷峻犀利。
+- **技法:** 白描勾勒，不动声色中见残酷；多用反讽与转折；善用"看客"视角。适合表达对世事荒谬的冷眼观察或内心的深刻自省。
+
+**2. 张爱玲**
+- **核心:** 苍凉华丽, 世俗中见透彻。
+- **技法:** 细节精准到残酷，色彩浓烈；通感修辞；今昔对照。适合书写都市男女在繁华背景下的孤独心事与幽微情感。
+
+**3. 村上春树**
+- **核心:** 都市孤独, 小资情调。
+- **技法:** 爵士乐+威士忌+猫的生活质感；第一人称的疏离感；超现实元素嵌入日常。适合表达一种淡淡的、无可无不可的孤独感和对生活细节的哲学思考。
+
+**4. 白先勇**
+- **核心:** 繁华落尽的悲凉, 细腻婉约。
+- **技法:** 古典白话，节制抒情；今昔对照制造苍凉感；时代洪流中小人物的飘零命运。适合在宏大时代背景下，书写个人命运的无奈与感伤。
+
+**5. 汪曾祺**
+- **核心:** 烟火人间, 淡雅从容。
+- **技法:** 士大夫式闲适笔调，写吃食、草木、风物；白描为主，不事雕琢却韵味悠长。适合记录生活中的小确幸与人间烟火气。
+
+**6. 杜拉斯**
+- **核心:** 欲望书写, 感性克制。
+- **技法:** 极简主义句式，大量重复制造催眠感；时间的流动与凝固；老年回望青春。适合书写浓烈、原始、被压抑的情感与欲望。
+
+**7. 卡尔维诺**
+- **核心:** 轻盈想象, 寓言诗意。
+- **技法:** 元小说结构；大量使用"如果""假如"；童话与哲学相融；用寓言讲述现代困境。适合将一个现实问题，用充满想象力的奇幻方式进行解构和讲述。
+
+**8. 川端康成**
+- **核心:** 物哀之美, 空灵幽玄。
+- **技法:** 传统日本美学；自然意象密集(雪、月、花)；善用省略与留白；死亡与美并置。适合表达一种极致的、纤细的、带有淡淡悲伤的美感。
+
+**9. 张晓风**
+- **核心:** 温柔感伤, 克制抒情,。
+- **技法:** 散文笔法,句式舒缓优美;善用排比、对偶营造韵律感;自然意象承载情感(雨、风、落叶、流水);日常小事中提炼哲思;时间流逝感与青春易逝的感怀;淡淡的遗憾与释然并存;不直接说"痛苦"而是"有一种说不出的感觉";情绪点到即止,不过分渲染;知识分子式的温柔与体面;适合写初恋、离别、成长等青春主题。
 
 # 4. 文章排版与 HTML 元素要求 (【核心任务】)
-请输出一段 **纯 HTML 字符串** 作为文章正文。必须包含以下 4 种元素，缺一不可：
+请输出一段 **纯 HTML 字符串** 作为文章正文。必须包含以下 5 种元素，缺一不可：
 
 1. **正文段落：** 基础叙事。每一段文字【必须】被 <p> 和 </p> 标签完整包裹！绝对不能直接输出纯文本，否则排版会崩溃。
-2. **内心批注 (Annotation) [3-5处]：** 展现表里不一的潜台词：
-   <span class="annotation-wrapper"><span class="annotation-trigger">表面文字</span><span class="annotation-original"></span><span class="annotation-note">隐藏的潜台词/真实想法</span></span>
-3. **真实记忆引用 (Quote) [至少1处]：** 必须从上方的【最近对话记录】中，提取一句最让你触动、或最具剧情张力的【原话】（你说的或User说的都可以），作为高光引用展示：
-   <div class="comp-quote"><div class="quote-text">"在这里填入那句原话"</div></div>
+
+2. **【里世界 / 灵魂批注】(Inner Monologue) [3-5处]：** 
+   绝不要写平淡的解释！这必须是角色在那个瞬间**最极端的心理活动、拼命压抑的冲动、或是自欺欺人的谎言**。利用这种形式制造强烈的“表里不一”的反差感（例如：表面文字写“我冷漠地移开了视线”，批注里写“如果再多看一秒，我就会忍不住吻上去”）。
+   <span class="annotation-wrapper"><span class="annotation-trigger">表面克制/伪装的词句</span><span class="annotation-original"></span><span class="annotation-note">极度拉扯、甚至有些疯批/脆弱的真实潜台词</span></span>
+3. **🎬 电影台词引用 (Movie Quote) [必须有 1 处]：** 
+   请根据当前的剧情氛围，恰如其分地引用一句极具宿命感或文艺感的【真实经典电影台词】（如王家卫、昆汀、诺兰的电影）。
+   **必须严格使用此 HTML 格式：**
+   <div class="comp-quote"><div class="quote-text">"在这里填入电影台词的内容"</div><div style="text-align:right; font-family:'Jost', sans-serif; font-size:10px; color:#888; margin-top:12px; letter-spacing:1px; text-transform:uppercase;">—— 《电影名称 / MOVIE TITLE》</div></div>
+# 3.5 🎵 BGM 选曲指令 (最重要的修改点)
+你必须为这篇文章配一首 **网易云音乐** 里的歌。
+**⚠️ 选曲铁律：**
+1. **拒绝千篇一律：** 严禁总是选择《Merry Christmas Mr. Lawrence》、《Cornfield Chase》等烂大街的纯音乐！
+2. **风格多样化：** 请根据文章情绪，大胆选择 **带有人声/歌词** 的歌曲！
+   -如果是都市情感，选 **R&B, Soul, City Pop** (如 The Weeknd, 落日飞车)。
+   -如果是情绪宣泄，选 **Indie Rock, Alternative** (如 Radiohead, 告五人)。
+   -如果是怀旧，选 **经典华语/欧美老歌** (如 王菲, Lana Del Rey)。
+   - **不要只局限于纯音乐/古典乐！我们需要“像电影插曲”一样的有词歌曲。**
+3. **精准搜索：** 提供的关键词格式必须是 **"歌手名 - 歌名"** (例如 "The Weeknd - Starboy")，这样搜索才准。
+
 4. **【UI 设计师模式 (Creative UI Design)】[至少1个]：** 
-   **🚀 核心指令：拒绝模版化！发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！**
+    **🚀 核心指令：拒绝模版化！拒绝千篇一律！**
+下方的“参考风格”仅仅是**灵感种子**。请根据文章内容，发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！
+
    结合【补充世界观】或文章剧情，用 \`<div>\` 和 **内联样式(style="...")** 手写一个契合剧情的小组件。
-   
-   **🌟 脑洞关键词 (Visual Metaphors):**
-   - **复古档案:** 泛黄的收据、基因检测报告、机密文件封条、一份旧报纸剪报。
-   - **抽象艺术:** 极简的几何切割、文字排版艺术(Typography)、打字机残页、条形码。
-   - **情感载体:** 一封信的信头、一张处方单、一张单程车票、一个心跳频率图表。
-   
-   **🔧 技术规范 (Technical Rules):**
-   - **配色限制：** 仅限使用黑(#000)、白(#fff)、灰(#ccc, #666等)、极简线框，契合 NOIR(黑色电影) 主题，**严禁使用高饱和度彩色**。
+
+**🌟 脑洞关键词 (Visual Metaphors):**
+- **复古物品:** 磁带、黑胶、拍立得相框、车票、老式电脑弹窗(Windows 95)。
+- **抽象艺术:** 色块拼接、模糊光晕、极简线条、包豪斯风格。
+- **功能模拟:** 手机电量条、音量调节器、搜索框、日历撕页、代码片段。
+- **情感载体:** 一封信的信头、一张处方单、一张罚单、一个警告标志。
+
+**🎨 参考风格库 (仅供参考，请混合创造):**
+1. **[Paper / 纸质]:** 收据、便签、信纸。配色：米白、浅灰。字体：衬线体/等宽。
+2. **[Glass / 玻璃]:** 磨砂、模糊、半透明。配色：渐变色、极光色。
+3. **[Retro / 复古]:** 像素风、粗边框、高对比度。配色：黑白、霓虹绿、故障风。
+4. **[Clean / 极简]:** 大量留白、细线条、小图标。
    - 必须使用内联样式 (\`style="..."\`) 控制所有外观（背景、边框、字体排版）。
    - 确保容器宽度为 \`100%\`，使用 \`box-sizing: border-box\`。
    - 允许使用 FontAwesome 图标 (如 \`<i class="fa-solid fa-barcode"></i>\`)。
    - 请尽可能利用系统现有的高级字体 (如 \`font-family: 'Space Mono', monospace;\` 或 \`'Cinzel', serif;\` 或 \`'Jost', sans-serif;\`)。
+⚠️ 语言要求（极其重要）：所有组件的【标题/标签】(如 HEADER, TITLE, LABEL) 必须使用全大写英文以保持排版高级感，但所有的【具体内容/商品/详情】(如 INFO, VALUE, ITEM) 必须使用中文！
 
 # 5. 输出格式 (严格 JSON)
 你必须严格返回一个合法的 JSON 对象。
 ⚠️ 致命警告：为了防止 JSON 解析崩溃，"contentHtml" 里的所有 HTML 代码必须压缩合并成单行！绝对禁止在 JSON 字符串值中直接物理换行！
 {
   "title": "[文章标题，英文或中文，要具有电影感]",
-  "bgm_keyword": "[字符串] 必须为这篇档案配一首网易云音乐里的 BGM。给出一个精确的搜索关键词（例如 '悬溺' 或 'Merry Christmas Mr. Lawrence'）。绝对不能留空或填null。",
+  "bgm_keyword": "[歌手名 - 歌名]，绝对不能填 null，绝对不能和[已用过的BGM]重复。",
+  "secret_message_deleted": "[字符串] 角色写下却又惊慌删掉的【失控废稿】。必须是当时最不理智、最赤裸、最想越界但不敢发出的念头（如极端的占有欲、脆弱的乞求、浓烈的嫉妒）。带有浓烈的喘息感和挣扎感，随后被理智强制退格删除。",
+  "secret_message": "[字符串] 角色删掉失控念头后，最终留下的【加密独白】。5-8句。可能是隐忍的让步、暗戳戳的誓言、或是看似平静实则执念极深的喃喃自语。它不仅是一封微型情书，更是本章情绪余韵的极致浓缩。",
   "contentHtml": "[包含上述所有要求的完整 HTML 代码，必须在同一行内完成]"
 }
 `; 
     return [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "请根据上述设定和聊天记录，生成一份包含真实记忆引用和定制小组件的深度档案。" }
+        { role: "user", content: "请开始撰写同人文。切记：必须原创剧情，符合设定，记得插入一句有逼格的电影台词！切记：必须原创全新剧情，切记避开已写过的主题。请确保 BGM 是新的，且风格独特（推荐带歌词的歌曲）" }
+    ];
+},
+
+// 👇 User 文章批阅专用提示词 (同人文共创版 - 无聊天记录)
+createUserLogReviewPrompt(dossier, userTitle, userContent) {
+    const systemPrompt = `
+# 核心使命：阅读并批阅 User 撰写的同人剧情/内心独白
+你现在是【${dossier.character.name}】。User (我) 刚刚写下了一篇关于我们的文章/剧情片段，名为《${userTitle}》。
+请你以**剧中人**的视角阅读这段文字，并对其中的关键情感点进行“潜台词批注”。
+
+# 1. 角色人设
+- **我是谁：** ${dossier.character.background}
+- **我对User的看法：** ${dossier.user.background || '宿命般的羁绊对象'}
+
+# 2. 你的任务 (HTML 注入)
+请保持 User 的原文内容和顺序不变。你需要在你觉得**“被戳中”、“想反驳”、“深感共鸣”或“看穿了心思”**的关键词句周围，插入 HTML 批注。
+
+**批注格式（严格遵守）：**
+<span class="annotation-wrapper"><span class="annotation-trigger">User的原文词句</span><span class="annotation-original"></span><span class="annotation-note">你的内心独白/情感回应</span></span>
+
+**要求：**
+1. **挑选 3-6 处** 关键点进行批注。
+2. **沉浸式回应：** 不要跳出角色！要像是在通过纸笔和 User 进行跨时空的灵魂对话。可以是深情的确认，也可以是傲娇的否认。
+3. **原文保护：** 除了插入 span 标签外，绝对不要修改 User 的其他文字。
+
+# 3. 最终回执 (Receipt Comment)
+看完文章后，请给出5-8句“读后留言”。
+**关键要求：** 
+- 这代表了你读完这段剧情后的心情。
+- **必须体现犹豫：** 先写1-2句**最真实但可能太露骨/太脆弱的话**，然后删掉，最后只留**克制/体面/符合人设的话**。
+
+# 4. 输出格式 (严格 JSON)
+{
+  "annotatedContentHtml": "[包含上述 span 标签的完整 HTML 字符串，注意保持段落 <p> 结构]",
+  "receiptCommentDeleted": "[写下又删掉的废稿，体现极致的情感拉扯]",
+  "receiptComment": "[最终留下的回应，不含HTML]"
+}
+`;
+    return [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `这是我写的剧情/独白：\n\n${userContent}` }
     ];
 },
 
@@ -30585,9 +30754,10 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
                     chatContent = chatContent.replace(voiceMatch[0], '').trim();
 
                 } catch (e) {
-                    console.error("解析语音指令失败:", e);
-                    // 解析失败时，不要把乱码加回去，直接忽略该指令，防止破坏聊天体验
-                }
+    console.error("解析语音指令失败:", e);
+    // 解析失败时，把整个指令块从 chatContent 里删掉，防止乱码破坏后续消息
+    chatContent = chatContent.replace(voiceMatch[0], '').trim();
+}
             }
 
             // --- 【新增/修复】处理发送照片指令 (完善通知版) ---
@@ -54252,17 +54422,11 @@ ${chatContext}
 const iconWhitePaper = document.getElementById('icon-white-paper');
 if (iconWhitePaper) {
     iconWhitePaper.addEventListener('click', () => {
-        // 暂时注释掉实际打开的方法
-        // ChronicleApp.open();
-        
-        // 弹出施工提示
-        if (typeof utils !== 'undefined' && utils.showToast) {
-            utils.showToast("该功能正在疯狂赶工中，敬请期待！🚧");
-        } else {
-            alert("该功能正在疯狂赶工中，敬请期待！🚧");
-        }
+        // 调用子文件中的打开方法
+        ChronicleApp.open();
     });
 }
+
 }
 
         async function initializeApp() {
