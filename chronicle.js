@@ -1504,13 +1504,26 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
             }
 
             // 呼叫 AI
-            const prompt = window.promptManager.createChronicleArticlePrompt(
-                this.currentData.dossierRef, 
-                this.currentData.personaNote,
-                existingTitles,
-                existingSongs,
-                previousContent // 👈 传给 AI 重新生成
-            );
+            
+            let prompt;
+            if (previousContent) {
+                // 如果重构的不是第一章，按续写逻辑重构
+                prompt = window.promptManager.createChronicleContinuationPrompt(
+                    this.currentData.dossierRef, 
+                    this.currentData.personaNote,
+                    existingTitles,
+                    existingSongs,
+                    previousContent 
+                );
+            } else {
+                // 如果重构的是第一章，按开篇逻辑重构
+                prompt = window.promptManager.createChronicleArticlePrompt(
+                    this.currentData.dossierRef, 
+                    this.currentData.personaNote,
+                    existingTitles,
+                    existingSongs
+                );
+            }
             
             const aiResponse = await window.apiHelper.getChatCompletion(prompt);
             
@@ -2230,18 +2243,30 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
                 previousContent = lastChap.html.replace(/<[^>]+>/g, ' '); 
             }
 
-            // 3. 调用全新的同人提示词 (传入 existingTitles, existingSongs, previousContent)
-            const prompt = window.promptManager.createChronicleArticlePrompt(
-                this.currentData.dossierRef, 
-                this.currentData.personaNote,
-                existingTitles,
-                existingSongs,
-                previousContent // 👈 把上一章剧情传进去！
-            );
+            // 3. 调用全新的同人提示词 
+
+            let prompt;
+            if (isContinuation && previousContent) {
+                // 如果是催更，调用续写专属提示词
+                prompt = window.promptManager.createChronicleContinuationPrompt(
+                    this.currentData.dossierRef, 
+                    this.currentData.personaNote,
+                    existingTitles,
+                    existingSongs,
+                    previousContent
+                );
+            } else {
+                // 如果是第一章，调用开篇专属提示词
+                prompt = window.promptManager.createChronicleArticlePrompt(
+                    this.currentData.dossierRef, 
+                    this.currentData.personaNote,
+                    existingTitles,
+                    existingSongs
+                );
+            }
             
             const aiResponse = await window.apiHelper.getChatCompletion(prompt);
-            
-            
+                 
             // --- JSON 解析 (保留你现在的智能容错逻辑) ---
             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
             if (!jsonMatch) throw new Error("AI未返回JSON数据");
