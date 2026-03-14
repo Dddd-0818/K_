@@ -12138,11 +12138,18 @@ body.light-mode .widget-ins-left:hover {
    ========================================= */
 
 /* 1. 锁死页面容器 */
-html, body, #movie-story-page {
-    overflow-x: hidden !important; /* 隐藏横向滚动条 */
+html, body {
+    overflow-x: hidden !important; 
+    width: 100vw !important;
+    /* 【千万不要给 body 加 fixed，会导致左右滑动页面的点击错位】 */
+    overscroll-behavior: none; /* 现代浏览器防止橡皮筋的正确做法 */
+}
+
+#movie-story-page {
+    overflow-x: hidden !important;
     width: 100% !important;
-    max-width: 100vw !important;   /* 确保不超过屏幕宽 */
-    position: fixed;               /* 防止 iOS 橡皮筋效果导致左右晃动 */
+    max-width: 100vw !important;
+    position: fixed; /* 仅让电影应用内部 fixed */
 }
 
 /* 2. 锁死内容容器 (这是主要的滚动区域) */
@@ -17744,6 +17751,455 @@ body.light-mode #single-chat-typing .thread {
     background: #620E2C !important;
 }
 
+/* ============================================================
+   ===   电影模式选角页 (Persona Archive) 完美还原版 V2   ===
+   ============================================================ */
+
+/* 1. 锁死页面基础配色与排版，不受深浅模式干扰 */
+#movie-character-select-page {
+    /* 还原图2的高级灰卡其底色 */
+    --u-bg: #d6d0c4;        
+    --u-text: #2c2a28;
+    --u-gold: #968673; 
+
+    background-color: var(--u-bg) !important;
+    background-image: none !important;
+    color: var(--u-text) !important;
+    padding: 0 !important;
+    
+    /* 强制上下排列，锁死横向滚动 */
+    display: flex !important;
+    flex-direction: column !important; 
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important; 
+    box-sizing: border-box !important;
+}
+body.light-mode #movie-character-select-page { background-color: var(--u-bg) !important; }
+
+/* 2. 顶部 Header */
+.uma-fixed-header {
+    flex-shrink: 0; 
+    padding: 60px 30px 20px 30px; 
+    display: flex; justify-content: space-between; align-items: flex-start;
+    width: 100%; box-sizing: border-box;
+}
+.uma-brand-box { display: flex; flex-direction: column; }
+.uma-brand-box h1 { 
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif !important; 
+    font-size: 42px !important; 
+    margin: 0 0 5px 0 !important; 
+    font-weight: 400 !important; 
+    line-height: 1 !important; 
+    color: var(--u-text) !important;
+    letter-spacing: 2px !important;
+}
+.uma-brand-box span { 
+    font-family: 'Space Mono', monospace !important; 
+    font-size: 10px !important; 
+    letter-spacing: 4px !important; 
+    color: var(--u-gold) !important; 
+    text-transform: uppercase !important; 
+}
+.uma-tool-icon { font-size: 28px !important; cursor: pointer; color: var(--u-text) !important; opacity: 0.6; }
+
+/* 3. 滚动区域 (强制单列居中) */
+.uma-character-scroll {
+    flex: 1; width: 100%;
+    overflow-y: auto !important; overflow-x: hidden !important;
+    padding: 10px 20px 60px 20px !important;
+    
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important; /* 强制所有卡片水平居中 */
+    gap: 30px !important; /* 卡片之间的垂直间距 */
+    box-sizing: border-box;
+}
+.uma-character-scroll::-webkit-scrollbar { display: none; }
+
+/* 4. 角色卡片 (核心布局修复，还原图2排版) */
+.uma-char-card {
+    width: 100% !important;
+    max-width: 360px !important; /* 适合手机的宽度 */
+    background: #e6e2d8 !important; /* 还原图2卡片颜色，比背景稍亮 */
+    border: 1px solid rgba(255,255,255,0.4) !important;
+    padding: 30px 25px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04) !important;
+    
+    /* 强制左图右文 */
+    display: flex !important;
+    flex-direction: row !important; 
+    gap: 25px !important;
+    position: relative !important;
+    box-sizing: border-box !important;
+}
+
+/* 右上角黑色竖向标签 (还原图2的压边效果) */
+.uma-wash-tag {
+    position: absolute; 
+    right: -15px; /* 稍微伸出卡片边缘一点点 */
+    top: 25px;
+    background: var(--u-text) !important; 
+    color: #fff !important;
+    font-family: 'Space Mono', monospace !important; 
+    font-size: 9px !important; 
+    padding: 10px 5px !important;
+    letter-spacing: 3px !important;
+    writing-mode: vertical-rl; 
+    text-transform: uppercase;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    z-index: 5;
+}
+
+/* 5. 左侧图片区域 */
+.uma-char-visual {
+    width: 100px !important;
+    height: 120px !important;
+    flex-shrink: 0 !important;
+    background: #333;
+    margin-top: 15px; /* 下移对齐文本 */
+    
+    /* === 核心新增：右下角切角特效 === */
+    clip-path: polygon(
+        0 0,                     /* 左上角 */
+        100% 0,                  /* 右上角 */
+        100% calc(100% - 15px),  /* 右侧，距离底部 25px 处开始切 */
+        calc(100% - 15px) 100%,  /* 底部，距离右侧 25px 处结束切 */
+        0 100%                   /* 左下角 */
+    ) !important;
+}
+.uma-char-visual img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+
+/* 6. 右侧文本与信息区 */
+.uma-char-info { 
+    flex: 1; display: flex; flex-direction: column; min-width: 0; 
+    position: relative;
+}
+
+/* 中间极细分割线 */
+.uma-char-info::before {
+    content: ''; position: absolute;
+    left: -12.5px; /* 定位在 gap 中间 */
+    top: 0; bottom: 0;
+    width: 1px; background: rgba(0,0,0,0.06);
+}
+
+.uma-info-top { margin-bottom: 15px; padding-right: 15px; }
+.uma-sub-role { 
+    font-family: 'Space Mono', monospace !important; 
+    font-size: 9px !important; 
+    color: var(--u-gold) !important; 
+    letter-spacing: 2px !important; 
+    text-transform: uppercase; 
+    display: block; margin-bottom: 5px;
+}
+.uma-name { 
+    font-family: 'Noto Serif SC', serif !important; 
+    font-size: 26px !important; 
+    font-weight: 400 !important; 
+    margin: 0 !important; 
+    color: var(--u-text) !important;
+    letter-spacing: 1px;
+}
+
+/* 语录区 */
+.uma-desc { 
+    font-family: 'Noto Serif SC', serif !important;
+    font-size: 13px !important; 
+    line-height: 1.8 !important; 
+    color: var(--u-text) !important; 
+    opacity: 0.8 !important; 
+    margin: 0 0 20px 0 !important;
+    text-align: justify;
+}
+
+/* 7. 性格成分表 */
+.uma-fabric {
+    border-top: 1px dashed rgba(0,0,0,0.15) !important;
+    padding-top: 15px !important;
+    margin-bottom: 25px !important;
+    display: flex; flex-direction: column; gap: 6px;
+}
+.uma-fabric-item { 
+    display: flex; justify-content: space-between; 
+    font-family: 'Space Mono', monospace !important; 
+    font-size: 10px !important; 
+    color: var(--u-text) !important;
+    opacity: 0.7;
+}
+
+/* 8. 底部按钮组 */
+.uma-actions { display: flex; gap: 10px; margin-top: auto; }
+.uma-btn {
+    flex: 1; padding: 8px 0 !important; 
+    background: transparent !important; 
+    border: 1px solid rgba(0,0,0,0.2) !important;
+    color: var(--u-text) !important;
+    font-family: 'Space Mono', monospace !important; 
+    font-size: 11px !important; 
+    text-align: center; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.uma-btn.select { background: #2c2a28 !important; color: #fff !important; border-color: #2c2a28 !important; }
+
+/* ============================================================
+   ===   电影模式：高定版设置浮窗 (Couture Modal) 专属适配   ===
+   ============================================================ */
+
+/* 关闭按钮悬停 */
+#movie-settings-modal .modal-close:hover {
+    opacity: 1 !important;
+    color: #b3936a !important;
+}
+
+/* 底部按钮悬停 */
+#movie-settings-modal .btn-clear:hover {
+    background: rgba(150, 75, 75, 0.05) !important;
+}
+#movie-settings-modal .btn-save:hover {
+    background: #403d3a !important;
+}
+
+/* 图书馆选书标签 (复刻 collection-item 风格) */
+#movie-settings-modal .book-chip {
+    padding: 5px 12px !important; 
+    border: 1px solid #dcd4c9 !important; 
+    font-family: 'Noto Serif SC', serif !important; 
+    font-size: 12px !important; 
+    color: #a0978b !important; 
+    cursor: pointer; 
+    transition: 0.3s;
+    border-radius: 0 !important; /* 强制直角 */
+    background: transparent !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#movie-settings-modal .book-chip:hover {
+    border-color: #b3936a !important;
+}
+
+#movie-settings-modal .book-chip.selected {
+    border-color: #b3936a !important; 
+    color: #b3936a !important; 
+    background: rgba(179, 147, 106, 0.08) !important;
+}
+
+/* 隐藏原来那个粗糙的对勾，让它看起来更干净 */
+#movie-settings-modal .book-chip .selection-icon {
+    font-size: 12px !important;
+}
+
+/* ============================================================
+   ===   电影模式：放映室 (The Tailor's Cut 风格)         ===
+   ============================================================ */
+
+/* 1. 全局与背景 */
+#movie-story-page {
+    --u-ivory: #f5f2ed;
+    --u-charcoal: #2c2a28;
+    --u-gold: #b3936a;
+    --u-linen: #dcd4c9;
+    --u-danger: #964b4b;
+    --u-glass: rgba(245, 242, 237, 0.3);
+    --u-border: rgba(255, 255, 255, 0.5);
+    
+    background-color: var(--u-linen) !important;
+    color: var(--u-charcoal) !important;
+    background-image: none !important; /* 屏蔽旧的背景 */
+}
+
+.stage-bg {
+    position: absolute; inset: 0; z-index: -1;
+    /* 默认背景，会被 JS 里的自定义壁纸覆盖 */
+    background-image: var(--movie-bg-image, url('https://i.postimg.cc/d0qwTk2F/IMG-0156.jpg'));
+    background-size: cover; background-position: center;
+    filter: contrast(1.02) brightness(1.02) saturate(0.95);
+    transition: background-image 0.5s ease;
+}
+.stage-overlay {
+    position: absolute; inset: 0; z-index: 0;
+    background: linear-gradient(135deg, rgba(245,242,237,0.2) 0%, rgba(220,212,201,0.6) 100%);
+    pointer-events: none;
+}
+
+/* 2. 顶部 Header */
+.fixed-header {
+    position: absolute; top: 0; left: 0; width: 100%; z-index: 100;
+    padding: 60px 30px 20px;
+    background: linear-gradient(to bottom, rgba(220,212,201,0.9) 0%, rgba(220,212,201,0.5) 70%, transparent 100%);
+    display: flex; justify-content: space-between; align-items: flex-end;
+    pointer-events: none; /* 让背景透传点击 */
+}
+.fixed-header * { pointer-events: auto; }
+.logo-text h1 { font-family: 'Cormorant Garamond', serif; font-size: 32px; margin: 0; font-weight: 300; line-height: 0.8; color: var(--u-charcoal); }
+.logo-text span { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 4px; color: var(--u-gold); }
+.header-actions { display: flex; align-items: center; gap: 20px; }
+.nav-icon { font-size: 24px; cursor: pointer; color: var(--u-charcoal); transition: 0.3s; }
+.nav-icon:hover { color: var(--u-gold); }
+
+/* 3. 滚动容器与加载按钮 */
+#movie-screen-container {
+    height: 100%; width: 100%;
+    padding: 140px 20px 220px 20px !important; 
+    display: flex !important; flex-direction: column; gap: 60px !important;
+    overflow-y: auto !important; overflow-x: hidden !important;
+    position: relative; z-index: 10;
+}
+
+.system-load-more {
+    text-align: center; margin: -20px 0 20px;
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 3px; color: var(--u-gold);
+    text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    opacity: 0.6; cursor: pointer; transition: 0.3s;
+}
+.system-load-more:hover { opacity: 1; }
+.system-load-more::before { content: ''; width: 1px; height: 30px; background: var(--u-gold); }
+
+/* 4. 剧本卡片核心 (The Script Shard) */
+.script-shard {
+    position: relative; 
+    width: 90% !important; max-width: 500px !important;
+    background: var(--u-glass) !important;
+    backdrop-filter: blur(40px) saturate(1.1) !important; 
+    -webkit-backdrop-filter: blur(40px) saturate(1.1) !important;
+    border: 1px solid var(--u-border) !important;
+    padding: 40px 30px !important;
+    box-shadow: 0 30px 60px rgba(44,42,40,0.06) !important;
+    animation: shardFadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    flex-shrink: 0 !important; /* 极其重要：防止被挤压 */
+}
+@keyframes shardFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 统一居中对齐 */
+.script-shard {
+    align-self: center !important;
+    margin: 0 auto !important;
+    /* 移除了统一的16px圆角，由下方分别定义异形圆角 */
+}
+
+/* User卡片 (图1)：左上角微直角，其余大圆角 */
+.shard-user { 
+    margin-left: auto !important; margin-right: auto !important; 
+    border-radius: 2px 24px 24px 24px !important; 
+}
+
+/* Char卡片 (图2)：右上角微直角，其余大圆角 */
+.shard-ai { 
+    margin-left: auto !important; margin-right: auto !important; 
+    border-radius: 24px 2px 24px 24px !important; 
+}
+
+/* 标签牌 */
+.shard-tag {
+    position: absolute; top: -14px; left: 20px;
+    background: var(--u-charcoal); color: var(--u-ivory);
+    font-family: 'Space Mono', monospace; font-size: 10px; padding: 4px 12px;
+    box-shadow: 3px 3px 0 var(--u-gold);
+    text-transform: uppercase; letter-spacing: 1px;
+}
+.shard-ai .shard-tag { left: auto; right: 20px; background: var(--u-gold); box-shadow: -3px 3px 0 var(--u-charcoal); }
+
+/* 正文排版 */
+.content-body { font-size: 1rem; line-height: 1.8; color: var(--movie-color-normal, var(--u-charcoal)); font-weight: 400; text-align: justify; }
+.content-body .dialogue { color: var(--movie-color-dialogue, #1a1a1a); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; display: block; margin: 15px 0; font-style: italic; }
+.content-body .thought { color: var(--movie-color-thought, #b3936a); font-style: italic; }
+
+/* 底部操作与分页 */
+.card-footer-flex { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
+.ruler-pagination { display: flex; align-items: center; gap: 15px; color: var(--u-gold); }
+.ruler-arrow { font-size: 16px; cursor: pointer; transition: 0.3s; padding: 5px; }
+.ruler-arrow:hover { color: var(--u-charcoal); transform: scale(1.2); }
+.ruler-arrow.disabled { opacity: 0.2; pointer-events: none; }
+.ruler-line { display: flex; align-items: center; gap: 4px; position: relative; padding: 0 5px; }
+.ruler-line::before { content: ''; width: 30px; height: 1px; background: var(--u-gold); opacity: 0.4; }
+.ruler-info { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--u-gold); letter-spacing: 1px; }
+
+.shard-actions { display: flex; gap: 10px; }
+.action-tag {
+    width: 32px; height: 32px; background: var(--u-ivory);
+    border: 1px solid var(--u-linen); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.3s; color: var(--u-charcoal);
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+}
+.action-tag:hover { background: var(--u-charcoal); color: var(--u-ivory); transform: translateY(-3px); }
+
+/* 5. 剪刀打字机动画 */
+.typing-indicator {
+    align-self: center !important; /* 从 flex-end 改为 center */
+    width: 200px; padding: 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.cutting-line { width: 100%; height: 1px; border-top: 1px dashed var(--u-gold); position: relative; }
+.scissors-icon {
+    position: absolute; top: -12px; left: 0;
+    font-size: 22px; color: var(--u-charcoal);
+    animation: cuttingMove 3s infinite linear, snipSnip 0.5s infinite alternate;
+}
+@keyframes cuttingMove { from { left: 0; } to { left: 100%; } }
+@keyframes snipSnip { from { transform: rotate(0deg); } to { transform: rotate(-30deg); } }
+
+/* 6. 底部控制台 Console */
+.fixed-console {
+    position: absolute; bottom: 0; left: 0; width: 100%; z-index: 100;
+    padding: 0 20px 40px 20px; /* 适配手机 */
+    background: linear-gradient(to top, rgba(220,212,201,1) 0%, rgba(220,212,201,0.6) 60%, transparent 100%);
+    pointer-events: none;
+}
+.console-glass {
+    pointer-events: auto;
+    max-width: 650px; margin: 0 auto;
+    background: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
+    border: 1px solid var(--u-border) !important;
+    border-radius: 12px !important; padding: 15px 20px !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+    transition: all 0.3s;
+}
+.console-glass.waiting-for-reply {
+    animation: breathingConsole 2s infinite ease-in-out;
+}
+@keyframes breathingConsole {
+    0%, 100% { box-shadow: 0 20px 40px rgba(0,0,0,0.08), inset 0 0 0 rgba(179, 147, 106, 0); }
+    50% { box-shadow: 0 20px 60px rgba(179, 147, 106, 0.2), inset 0 0 20px rgba(179, 147, 106, 0.1); }
+}
+
+.console-top-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 8px; }
+.tool-group { display: flex; gap: 20px; color: var(--u-gold); font-size: 18px; }
+.tool-group i { cursor: pointer; transition: 0.3s; }
+.tool-group i:hover { color: var(--u-charcoal); }
+.clapper-wrap { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--u-charcoal); display: flex; align-items: center; gap: 6px; cursor: pointer; opacity: 0.6; transition: 0.3s;}
+.clapper-wrap:hover { opacity: 1; color: var(--u-danger); }
+
+.input-row { display: flex; align-items: flex-end; gap: 10px; }
+.text-input { flex-grow: 1; background: transparent; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 15px; color: var(--u-charcoal) !important; resize: none; min-height: 24px; max-height: 120px; padding: 5px 0;}
+.text-input::placeholder { color: rgba(44,42,40,0.3) !important; }
+
+.stitch-send-btn {
+    background: var(--u-ivory) !important; border: 1px solid var(--u-gold) !important; padding: 10px 20px !important;
+    border-radius: 0 !important; /* 强制覆盖旧圆角 */
+    position: relative; cursor: pointer; transition: 0.3s; display: flex; align-items: center;
+}
+.stitch-send-btn::after { content: ''; position: absolute; inset: 2px; border: 1px dashed var(--u-gold); opacity: 0.3; }
+.stitch-send-btn span { font-family: 'Cormorant Garamond', serif; font-weight: 600; letter-spacing: 1.5px; font-size: 13px; color: var(--u-charcoal) !important; }
+.stitch-send-btn:hover { background: var(--u-charcoal) !important; border-color: var(--u-charcoal) !important; }
+.stitch-send-btn:hover span { color: var(--u-ivory) !important; }
+
+/* === 紧急修复：强制盒模型，防止元素被撑爆剪裁 === */
+.fixed-header, 
+#movie-screen-container, 
+.fixed-console, 
+.script-shard,
+.settings-modal {
+    box-sizing: border-box !important;
+}
 
     </style>
 </head>
@@ -18990,44 +19446,78 @@ body.light-mode #single-chat-typing .thread {
 
     <!-- 电影模式应用 -->
     <div id="movie-app" class="app-navigator">
+      <!-- === 电影模式：新版选角大厅 (Persona Archive 修复版) === -->
         <div id="movie-character-select-page" class="app-page">
-            <div class="page-header">
-                <i class="ri-arrow-left-s-line left-icon back-button" data-target="desktop"></i>
-                <h2>电影 - 选择主角</h2>
-            </div>
-            <div id="movie-poster-grid"></div>
-        </div>
-        <div id="movie-story-page" class="app-page" style="padding: 0; gap: 0;">
-            <div class="page-header">
-                <i class="ri-arrow-left-s-line left-icon back-button" data-target="movie-character-select-page"></i>
-                <h2 id="movie-character-name"></h2>
-                <i class="ri-settings-3-line right-icon" id="movie-settings-btn"></i>
-            </div>
-            <div id="movie-screen-container"></div>
-          <div id="movie-input-bar">
-                <div class="input-card">
-                    <textarea id="movie-input" placeholder="输入你的行动或对话..." rows="1"></textarea>
+            <!-- 头部区域 -->
+            <header class="uma-fixed-header">
+                <div class="uma-brand-box">
+                    <h1>PERSONA</h1>
+                    <span>The Silent Script / Archive</span>
                 </div>
-                <div class="input-actions">
-                    <div class="action-icons">
-                        <i class="ri-attachment-line"></i>
-                        <i class="ri-image-add-line"></i>
-                        <i class="ri-sparkles-line"></i>
-<i class="ri-clapperboard-line" id="movie-wrap-up-icon" title="杀青/存档" style="cursor: pointer; margin-left: 8px;"></i>
+                <div class="uma-header-tools">
+                    <i class="ri-arrow-go-back-line uma-tool-icon back-button" data-target="desktop" title="返回"></i>
+                </div>
+            </header>
+            
+            <!-- 【关键修复】更换ID为 uma-movie-poster-grid，避开旧版大富翁/电影的CSS污染 -->
+            <main class="uma-character-scroll" id="uma-movie-poster-grid">
+                <!-- JS 动态生成 -->
+            </main>
+        </div>
+       <!-- === 电影模式：放映室 (The Tailor's Cut 聊天页) === -->
+        <div id="movie-story-page" class="app-page" style="padding: 0; background: transparent;">
+            
+            <!-- 沉浸式背景层 -->
+            <div class="stage-bg" id="movie-stage-bg"></div>
+            <div class="stage-overlay"></div>
+
+            <!-- 顶部悬浮 Header -->
+            <header class="fixed-header">
+                <div class="logo-text">
+                    <h1 id="movie-character-name">KIKI OS</h1>
+                    <span>ARCHIVE / VOL. 07</span>
+                </div>
+                <div class="header-actions">
+                    <i class="ri-arrow-go-back-line nav-icon back-button" data-target="movie-character-select-page" title="返回"></i>
+                    <i class="ri-more-2-fill nav-icon" id="movie-settings-btn" title="设置"></i>
+                </div>
+            </header>
+
+            <!-- 主剧本滚动区 -->
+            <main class="scroll-container" id="movie-screen-container">
+                <!-- JS 会在这里动态生成剧本卡片 -->
+            </main>
+
+            <!-- 剪刀裁切打字机动画 (默认隐藏，由JS调度) -->
+            <div class="typing-indicator" id="movie-typing-indicator" style="display: none;">
+                <div class="cutting-line"><i class="ri-scissors-2-line scissors-icon"></i></div>
+                <span style="font-family: 'Space Mono', monospace; font-size: 8px; color: #b3936a; letter-spacing: 2px;">THE MUSE IS CUTTING...</span>
+            </div>
+
+            <!-- 底部玻璃控制台 -->
+            <div class="fixed-console" id="movie-input-bar">
+                <div class="console-glass">
+                    <div class="console-top-tools">
+                        <div class="tool-group action-icons">
+                            <i class="ri-attachment-line" id="movie-style-btn" title="风格调色"></i>
+                            <i class="ri-image-add-line" id="movie-wallpaper-btn" title="添加场景图片"></i>
+                            <i class="ri-sparkles-line" title="AI 灵感"></i>
+                        </div>
+                        <div class="clapper-wrap" id="movie-wrap-up-icon">
+                            <i class="ri-clapperboard-line"></i> WRAP UP ARCHIVE
+                        </div>
                     </div>
-                    <button id="movie-send-btn">
-                        <span>发送</span>
-                        <i class="ri-arrow-up-s-line"></i>
-                    </button>
+                    <div class="input-row">
+                        <textarea class="text-input" id="movie-input" placeholder="Write into the silence..." rows="1"></textarea>
+                        <button class="stitch-send-btn" id="movie-send-btn"><span>ACTION</span></button>
+                    </div>
                 </div>
             </div>
- <!-- ▼▼▼ 【新增】回到底部按钮 (加在这里) ▼▼▼ -->
-            <div id="movie-scroll-bottom-btn" class="scroll-bottom-btn">
-                <i class="ri-arrow-down-double-line"></i>
-            </div>
-            <!-- ▲▲▲ 新增结束 ▲▲▲ -->
+            
+            <!-- 回底按钮 -->
+            <div id="movie-scroll-bottom-btn" class="scroll-bottom-btn"><i class="ri-arrow-down-double-line"></i></div>
         </div>
-    </div>
+</div>
 
 <!-- 梦境应用 (带历史记录 & 呼吸灯版) -->
 <div id="dream-app" class="app-navigator">
@@ -21249,28 +21739,59 @@ body.light-mode #single-chat-typing .thread {
         </div>
     </div>
 
-    <!-- 电影模式设置弹窗 -->
+   <!-- 电影模式设置弹窗 (Couture Edition UI) -->
     <div id="movie-settings-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>导演设置</h3>
-                <i id="close-movie-settings-btn" class="ri-close-line"></i>
+        <div class="settings-modal" style="width: 88%; max-width: 440px; background: rgba(245, 242, 237, 0.95); border: 1px solid rgba(255,255,255,0.5); padding: 45px 35px; border-radius: 0; box-shadow: 0 60px 120px rgba(0,0,0,0.15); position: relative;">
+            <i id="close-movie-settings-btn" class="ri-close-line modal-close" style="position: absolute; top: 20px; right: 20px; font-size: 24px; cursor: pointer; color: #2c2a28; opacity: 0.5; transition: opacity 0.3s;"></i>
+
+            <!-- 开场白 -->
+            <div class="modal-section" style="margin-bottom: 25px; margin-top: 5px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px;">
+                    <label style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 17px; color: #2c2a28; margin: 0;">开场白</label>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 8px; color: #b3936a; text-transform: uppercase; letter-spacing: 1px;">Opening Script</span>
+                </div>
+                <textarea id="movie-opening-prompt" class="input-stitched textarea-stitched" placeholder="请输入背景世界观或第一幕场景..." style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #dcd4c9; padding: 10px 0; font-family: 'Noto Serif SC', serif; font-size: 14px; outline: none; color: #2c2a28; height: 70px; resize: none; line-height: 1.6;"></textarea>
             </div>
-            <div class="form-group">
-                <label for="movie-opening-prompt">开场白 (选填)</label>
-                <textarea id="movie-opening-prompt" rows="5" placeholder="输入一段剧情的序幕，作为故事的开端..."></textarea>
+
+            <!-- 叙事深度 -->
+            <div class="modal-section" style="margin-bottom: 25px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px;">
+                    <label style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 17px; color: #2c2a28; margin: 0;">叙事深度</label>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 8px; color: #b3936a; text-transform: uppercase; letter-spacing: 1px;">Intensity / Words</span>
+                </div>
+                <input type="number" id="movie-response-length" value="150" class="input-stitched" style="width: 100%; background: transparent; border: none; border-bottom: 1px solid #dcd4c9; padding: 10px 0; font-family: 'Noto Serif SC', serif; font-size: 14px; outline: none; color: #2c2a28;">
             </div>
-            <div class="form-group">
-                <label for="movie-response-length">AI叙事篇幅 (建议50-500字)</label>
-                <input type="number" id="movie-response-length" value="150" placeholder="例如：150">
+
+            <!-- 图书馆藏 -->
+            <div class="modal-section" style="margin-bottom: 25px;">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 5px;">
+                    <label style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: 600; font-size: 17px; color: #2c2a28; margin: 0;">世界馆藏</label>
+                    <span style="font-family: 'Space Mono', monospace; font-size: 8px; color: #b3936a; text-transform: uppercase; letter-spacing: 1px;">World Archive</span>
+                </div>
+                <div id="movie-library-select-container" class="world-collection" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; max-height: 150px; overflow-y: auto; background: transparent; padding: 0;">
+                    <!-- JS 将在这里生成 .book-chip -->
+                </div>
             </div>
-            <div class="form-group">
-                <label>世界观设定 (图书馆)</label>
-                <div id="movie-library-select-container" style="max-height: 150px; overflow-y: auto; background: var(--input-bg-color); padding: 10px; border-radius: 8px;"></div>
+
+            <!-- 沉浸模式开关 -->
+            <div class="toggle-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-top: 5px;">
+                <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; color: #2c2a28;">显示状态栏</span>
+                <!-- 保留原结构，套用新样式 -->
+                <label id="movie-widget-toggle-label" class="switch" style="width: 40px; height: 18px; background: #dcd4c9; border-radius: 9px; position: relative; cursor: pointer; transition: 0.3s; display: inline-block; flex-shrink: 0;">
+                    <input type="checkbox" id="movie-show-widget-toggle" checked style="opacity: 0; width: 0; height: 0; position: absolute;">
+                    <span id="movie-widget-toggle-track" style="position: absolute; inset: 0; background: #b3936a; border-radius: 9px; transition: background 0.3s;"></span>
+                    <span id="movie-widget-toggle-knob" style="position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 2px; left: 24px; transition: left 0.3s; pointer-events: none;"></span>
+                </label>
             </div>
-            <div class="action-buttons" style="display: flex; justify-content: space-between; margin-top: 15px;">
-                <button id="movie-clear-history-btn" class="danger-button" style="background-color: #ff3b30;">清空剧情</button>
-                <button id="save-movie-settings-btn">保存并开始</button>
+
+            <!-- 底部按钮 -->
+            <div class="modal-footer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 35px;">
+                <button id="movie-clear-history-btn" class="btn-modal btn-clear" style="padding: 12px; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 14px; cursor: pointer; border: 1px solid #964b4b; background: transparent; color: #964b4b; transition: 0.3s; clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%); letter-spacing: 1px;">清空记忆</button>
+                
+                <button id="save-movie-settings-btn" class="btn-modal btn-save" style="padding: 12px; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 14px; cursor: pointer; border: none; background: #2c2a28; color: #f5f2ed; position: relative; transition: 0.3s; letter-spacing: 1px;">
+                    <div style="position: absolute; inset: 2px; border: 1px dashed #b3936a; opacity: 0.4; pointer-events: none;"></div>
+                    开始编织
+                </button>
             </div>
         </div>
     </div>
@@ -22272,9 +22793,11 @@ const AlchemySplashController = {
         }
 
         // 终极绽放
-        document.getElementById('splash-svgContainer').classList.add('bloom');
+        const svgContainer = document.getElementById('splash-svgContainer');
+        if (svgContainer) svgContainer.classList.add('bloom');
         setTimeout(() => {
-            document.getElementById('splash-brandLayer').classList.add('active');
+            const brandLayer = document.getElementById('splash-brandLayer');
+            if (brandLayer) brandLayer.classList.add('active');
         }, 800);
     }
 };
@@ -23029,7 +23552,7 @@ chatWallpaperUploader: document.getElementById('chat-wallpaper-uploader'),
     iconMovie: document.getElementById('icon-story'),
     movieApp: document.getElementById('movie-app'),
     movieBackBtns: document.querySelectorAll('#movie-app .back-button'),
-    moviePosterGrid: document.getElementById('movie-poster-grid'),
+   moviePosterGrid: document.getElementById('uma-movie-poster-grid'),
     movieStoryPage: document.getElementById('movie-story-page'),
     movieCharacterName: document.getElementById('movie-character-name'),
     movieSettingsBtn: document.getElementById('movie-settings-btn'),
@@ -23049,10 +23572,10 @@ movieWrapUpIcon: document.getElementById('movie-wrap-up-icon'),
     cancelMovieEditBtn: document.getElementById('cancel-movie-edit-btn'),
     saveMovieEditBtn: document.getElementById('save-movie-edit-btn'),
     movieEditTextarea: document.getElementById('movie-edit-textarea'),
-   movieInputBar: document.getElementById('movie-input-bar'),
-   movieInputCard: document.querySelector('#movie-input-bar .input-card'),
-   movieWallpaperUploadBtn: document.querySelector('#movie-input-bar .action-icons .ri-image-add-line'), 
-   movieStyleBtn: document.querySelector('#movie-input-bar .action-icons .ri-attachment-line'),       
+  movieInputBar: document.querySelector('.fixed-console'),
+   movieInputCard: document.querySelector('.console-glass'),
+   movieWallpaperUploadBtn: document.getElementById('movie-wallpaper-btn'), 
+   movieStyleBtn: document.getElementById('movie-style-btn'),       
     movieWallpaperUploader: document.getElementById('movie-wallpaper-uploader'),
     movieStyleModal: document.getElementById('movie-style-modal'),
     closeMovieStyleBtn: document.getElementById('close-movie-style-btn'),
@@ -35029,37 +35552,120 @@ async function openDiaryReadModal(diaryId) {
 // =======================================================
 // ============ 电影模式 - 核心功能函数 ==================
 // =======================================================
-
 /**
- * 渲染“选角大厅”的角色海报墙
+ * 【全新 V4.1】渲染电影模式“选角大厅” (修复多角色只显示一个的Bug)
  */
 async function renderMovieCharacterSelection() {
-    DOM.moviePosterGrid.innerHTML = '';
-    if (appState.dossiers.length === 0) {
-        DOM.moviePosterGrid.innerHTML = `<p style="text-align:center; opacity:0.7; grid-column: 1 / 3;">还没有任何角色档案...</p>`;
+    const container = document.getElementById('uma-movie-poster-grid'); 
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!appState.dossiers || appState.dossiers.length === 0) {
+        container.innerHTML = `<p style="text-align:center; opacity:0.5; margin-top:50px;">暂无角色档案</p>`;
         return;
     }
 
-    for (const dossier of appState.dossiers) {
-        const card = document.createElement('div');
-        card.className = 'movie-poster-card';
-        card.dataset.dossierId = dossier.id;
+    // 遍历所有角色
+    for (let i = 0; i < appState.dossiers.length; i++) {
+        try {
+            const dossier = appState.dossiers[i];
+            const card = document.createElement('div');
+            card.className = 'uma-char-card';
 
-        let avatarUrl = '';
-        if (dossier.character.avatarAssetId) {
-            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
-            if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+            // 1. 头像处理
+            let avatarUrl = '';
+            if (dossier.character.avatarAssetId) {
+                try {
+                    const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+                    if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+                } catch(e) { console.error("头像加载失败", e); }
+            }
+            const imgHtml = avatarUrl ? `<img src="${avatarUrl}">` : '';
+
+            // 2. 语录处理 (核心修复：防止 undefined 报错)
+            let rawQuote = dossier.aiGenerated?.quote || '';
+            if (typeof rawQuote !== 'string') rawQuote = String(rawQuote);
+            
+            let fallbackDesc = dossier.character?.background || '';
+            if (typeof fallbackDesc !== 'string') fallbackDesc = String(fallbackDesc);
+            
+            let quote = rawQuote || fallbackDesc.substring(0, 60) + '...';
+            quote = quote.replace(/^["“]|["”]$/g, ''); 
+
+            // 3. 智能解析性格为成分表 (核心修复：防止 AI 返回数组导致 split 报错)
+            let personalityText = dossier.aiGenerated?.personality || '神秘';
+            if (Array.isArray(personalityText)) personalityText = personalityText.join(' ');
+            if (typeof personalityText !== 'string') personalityText = String(personalityText);
+            
+            let traits = personalityText.split(/[、，, ]+/).filter(t => t.trim());
+            if (traits.length === 0) traits = ['未知'];
+            
+            let fabricHtml = '';
+            if (traits.length >= 3) {
+                fabricHtml = `
+                    <div class="uma-fabric-item"><span>${traits[0]}</span><span>65%</span></div>
+                    <div class="uma-fabric-item"><span>${traits[1]}</span><span>25%</span></div>
+                    <div class="uma-fabric-item"><span>${traits[2]}</span><span>10%</span></div>
+                `;
+            } else if (traits.length === 2) {
+                fabricHtml = `
+                    <div class="uma-fabric-item"><span>${traits[0]}</span><span>70%</span></div>
+                    <div class="uma-fabric-item"><span>${traits[1]}</span><span>30%</span></div>
+                `;
+            } else {
+                fabricHtml = `
+                    <div class="uma-fabric-item"><span>${traits[0]}</span><span>100%</span></div>
+                `;
+            }
+
+            const indexStr = String(i + 1).padStart(2, '0');
+
+            // 4. 构建 HTML
+            card.innerHTML = `
+                <div class="uma-wash-tag">ARCHIVE ${indexStr}</div>
+                
+                <div class="uma-char-visual">
+                    ${imgHtml}
+                </div>
+                
+                <div class="uma-char-info">
+                    <div class="uma-info-top">
+                        <span class="uma-sub-role">THE FRAGILE MUSE</span>
+                        <h2 class="uma-name">${dossier.character?.name || '未知角色'}</h2>
+                    </div>
+                    
+                    <p class="uma-desc">${quote}</p>
+                    
+                    <div class="uma-fabric">
+                        ${fabricHtml}
+                    </div>
+                    
+                    <div class="uma-actions">
+                        <div class="uma-btn edit-btn">EDIT</div>
+                        <div class="uma-btn select-btn">SELECT</div>
+                    </div>
+                </div>
+            `;
+
+            // 5. 绑定交互事件
+            card.querySelector('.select-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                enterMovieMode(dossier.id);
+            });
+            
+            card.querySelector('.edit-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                openDossierModal(dossier.id); 
+            });
+
+            container.appendChild(card);
+            
+        } catch (innerError) {
+            // 即使某个角色渲染失败，也不会打断后续角色的渲染
+            console.error(`渲染第 ${i} 个角色卡片时发生错误:`, innerError);
         }
-        const avatarStyle = avatarUrl ? `style="background-image: url('${avatarUrl}')"` : '';
-
-        card.innerHTML = `
-            <div class="poster-image" ${avatarStyle}></div>
-            <div class="poster-title">${dossier.character.name}</div>
-        `;
-        DOM.moviePosterGrid.appendChild(card);
     }
 }
-
 /**
  * 【V2.2 - 内存同步修复版】保存设置并开始/进入电影
  */
@@ -35072,6 +35678,7 @@ async function startMovie() {
     // 1. 从浮窗收集设置
     const openingPrompt = DOM.movieOpeningPrompt.value.trim();
     const responseLength = parseInt(DOM.movieResponseLength.value, 10) || 150;
+    const showWidget = document.getElementById('movie-show-widget-toggle')?.checked !== false;
     const selectedBookIds = [];
     
     DOM.movieLibrarySelectContainer.querySelectorAll('.book-chip.selected').forEach(chip => {
@@ -35080,7 +35687,7 @@ async function startMovie() {
 
     // 2. 将设置保存到数据库
     const sessionSettings = {
-        dossierId, openingPrompt, responseLength, libraryBookIds: selectedBookIds
+        dossierId, openingPrompt, responseLength, libraryBookIds: selectedBookIds, showWidget
     };
     await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_SESSIONS, sessionSettings);
 
@@ -35134,11 +35741,32 @@ async function openMovieSettingsModal() {
             // 安全检查
             if (!appState.currentMovieSession?.dossierId) return;
 
-            const { dossierId, openingPrompt, responseLength, libraryBookIds } = appState.currentMovieSession;
+            const { dossierId, openingPrompt, responseLength, libraryBookIds, showWidget } = appState.currentMovieSession;
             
             // 填充表单
             DOM.movieOpeningPrompt.value = openingPrompt || '';
             DOM.movieResponseLength.value = responseLength || 150;
+
+            // 同步状态栏开关（默认开启）
+            const toggle = document.getElementById('movie-show-widget-toggle');
+            const track = document.getElementById('movie-widget-toggle-track');
+            const knob = document.getElementById('movie-widget-toggle-knob');
+            const isOn = showWidget !== false;
+           toggle.checked = isOn;
+            // 替换为高定版颜色与位置
+            track.style.background = isOn ? '#b3936a' : '#dcd4c9';
+            knob.style.left = isOn ? '24px' : '2px';
+            
+            // 绑定开关交互（防止重复绑定）
+            const label = document.getElementById('movie-widget-toggle-label');
+            label.onclick = null;
+           label.onclick = () => {
+                toggle.checked = !toggle.checked;
+                const on = toggle.checked;
+                // 替换为高定版颜色与位置
+                track.style.background = on ? '#b3936a' : '#dcd4c9';
+                knob.style.left = on ? '24px' : '2px';
+            };
 
             // 【核心修改区域】填充图书馆书籍选择区
             const container = DOM.movieLibrarySelectContainer;
@@ -35199,7 +35827,8 @@ async function enterMovieMode(dossierId) {
         libraryBookIds: Array.from(linkedBookIds),
         libraryBooks: allBooks.filter(book => linkedBookIds.has(book.id)),
         wallpaperAssetId: sessionSettings.wallpaperAssetId,
-        styleSettings: sessionSettings.styleSettings || {}
+        styleSettings: sessionSettings.styleSettings || {},
+        showWidget: sessionSettings.showWidget !== false
     };
 
     // ============================================================
@@ -35607,160 +36236,105 @@ function createGoblinWidget(uniqueId, data = null) {
 
     return container;
 }
-
 /**
- * 【V8 - 最终完整版】渲染一轮剧情
- * 集成：楼层显示 + 文本格式化 + 鬼怪组件(带状态回溯) + 底部操作栏
+ * 【V9 - 高定剪裁版】渲染一轮剧情 (Tailor's Cut UI)
  */
 async function renderMovieTurn(turn, turnIndex, prepend = false) {
     const container = DOM.movieScreenContainer;
     
     const card = document.createElement('div');
-    card.className = 'story-card'; 
+    const isUser = turn.author === 'user';
+    // 根据角色分配左右样式
+    card.className = `script-shard ${isUser ? 'shard-user' : 'shard-ai'}`; 
     card.dataset.turnId = turn.id;
 
-    // --- 1. 准备基础数据 ---
-    const timeStr = new Date(turn.timestamp).toLocaleTimeString('zh-CN', {hour: '2-digit', minute: '2-digit'});
-    
-    // 获取当前正在进行的档案信息
+    // --- 1. 获取并处理名字 ---
     const currentDossierId = appState.currentMovieSession?.dossierId;
     const dossier = appState.dossiers.find(d => d.id === currentDossierId);
-
-    // --- 2. 确定头像和名字 ---
-    let avatarUrl = '';
-    let displayName = '旁白/系统';
-    let roleInitial = 'S'; 
-
-    if (turn.author === 'user') {
-        displayName = '我';
-        roleInitial = 'ME';
-        
-        // 逻辑：优先找当前档案绑定的User头像 -> 其次找全局User头像
-        if (dossier && dossier.user && dossier.user.avatarAssetId) {
-            try {
-                const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.user.avatarAssetId);
-                if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
-            } catch (e) { console.error("头像加载失败", e); }
-        }
-        
-        if (!avatarUrl) {
-            try {
-                const globalSetting = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'global_user_avatar_asset_id');
-                if (globalSetting?.value) {
-                    const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, globalSetting.value);
-                    if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
-                }
-            } catch (e) { console.error("全局头像加载失败", e); }
-        }
-
-    } else {
-        // AI 角色
-        if (dossier) {
-            displayName = dossier.character.name;
-            roleInitial = displayName[0];
-            if (dossier.character.avatarAssetId) {
-                try {
-                    const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
-                    if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
-                } catch (e) { console.error("角色头像加载失败", e); }
-            }
-        }
+    
+    let roleName = 'MUSE';
+    if (isUser) {
+        roleName = 'ME';
+    } else if (dossier) {
+        roleName = dossier.character.name.toUpperCase();
+        // 名字太长则截断，保持标签小巧
+        if (roleName.length > 8) roleName = roleName.substring(0, 8);
     }
 
-    const avatarStyle = avatarUrl ? `background-image: url('${avatarUrl}'); color: transparent;` : '';
+    const indexStr = String(turnIndex).padStart(2, '0');
+    const tagHTML = `<div class="shard-tag">STITCH ${indexStr} / ${roleName}</div>`;
 
-    // --- 3. 构建头部 HTML ---
-    const headerHTML = `
-        <div class="ins-card-header">
-            <div class="ins-avatar" style="${avatarStyle}">${roleInitial}</div>
-            <div class="ins-meta">
-                <span class="ins-username">${displayName}</span>
-                <span class="ins-info-sub">No.${turnIndex} · ${timeStr}</span>
-            </div>
-            <i class="ri-more-fill ins-more-btn"></i>
-        </div>
-    `;
-
-    // --- 4. 构建内容 Body (DOM 操作) ---
-    // 文本格式化：换行转<br>，星号转内心独白，引号转对话高亮
+    // --- 2. 内容解析 ---
     let processedContent = turn.content.replace(/\n/g, '<br>');
     processedContent = processedContent.replace(/\*([^*]+)\*/g, '<span class="thought">$1</span>');
     processedContent = processedContent.replace(/“([^”]+)”/g, '<span class="dialogue">“$1”</span>');
     
     const bodyEl = document.createElement('div');
-    bodyEl.className = 'ins-card-body';
+    bodyEl.className = 'content-body';
     bodyEl.innerHTML = processedContent;
 
-    // 【核心集成】如果是 AI 的回复，追加鬼怪组件
-    if (turn.author === 'ai') {
+    // (可选：保留鬼怪挂件逻辑)
+    const showWidget = appState.currentMovieSession?.showWidget !== false;
+    if (!isUser && showWidget) {
         const uniqueId = `${turn.id || Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-        
-        // 【关键逻辑：状态回溯】
-        // 优先使用该条记录里保存的 `widgetState` (当时的状态)
-        // 如果没有 (老数据)，则回退到 `appState.currentGoblinState` (当前最新状态)
-        // 这样可以保证你在翻看历史记录时，每一楼的状态栏（如天气、新闻）都是当时那一刻的样子。
         const widgetData = turn.widgetState || appState.currentGoblinState;
-        
-        // 调用组件生成函数
         const goblinWidget = createGoblinWidget(uniqueId, widgetData);
         bodyEl.appendChild(goblinWidget);
     }
 
-    // --- 5. 构建底部 HTML (Actions + Swipe) ---
-    let footerHTML = '';
-    let swipeControls = '';
+    // --- 3. 底部操作栏 ---
+    let swipeControls = '<div></div>'; // 默认占位符，保持flex两端对齐
 
-    // 只有 AI 的消息才显示 Swipe (重新生成/切换候选)
-    if (turn.author === 'ai') {
+    if (!isUser) {
         const metadata = turn.metadata || {};
-        const candidates = metadata.candidates || [turn.content];
+        const candidates = metadata.candidates ||[turn.content];
         const currentIndex = metadata.currentIndex || 0;
         
+        // 完美还原高定版分页器
         swipeControls = `
-            <div class="ins-swipe-control">
-                <i class="ri-arrow-left-s-line swipe-arrow prev ${currentIndex === 0 ? 'disabled' : ''}"></i>
-                <span class="swipe-counter">${currentIndex + 1}/${candidates.length}</span>
-                <i class="ri-arrow-right-s-line swipe-arrow next"></i>
+            <div class="ruler-pagination">
+                <i class="ri-arrow-left-s-line ruler-arrow swipe-arrow prev ${currentIndex === 0 ? 'disabled' : ''}"></i>
+                <div class="ruler-line"><span class="ruler-info swipe-counter">ARCHIVE ${String(currentIndex + 1).padStart(2, '0')} / ${String(candidates.length).padStart(2, '0')}</span></div>
+                <i class="ri-arrow-right-s-line ruler-arrow swipe-arrow next"></i>
             </div>
         `;
     }
 
-    footerHTML = `
-        <div class="ins-card-footer">
-            <div class="ins-action-group">
-                <i class="ri-git-branch-line ins-icon-btn branch" title="由此创建新分支" data-action="branch"></i>
-                <i class="ri-pencil-line ins-icon-btn edit" title="编辑" data-action="edit"></i>
-                <i class="ri-delete-bin-line ins-icon-btn danger" title="删除" data-action="delete"></i>
-            </div>
+    // 动作标签
+    const branchBtn = !isUser ? `<div class="action-tag branch" style="color:var(--u-gold)" title="分支"><i class="ri-git-branch-line"></i></div>` : '';
+    const footerHTML = `
+        <div class="card-footer-flex">
             ${swipeControls}
+            <div class="shard-actions">
+                ${branchBtn}
+                <div class="action-tag edit" title="编辑"><i class="ri-quill-pen-line"></i></div>
+                <div class="action-tag danger" title="删除"><i class="ri-delete-bin-line"></i></div>
+            </div>
         </div>
     `;
 
-    // --- 6. 最终组装 ---
-    card.innerHTML = headerHTML;             // 插入头部
-    card.appendChild(bodyEl);                // 插入内容体 (含文本和组件)
-    card.insertAdjacentHTML('beforeend', footerHTML); // 插入底部
+    // 组装
+    card.innerHTML = tagHTML;
+    card.appendChild(bodyEl);
+    card.insertAdjacentHTML('beforeend', footerHTML);
 
-    // --- 7. 插入页面容器 ---
+    // 插入 DOM
     if (prepend) {
-        // 如果是“加载更多”，插在顶部
         const loadMoreBtn = document.getElementById('movie-load-more-btn');
         if (loadMoreBtn) container.insertBefore(card, loadMoreBtn.nextSibling);
         else container.insertBefore(card, container.firstChild);
     } else {
-        // 正常对话，插在底部
         container.appendChild(card);
     }
 }
 
-// 1. 添加加载按钮
+// 1. 添加加载按钮 (高定版 UI)
 function addMovieLoadMoreButton() {
     if (document.getElementById('movie-load-more-btn')) return;
     const btn = document.createElement('div');
     btn.id = 'movie-load-more-btn';
-    btn.textContent = '加载更早的剧情';
-    // 样式和聊天里的保持一致
-    btn.style.cssText = `text-align: center; padding: 15px; font-size: 14px; color: var(--text-color); opacity: 0.7; cursor: pointer; width: 100%;`;
+    btn.className = 'system-load-more';
+    btn.textContent = 'LOAD HISTORICAL ARCHIVE';
     DOM.movieScreenContainer.prepend(btn);
 }
 
@@ -35775,7 +36349,7 @@ async function loadMoreMovieTurns() {
 
     try {
         // 获取当前已显示的卡片数量
-        const currentCount = DOM.movieScreenContainer.querySelectorAll('.story-card').length;
+       const currentCount = DOM.movieScreenContainer.querySelectorAll('.script-shard').length;
         const totalHistory = appState.currentMovieHistoryFull || [];
         
         // 计算需要加载的切片范围
@@ -35828,12 +36402,20 @@ async function handleMovieSend() {
 
     const { dossierId } = appState.currentMovieSession;
 
-    // 1. UI 锁定
+   // 1. UI 锁定
     DOM.movieInput.disabled = true;
     DOM.movieSendBtn.disabled = true;
     DOM.movieInput.value = '';
     DOM.movieInput.placeholder = '导演正在调度长镜头...';
     DOM.movieInputCard.classList.add('waiting-for-reply');
+
+    // === 新增：把隐藏的剪刀动画移到容器最底部并显示 ===
+    const typingIndicator = document.getElementById('movie-typing-indicator');
+    if (typingIndicator) {
+        DOM.movieScreenContainer.appendChild(typingIndicator);
+        typingIndicator.style.display = 'flex';
+        DOM.movieScreenContainer.scrollTop = DOM.movieScreenContainer.scrollHeight;
+    }
 
     try {
         // 2. 用户回合上屏
@@ -35938,11 +36520,15 @@ async function handleMovieSend() {
     } catch (error) {
         console.error("导演掉线:", error);
         utils.showToast(`Error: ${error.message}`);
-    } finally {
+  } finally {
         DOM.movieInput.disabled = false;
         DOM.movieSendBtn.disabled = false;
-        DOM.movieInput.placeholder = '输入你的行动或对话...';
+        DOM.movieInput.placeholder = 'Write into the silence...';
         DOM.movieInputCard.classList.remove('waiting-for-reply');
+        
+        // 隐藏剪刀动画
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        
         DOM.movieInput.focus();
     }
 }
@@ -36142,10 +36728,8 @@ async function handleMovieDelete(turnId) {
                 // ^^^ 效果结束 ^^^
             }
         }
-
 /**
- * 【终极修复 V2】电影模式 Swipe (原地无感刷新 + 箭头修复版)
- * 修复：生成/切换时不跳动，且生成完成后箭头能正确恢复
+ * 【终极修复 V4】电影模式 Swipe (遵守挂件开关设定)
  */
 async function handleMovieSwipe(turnId, direction) {
     if (!turnId) return;
@@ -36166,18 +36750,17 @@ async function handleMovieSwipe(turnId, direction) {
     let { candidates, currentIndex } = turn.metadata;
     let hasChanged = false; // 标记数据是否变动
 
-    // 3. 【关键】获取当前卡片的 DOM 引用及内部元素
-    const card = document.querySelector(`.story-card[data-turn-id="${turnId}"]`);
+    // 3. 获取当前卡片的 DOM 引用及内部元素
+    const card = document.querySelector(`.script-shard[data-turn-id="${turnId}"]`);
     if (!card) return; 
 
-    // --- 提前获取所有控件引用，防止修改类名后找不到 ---
+    // 提前获取所有控件引用
     const nextArrow = card.querySelector('.swipe-arrow.next'); // 右箭头
     const prevArrow = card.querySelector('.swipe-arrow.prev'); // 左箭头
     const counter = card.querySelector('.swipe-counter');      // 计数器
-    const bodyEl = card.querySelector('.ins-card-body');       // 内容区
+    const bodyEl = card.querySelector('.content-body, .ins-card-body'); // 兼容新老内容区
 
     // === 逻辑分支：左滑 / 右滑 ===
-
     if (direction === 'prev') {
         // <--- 查看旧结果
         if (currentIndex > 0) {
@@ -36192,18 +36775,13 @@ async function handleMovieSwipe(turnId, direction) {
             hasChanged = true;
         } else {
             // B. 没存货，请求 AI 生成 (Reroll)
-            
-            // 改变图标为加载中 (保留引用，直接操作)
             if (nextArrow) {
-                // 临时保存旧类名，虽然后面会重置，但是个好习惯
-                // 这里直接设为转圈样式
                 nextArrow.className = 'ri-loader-4-line swipe-loading'; 
                 nextArrow.style.pointerEvents = 'none';
             }
 
             try {
-                // 准备上下文
-                const fullHistory = appState.currentMovieHistoryFull || [];
+                const fullHistory = appState.currentMovieHistoryFull ||[];
                 const thisTurnIndex = fullHistory.findIndex(t => t.id === turnId);
                 const contextHistory = fullHistory.slice(0, thisTurnIndex);
                 const lastUserTurn = contextHistory.length > 0 ? contextHistory[contextHistory.length - 1].content : null;
@@ -36216,7 +36794,6 @@ async function handleMovieSwipe(turnId, direction) {
                 
                 let newContent = await apiHelper.getChatCompletion(prompt);
                 
-                // 简单的 JSON 清洗
                 try {
                     const jsonMatch = newContent.match(/\{[\s\S]*\}/);
                     if (jsonMatch) {
@@ -36225,7 +36802,6 @@ async function handleMovieSwipe(turnId, direction) {
                     }
                 } catch(e) {}
 
-                // 存入候选列表
                 candidates.push(newContent);
                 currentIndex++;
                 hasChanged = true;
@@ -36233,66 +36809,63 @@ async function handleMovieSwipe(turnId, direction) {
             } catch (error) {
                 console.error("Swipe生成失败:", error);
                 utils.showToast("生成失败");
-                // 失败时，手动恢复箭头
                 if (nextArrow) {
                     nextArrow.className = 'ri-arrow-right-s-line swipe-arrow next';
                     nextArrow.style.pointerEvents = 'auto';
                 }
-                return; // 退出
+                return;
             }
         }
     }
 
     // === 4. 执行原地更新 (如果数据变了) ===
     if (hasChanged) {
-        // A. 更新数据对象
         turn.content = candidates[currentIndex];
         turn.metadata.candidates = candidates;
         turn.metadata.currentIndex = currentIndex;
 
-        // B. 写入数据库 & 内存
+        // 存入数据库和内存
         await dbHelper.set(CONSTANTS.STORE_NAMES.MOVIE_HISTORY, turn);
-        // 同步全局内存
         const memIndex = appState.currentMovieHistoryFull.findIndex(t => t.id === turnId);
         if (memIndex > -1) {
             appState.currentMovieHistoryFull[memIndex] = turn;
         }
-
-        // C. 【核心】操作 DOM 更新内容
         
-        // C1. 格式化文本
         let processedContent = turn.content.replace(/\n/g, '<br>');
         processedContent = processedContent.replace(/\*([^*]+)\*/g, '<span class="thought">$1</span>');
         processedContent = processedContent.replace(/“([^”]+)”/g, '<span class="dialogue">“$1”</span>');
 
-        // C2. 更新 Body 内容 (直接使用之前获取的 bodyEl)
+        // === 【核心修复点】更新 Body 内容，并严格判断是否要渲染鬼怪组件 ===
         if (bodyEl) {
             bodyEl.innerHTML = processedContent;
 
-            // C3. 重新挂载鬼怪组件
-            const uniqueId = `${turn.id}-${Date.now()}`; 
-            const widgetData = turn.widgetState || appState.currentGoblinState;
-            const goblinWidget = createGoblinWidget(uniqueId, widgetData);
-            bodyEl.appendChild(goblinWidget);
+            // 获取当前的组件显示设置（默认为 true）
+            const showWidget = appState.currentMovieSession?.showWidget !== false;
+            
+            if (showWidget) {
+                const uniqueId = `${turn.id}-${Date.now()}`; 
+                const widgetData = turn.widgetState || appState.currentGoblinState;
+                const goblinWidget = createGoblinWidget(uniqueId, widgetData);
+                bodyEl.appendChild(goblinWidget);
+            }
         }
 
-        // C4. 更新底部计数器 & 恢复箭头状态 (直接使用之前的引用)
-        if (counter) counter.textContent = `${currentIndex + 1}/${candidates.length}`;
+        // 恢复 UI 控制器状态
+        if (counter) {
+            counter.textContent = `ARCHIVE ${String(currentIndex + 1).padStart(2, '0')} / ${String(candidates.length).padStart(2, '0')}`;
+        }
         
-        // 恢复右箭头 (无论之前有没有变成loading，现在都要变回箭头)
         if (nextArrow) {
             nextArrow.className = 'ri-arrow-right-s-line swipe-arrow next';
             nextArrow.style.pointerEvents = 'auto';
         }
         
-        // 处理左箭头禁用状态
         if (prevArrow) {
             if (currentIndex === 0) prevArrow.classList.add('disabled');
             else prevArrow.classList.remove('disabled');
         }
     }
 }
-
 // ==========================================
 // ===   [逻辑核心] 电影模式：平行宇宙   ===
 // ==========================================
@@ -36722,14 +37295,14 @@ async function handleMovieWrapUp() {
     utils.showToast("正在整理片场记忆 (这可能需要几秒)...");
     
     // UI 优化
-    const originalClass = DOM.movieWrapUpIcon.className;
-    DOM.movieWrapUpIcon.className = 'ri-loader-4-line spin';
+   // 【核心修复】只转动里面的图标，不破坏外层 div
+    const iconEl = DOM.movieWrapUpIcon.querySelector('i');
+    const originalClass = iconEl.className;
+    iconEl.className = 'ri-loader-4-line spin';
     DOM.movieWrapUpIcon.style.pointerEvents = 'none';
 
     try {
-        // ============================================================
-        // === 【核心修复】智能压缩剧本，防止 Token 溢出 ===
-        // ============================================================
+       
         const compressedHistory = compressMovieHistory(fullHistory);
 
         // 2. 调用 AI 生成深度总结 (使用压缩后的剧本)
@@ -36769,9 +37342,9 @@ async function handleMovieWrapUp() {
         } else {
             utils.showToast("存档失败，导演发火了");
         }
-    } finally {
+ } finally {
         // UI 恢复
-        DOM.movieWrapUpIcon.className = originalClass;
+        if (iconEl) iconEl.className = originalClass;
         DOM.movieWrapUpIcon.style.pointerEvents = 'auto';
     }
 }
@@ -50529,8 +51102,8 @@ DOM.saveMovieSettingsBtn.addEventListener('click', startMovie);
 // 点击“清空剧情”
 DOM.movieClearHistoryBtn.addEventListener('click', clearMovieHistory);
 
-        // vvv 【【【 电影模式卡片操作 (含 Swipe) 】】】 vvv
-        // 1. 卡片点击事件委托 (Ins风格适配版)
+       // vvv 【【【 电影模式卡片操作 (含 Swipe) 】】】 vvv
+        // 1. 卡片点击事件委托 (使用 closest 修复所有按钮点击盲区)
         DOM.movieScreenContainer.addEventListener('click', async (e) => {
             const target = e.target;
             
@@ -50540,38 +51113,41 @@ DOM.movieClearHistoryBtn.addEventListener('click', clearMovieHistory);
                 return;
             }
 
-            const card = target.closest('.story-card');
+            // 获取被点击的卡片主体
+            const card = target.closest('.script-shard');
             if (!card) return;
 
             const turnId = parseInt(card.dataset.turnId, 10);
             
-            // === [新增] 分支按钮 (Branch) ===
-            // 兼容旧类名和新类名
-            if (target.classList.contains('branch') || target.classList.contains('ri-git-branch-line')) {
+            // === [修复] 分支按钮 (Branch) ===
+            if (target.closest('.branch') || target.closest('.ri-git-branch-line')) {
                 handleCreateBranch(turnId);
                 return;
             }
 
-            // === Swipe 切换 ===
-            if (target.classList.contains('swipe-arrow')) {
-                if (target.classList.contains('disabled') || target.classList.contains('swipe-loading')) return;
+            // === [修复] Swipe 切换 ===
+            const swipeArrow = target.closest('.swipe-arrow');
+            if (swipeArrow) {
+                if (swipeArrow.classList.contains('disabled') || swipeArrow.classList.contains('swipe-loading')) return;
 
-                if (target.classList.contains('prev')) {
+                if (swipeArrow.classList.contains('prev')) {
                     handleMovieSwipe(turnId, 'prev');
-                } else if (target.classList.contains('next')) {
+                } else if (swipeArrow.classList.contains('next')) {
                     handleMovieSwipe(turnId, 'next');
                 }
                 return;
             }
 
-            // === 删除 ===
-            if (target.classList.contains('danger') || target.classList.contains('ri-delete-bin-line')) {
+            // === [修复] 删除按钮 ===
+            if (target.closest('.danger') || target.closest('.ri-delete-bin-line')) {
                 handleMovieDelete(turnId);
+                return;
             } 
             
-            // === 编辑 ===
-            else if (target.classList.contains('edit') || target.classList.contains('ri-pencil-line')) {
+            // === [修复] 编辑按钮 (顺带修复旧代码中图标名称不匹配的问题) ===
+            if (target.closest('.edit') || target.closest('.ri-quill-pen-line') || target.closest('.ri-pencil-line')) {
                 handleMovieEdit(turnId);
+                return;
             }
         });
 
