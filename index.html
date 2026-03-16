@@ -31177,88 +31177,97 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
              // ✅✅✅ 修改：隐藏新版输入动画 ✅✅✅
         if (typingIndicator) typingIndicator.classList.remove('visible');
 
+           // =====================================================================
+            // 【核心修复】优化 JSON 解析逻辑，停止破坏性的预提取
+            // 直接解析 AI 的响应。如果带有 Markdown 包装或外部有多余字符，进行智能裁剪
             // =====================================================================
-            // 【根本修复】第0步：在 JSON 解析之前，先把所有 Action 指令块从原始响应中
-            // 剥离出来暂存，防止它们里面的 [ ] 符号干扰 JSON 边界识别
-            // =====================================================================
-            let rawForParsing = aiResponse;
-            const preExtractedActions = [];
+            let responseList =[];
+            let chatContentExtra = ""; // 用于收集写在 JSON 外部的 action 指令（防万一）
 
-            // 需要预剥离的标签对（带闭合标签的块）
-            const pairedActionTags = [
-                'AI_VOICE_ACTION',
-                'AI_TRANSFER_ACTION',
-                'AI_ACTION',
-            ];
-            for (const tag of pairedActionTags) {
-                const regex = new RegExp(`\\[${tag}\\]([\\s\\S]*?)\\[\\/${tag}\\]`, 'g');
-                rawForParsing = rawForParsing.replace(regex, (match) => {
-                    preExtractedActions.push(match);
-                    return ''; // 从原始字符串中移除
-                });
-            }
-            // 需要预剥离的单标签块（没有闭合标签，后跟 JSON 对象）
-            const singleActionTags = ['AI_HTML_ACTION', 'AI_CALL_ACTION', 'AI_TRANSFER_RESPONSE_ACTION', 'AI_MOMENT_ACTION'];
-            for (const tag of singleActionTags) {
-                const idx = rawForParsing.indexOf(`[${tag}]`);
-                if (idx !== -1) {
-                    // 把从这个标签开始往后的所有内容都视为 action（它们通常在末尾）
-                    preExtractedActions.push(rawForParsing.substring(idx));
-                    rawForParsing = rawForParsing.substring(0, idx).trim();
-                }
-            }
-            rawForParsing = rawForParsing.trim();
-
-            let responseList = [];
             try {
-                // 第一步：激进清洗——剥掉 AI 可能加的 Markdown 代码块包装
-                let jsonStr = rawForParsing.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-
-                // 第二步：寻找最外层的数组 [] 边界（此时 Action 已被剥离，[ ] 是安全的）
-                const firstBracket = jsonStr.indexOf('[');
-                const lastBracket = jsonStr.lastIndexOf(']');
-
-                if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
-                    jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
+                let jsonStr = aiResponse.trim();
+                
+                // 1. 剥离 Markdown 代码块
+                jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+                
+                try {
+                    // 尝试直接解析
                     responseList = JSON.parse(jsonStr);
-                } else {
-                    // 尝试单对象 {}
+                } catch (e) {
+                    // 如果直接解析失败，说明 JSON 外部可能包裹了其他字符
+                    // 智能寻找 JSON 数组或对象的边界
+                    const firstBracket = jsonStr.indexOf('[');
+                    const lastBracket = jsonStr.lastIndexOf(']');
                     const firstBrace = jsonStr.indexOf('{');
                     const lastBrace = jsonStr.lastIndexOf('}');
-                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                        jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
-                        const singleObj = JSON.parse(jsonStr);
-                        responseList = [singleObj];
-                    } else {
-                        throw new Error("Not JSON");
+                    
+                    let parsed = false;
+
+                    // 优先尝试数组
+                    if (firstBracket !== -1 && lastBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+                        let testStr = jsonStr;
+                        while(testStr.lastIndexOf(']') > testStr.indexOf('[')) {
+                            try {
+                                const endIdx = testStr.lastIndexOf(']');
+                                const sub = testStr.substring(firstBracket, endIdx + 1);
+                                responseList = JSON.parse(sub);
+                                // 保存可能写在外面的内容
+                                chatContentExtra = jsonStr.substring(0, firstBracket) + "\n" + jsonStr.substring(endIdx + 1);
+                                parsed = true;
+                                break;
+                            } catch(err) {
+                                testStr = testStr.substring(0, testStr.lastIndexOf(']'));
+                            }
+                        }
+                    } 
+                    // 其次尝试对象
+                    if (!parsed && firstBrace !== -1 && lastBrace !== -1) {
+                         let testStr = jsonStr;
+                         while(testStr.lastIndexOf('}') > testStr.indexOf('{')) {
+                            try {
+                                const endIdx = testStr.lastIndexOf('}');
+                                const sub = testStr.substring(firstBrace, endIdx + 1);
+                                responseList =[JSON.parse(sub)];
+                                chatContentExtra = jsonStr.substring(0, firstBrace) + "\n" + jsonStr.substring(endIdx + 1);
+                                parsed = true;
+                                break;
+                            } catch(err) {
+                                testStr = testStr.substring(0, testStr.lastIndexOf('}'));
+                            }
+                         }
                     }
+
+                    if (!parsed) throw new Error("无法找到有效的 JSON 边界");
                 }
 
-                // 第三步：二次校验——确保是数组，过滤掉空项/JSON骨架残骸
+                // 2. 数据结构统一
                 if (!Array.isArray(responseList)) responseList = [responseList];
-                responseList = responseList.filter(item => {
-                    if (!item || typeof item !== 'object') return false;
-                    const c = (item.content || '').trim();
-                    const cleaned = c.replace(/```json|```|\[|\]|\{|\}|"content"|"translation"|\s/g, '');
-                    return cleaned.length > 0;
-                });
-                if (responseList.length === 0) throw new Error("All items filtered out");
+                responseList = responseList.filter(item => item && typeof item === 'object');
+                
+                if (responseList.length === 0) throw new Error("JSON 解析后为空");
 
             } catch (e) {
-                console.warn("解析失败，降级为纯文本:", e);
-                const fallbackCleaned = rawForParsing
-                    .replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '')
-                    .replace(/"content"\s*:|"translation"\s*:|"trans"\s*:/g, '')
-                    .replace(/^[\s\[\{]+|[\s\]\}]+$/g, '')
-                    .trim();
-                responseList = [{ content: fallbackCleaned.length > 2 ? fallbackCleaned : rawForParsing, translation: null }];
+                console.warn("主 JSON 解析失败，启动智能文本提权修复:", e);
+                // 终极保底：利用正则强行提取 "content" 字段
+                let fallbackText = aiResponse.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '').trim();
+                const contentMatches =[...fallbackText.matchAll(/"content"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g)];
+                if (contentMatches.length > 0) {
+                    let extracted = contentMatches.map(m => m[1]).join('\n');
+                    // 还原转义符
+                    extracted = extracted.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                    responseList = [{ content: extracted, translation: null }];
+                } else {
+                    // 如果连 content 字段都找不到，直接把整个 AI 回复当作文本塞进去
+                    let rawText = fallbackText.replace(/^[\s\[\{]+|[\s\]\}]+$/g, '').trim();
+                    rawText = rawText.replace(/"content"\s*:\s*"/g, '').replace(/"translation"\s*:\s*(null|"[^"]*")/g, '');
+                    responseList =[{ content: rawText, translation: null }];
+                }
             }
-            
-            // 第四步：把预剥离的 Action 指令重新拼接到最后一个 item 的 content 尾部
-            // 这样进入 for 循环时，最后一条消息会正确触发各 Action 处理逻辑
-            if (preExtractedActions.length > 0 && responseList.length > 0) {
+
+            // 如果 AI 偶尔把 Action 标签写在了 JSON 数组的外面，我们把它拼接到最后一个气泡里
+            if (chatContentExtra.trim() && responseList.length > 0) {
                 const lastItem = responseList[responseList.length - 1];
-                lastItem.content = (lastItem.content || '') + '\n' + preExtractedActions.join('\n');
+                lastItem.content = (lastItem.content || '') + '\n' + chatContentExtra.trim();
             }
 
             // 开启循环，逐条处理
@@ -31618,12 +31627,24 @@ if (momentActionIndex !== -1) {
     }
 }
             
-            // d. **第三优先级：** 在【最终净化】的 chatContent 上检测并处理【撤回/引用】指令
+           // d. **第三优先级：** 在【最终净化】的 chatContent 上检测并处理【撤回/引用】指令
             const actionRegex = /\[AI_ACTION\]([\s\S]*?)\[\/AI_ACTION\]/s;
             let match = chatContent.match(actionRegex); 
 
             if (match) {
-                const actionJson = JSON.parse(match[1]);
+                try {
+                    let safeActionStr = match[1].trim();
+                    let actionJson;
+                    
+                    try {
+                        // 【核心修正】优先尝试直接解析。如果 AI 输出的是标准 JSON，这步会成功
+                        actionJson = JSON.parse(safeActionStr);
+                    } catch (e1) {
+                        // 如果失败，尝试执行容错修复（针对物理换行符等问题）
+                        safeActionStr = safeActionStr.replace(/(?:\r\n|\r|\n)/g, '\\n');
+                        safeActionStr = safeActionStr.replace(/\\(?!["\\/bfnrt])/g, "\\\\");
+                        actionJson = JSON.parse(safeActionStr);
+                    }
                 
                 if (actionJson.action === 'withdraw') {
                     const { originalMessage, reason, newMessage } = actionJson;
@@ -31669,7 +31690,7 @@ playNotificationSound();
                         if (isUserPresent()) await new Promise(resolve => setTimeout(resolve, 400));
                         const newContent = newMessage;
                         const isQuote = newContent.startsWith('> ') && newContent.includes('\n');
-                        const allNewMessages = []; 
+                        const allNewMessages =[]; 
 
                         if (isQuote) {
                             const replyLines = newContent.split('\n').filter(line => line.trim() !== '');
@@ -31711,7 +31732,7 @@ playNotificationSound();
                     // --- 引用指令 ---
                     const replyLines = actionJson.replyText.split('\n').filter(line => line.trim() !== '');
                     if (replyLines.length > 0) {
-                        const newMessages = [];
+                        const newMessages =[];
                         newMessages.push({ dossierId, sender: 'character', content: `> ${actionJson.quoteText}\n${replyLines[0]}`, timestamp: Date.now() });
                         for (let i = 1; i < replyLines.length; i++) {
                             newMessages.push({ dossierId, sender: 'character', content: replyLines[i], timestamp: Date.now() });
@@ -31735,7 +31756,15 @@ playNotificationSound();
                         }
                     }
                 }
- }else if (chatContent) {
+                } catch (e) {
+                    console.error("解析撤回/引用指令失败:", e);
+                } finally {
+                    // 无论解析是否成功，将指令块从可见聊天文本中完全移除，防止乱码露在气泡里
+                    chatContent = chatContent.replace(match[0], '').trim();
+                }
+            }
+            
+            if (chatContent) {
                 // === 普通文本消息 (含后台通知修复) ===
                 
                 const splitRegex = /(\|\|\||\[sticker:[^\]]+\]|\n+)/g;
