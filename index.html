@@ -7756,295 +7756,179 @@ body.light-mode .player-card.is-turn .player-avatar {
     100% { box-shadow: 0 0 0 2px #C41E3A, 0 0 5px rgba(196, 30, 58, 0.2); }
 }
 
-/* =========================================
-   ===   心声面板样式 (终极防隐身版)      ===
-   ========================================= */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Noto+Serif+SC:wght@200;400;700&display=swap');
+/* ===   高定心声面板 (Gift Box Archive) === */
 
 #inner-voice-modal { z-index: 300; }
 
-.inner-voice-container {
-    position: relative; width: 100%; height: 100%; 
-    background: #0a0a0c; /* 深色底 */
-    overflow: hidden; display: flex; flex-direction: column;
-    opacity: 0; transition: opacity 0.5s ease;
-}
-.modal-overlay.visible .inner-voice-container { opacity: 1; }
-
-/* 背景层 */
-.iv-fixed-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.iv-bg-base { position: absolute; inset: 0; background: linear-gradient(to bottom, #050505, #1a1016, #0f172a); }
-.iv-aurora-wrapper { position: absolute; top: -20%; left: -20%; width: 140%; height: 140%; opacity: 0.4; mix-blend-mode: screen; animation: iv-pulse-slow 8s ease-in-out infinite; }
-.iv-aurora-blob { position: absolute; width: 100%; height: 100%; }
-.iv-aurora-blob.top-right { top: 0; right: 0; background: radial-gradient(circle at 50% 50%, rgba(244,63,94,0.1), transparent 60%); }
-.iv-aurora-blob.bottom-left { bottom: 0; left: 0; background: radial-gradient(circle at 30% 50%, rgba(100,200,255,0.08), transparent 50%); }
-.iv-particle { position: absolute; background: white; border-radius: 50%; opacity: 0.3; animation: iv-float linear infinite; }
-.iv-big-text { position: absolute; top: 5rem; right: -2.5rem; font-size: 15rem; font-family: 'Cormorant Garamond', serif; font-weight: 700; color: rgba(255,255,255,0.04); line-height: 1; pointer-events: none; transform-origin: top right; }
-
-/* 内容层 */
-.iv-close-btn { position: absolute; top: 25px; right: 25px; z-index: 50; font-size: 28px; color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s; }
-.iv-close-btn:hover { color: #fff; transform: rotate(90deg); }
-
-/* 滚动区域 */
-.iv-content-scroll { 
+.gift-box-container {
+    width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
     position: relative; 
+    display: flex; justify-content: center; align-items: center;
+    margin: 0 auto;
+}
+
+.gift-box-wrapper {
+    position: relative;
+    /* 【核心修复】改为百分比与最大宽度结合，适配所有手机屏幕 */
+    width: 88%; max-width: 340px; 
+    height: 75vh; max-height: 580px; 
+    perspective: 1000px;
+    z-index: 20;
+    --ease-luxury: cubic-bezier(0.85, 0, 0.15, 1);
+    --ease-float: cubic-bezier(0.25, 1, 0.5, 1);
+    --border-radius-box: 24px;
+    --border-radius-card: 20px;
+}
+
+/* 流动呼吸光晕边框 */
+.box-lid-wrapper, .box-base-wrapper {
+    position: absolute; left: 0; width: 100%; height: 50%; z-index: 20;
+    transition: transform 1.4s var(--ease-luxury), opacity 1.2s var(--ease-luxury);
+    padding: 1px; box-sizing: border-box;
+}
+.box-lid-wrapper { top: 0; transform-origin: top center; padding-bottom: 0; }
+.box-base-wrapper { bottom: 0; transform-origin: bottom center; padding-top: 0; }
+
+.box-lid-glow, .box-base-glow {
+    position: absolute; inset: 0; overflow: hidden; z-index: -1;
+}
+.box-lid-glow { border-radius: var(--border-radius-box) var(--border-radius-box) 0 0; }
+.box-base-glow { border-radius: 0 0 var(--border-radius-box) var(--border-radius-box); }
+
+.box-lid-glow::before, .box-base-glow::before {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 150%; height: 150%;
+    background: conic-gradient(from 0deg, transparent 70%, rgba(255,255,255,0.8) 100%);
+    transform: translate(-50%, -50%);
+    animation: rotateGlow 4s linear infinite;
+}
+.box-base-glow::before { animation-direction: reverse; animation-duration: 5s; }
+
+@keyframes rotateGlow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* 黑曜石外壳 */
+.box-lid, .box-base {
+    width: 100%; height: 100%; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #181818 0%, #050505 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 30px 60px rgba(0,0,0,0.8);
+    box-sizing: border-box; /* 强行规矩 */
+}
+.box-lid { border-bottom: 1px solid #222; border-radius: calc(var(--border-radius-box) - 1px) calc(var(--border-radius-box) - 1px) 0 0; }
+.box-base { border-top: 1px solid #222; border-radius: 0 0 calc(var(--border-radius-box) - 1px) calc(var(--border-radius-box) - 1px); }
+
+/* 礼盒表面排版 */
+.box-lid-corner { position: absolute; top: 24px; left: 24px; display: flex; flex-direction: column; gap: 4px; }
+.lid-serial { font-size: 8px; font-family: 'Montserrat', sans-serif; color: rgba(255,255,255,0.3); letter-spacing: 2px; }
+.lid-status { font-size: 9px; font-family: 'Montserrat', sans-serif; color: rgba(255,255,255,0.6); letter-spacing: 1px; text-transform: uppercase; }
+.lid-line { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin-top: 4px; }
+
+.box-lid-center { position: absolute; bottom: 40px; width: 100%; text-align: center; }
+.lid-title { font-family: 'Cinzel', serif; font-size: 20px; color: rgba(255,255,255,0.85); letter-spacing: 8px; margin-bottom: 6px; font-weight: 500; }
+.lid-subtitle { font-family: 'Montserrat', sans-serif; font-size: 8px; color: rgba(255,255,255,0.4); letter-spacing: 4px; text-transform: uppercase; }
+
+.box-base-corner { position: absolute; bottom: 24px; right: 24px; text-align: right; }
+.base-mark { font-family: 'Cinzel', serif; font-size: 14px; color: rgba(255,255,255,0.2); font-style: italic; letter-spacing: 1px; }
+.base-desc { font-size: 7px; font-family: 'Montserrat', sans-serif; color: rgba(255,255,255,0.3); letter-spacing: 3px; margin-top: 4px; }
+
+/* 封条锁扣 */
+.box-seal {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 70px; height: 70px; border-radius: 50%;
+    background: #fff; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; z-index: 30; pointer-events: none; /* 默认不可点，AI加载完才能点 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 0 0 1px #E0E0E0;
+    transition: all 0.6s var(--ease-luxury);
+}
+.box-seal-inner {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 1px solid #000; border-radius: 50%; width: 58px; height: 58px;
+    box-sizing: border-box;
+}
+.box-seal-inner span { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; color: #000; font-weight: 600; line-height: 1; }
+.box-seal-inner i { font-size: 12px; color: #000; margin-top: 2px; }
+.box-seal.ready { pointer-events: auto; }
+.box-seal.ready:hover { transform: translate(-50%, -50%) scale(1.08); }
+
+/* 开盒动画类 */
+.gift-box-wrapper.is-open .box-seal { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(180deg); pointer-events: none; }
+.gift-box-wrapper.is-open .box-lid-wrapper { transform: translateY(-120%); opacity: 0; pointer-events: none; }
+.gift-box-wrapper.is-open .box-base-wrapper { transform: translateY(120%); opacity: 0; pointer-events: none; }
+.gift-box-wrapper.is-open .card-content { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+
+/* 内部心声卡片 */
+.card-content {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #FAFAFA;
+    background-image: radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 4px 4px; box-shadow: 0 40px 80px rgba(0,0,0,0.5);
     z-index: 10; 
-    width: 100%; 
-    height: 100%; 
-    overflow-y: auto; 
-    padding: 20px; 
-    box-sizing: border-box; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-}
-
-/* --- 修复点1：Loading 容器强制居中 --- */
-#inner-voice-loading {
-    display: none; /* 默认隐藏，由JS控制显示 */
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%; /* 占满全屏高度，确保居中 */
-    width: 100%;
-    margin-top: 20vh; /* 稍微偏上一点，视觉更平衡 */
-}
-
-/* --- 修复点2：Loading 动画修复 --- */
-.iv-loading-spinner { 
-    width: 50px; 
-    height: 50px; 
-    border: 3px solid rgba(255,255,255,0.1); /* 稍微加粗 */
-    border-top-color: #fb7185; 
-    border-radius: 50%; 
-    margin: 0 auto 20px auto; /* 居中 */
-    animation: iv-spin 1s linear infinite; 
-    flex-shrink: 0; /* 防止被压缩 */
-}
-
-#inner-voice-loading p { 
-    text-align: center; 
-    color: rgba(255,255,255,0.6); 
-    font-size: 14px; 
-    letter-spacing: 2px; 
-    animation: iv-pulse-text 2s infinite ease-in-out;
-}
-
-/* 浅色模式：加载圈底色变深灰，顶部变深红 */
-body.light-mode .iv-loading-spinner {
-    border-color: rgba(0, 0, 0, 0.1) !important;
-    border-top-color: #be123c !important;
-}
-
-/* 【关键修复】浅色模式：文字变深灰色 (原本是白色所以看不见) */
-body.light-mode #inner-voice-loading p {
-    color: rgba(0, 0, 0, 0.6) !important;
-    text-shadow: none;
-}
-
-/* 数据显示容器 */
-.iv-data-wrapper { 
-    width: 100%; 
-    max-width: 800px; 
-    margin-top: 40px; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 50px; 
-    /* 移除这里的 opacity: 0，防止不显示 */
-    animation: iv-slide-up 0.8s ease-out; 
-}
-
-/* 模块样式 */
-.iv-section-header {
-    text-align: center; 
-    padding-left: 0;    
-    margin-bottom: 40px; 
-}
-
-.iv-meta-badge {
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    gap: 8px;
-    color: rgba(253, 164, 175, 0.6); 
-    font-family: monospace; 
-    font-size: 10px; 
-    letter-spacing: 0.4em;
-    text-transform: uppercase; 
-    margin-bottom: 12px;
-}
-
-#iv-char-name {
-    font-family: "Times New Roman", "Songti SC", "SimSun", serif;
-    font-style: italic;
-    color: #e0e0e0; 
-    background: none;
-    -webkit-text-fill-color: initial;
-    -webkit-background-clip: border-box;
-    font-size: 4.5rem;
-    line-height: 1.1;
-    margin: 0;
-    letter-spacing: 2px;
-    text-shadow: 0 4px 15px rgba(0,0,0,0.8);
-    filter: none;
-}
-
-#iv-char-title {
-    font-size: 12px; 
-    color: rgba(255,255,255,0.4);
-    letter-spacing: 0.4em;
-    text-transform: uppercase; 
-    margin-top: 10px;
-    font-weight: 300;
-    opacity: 0.6;
-}
-
-/* --- 修复点3：中间引用框防隐身 --- */
-.iv-section-quote {
-    position: relative;
-    padding: 40px 20px; 
-    display: flex;
-    flex-direction: column;
-    align-items: center;     
-    justify-content: center; 
-    text-align: center;      
     
-    /* 核心修复：不透明度初始值设为1，不要设为0 */
-    background: rgba(255, 255, 255, 0.05); 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    /* 【核心修复】减小内边距，强制包裹 */
+    padding: 25px 20px; 
+    box-sizing: border-box !important; 
     
-    border-radius: 12px;
-    margin: 10px 0;
-    
-    /* 动画改为淡入，不使用 forwards 防止状态卡死 */
-    animation: iv-fade-in 1s ease-out;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border-radius: var(--border-radius-card); overflow: hidden; 
+    opacity: 0; transform: translateY(40px) scale(0.85); filter: blur(10px);
+    transition: all 1.4s var(--ease-float); transition-delay: 0.2s;
 }
 
-.iv-fingerprint {
-    position: absolute; 
-    top: 10px; 
-    left: 10px;
-    font-size: 80px; 
-    color: rgba(244, 63, 94, 0.1); 
-    transform: rotate(-15deg);
-    pointer-events: none; 
-    z-index: 0; 
+/* 顶部 */
+.c-header { 
+    display: flex; justify-content: space-between; align-items: flex-start; 
+    border-bottom: 1px solid #E0E0E0; padding-bottom: 15px; 
 }
-
-.iv-quote-content {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    display: flex;           
-    flex-direction: column;  
-    align-items: center;     
-    justify-content: center;
-    gap: 15px;               
+.c-title { 
+    font-family: 'Cinzel', serif; font-size: 24px; color: #1A1A1A; 
+    line-height: 1.1; margin-bottom: 6px; text-transform: uppercase; 
+    letter-spacing: 2px; white-space: nowrap; overflow: hidden; 
+    text-overflow: ellipsis; max-width: 90%;
 }
+.c-subtitle { font-size: 10px; color: #777; letter-spacing: 3px; text-transform: uppercase; font-family: 'Montserrat', sans-serif;}
 
-.iv-quote-mark {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 4rem;         
-    color: rgba(255, 255, 255, 0.2); 
-    line-height: 1;
-    display: block;          
-    text-align: center;      
+/* 【核心修复】关闭按钮：去掉负向定位，让它老实待在右上角 */
+.iv-close-btn { 
+    font-size: 24px; color: #999; cursor: pointer; transition: 0.3s;
+    margin-top: -5px; margin-right: -5px; 
 }
+.iv-close-btn:hover { color: #000; transform: rotate(90deg); }
 
-/* --- 修复点4：中间文字强制白色 --- */
-#iv-quote-text {
-    font-family: 'Cormorant Garamond', 'Noto Serif SC', serif; 
-    font-size: 1.8rem;       
-    font-weight: 500;
-    line-height: 1.8;        
-    
-    /* 强制纯白，增加权重防止被覆盖 */
-    color: #ffffff !important; 
-    
-    text-align: center;      
-    white-space: pre-wrap;   
-    max-width: 95%;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+/* 心声引语 */
+.c-thoughts { margin-top: 16px; position: relative; }
+.thoughts-mark { font-family: 'Cinzel', serif; font-size: 40px; color: #D8D8D8; line-height: 1; position: absolute; top: -14px; left: -10px; }
+.thoughts-text { font-family: 'Noto Serif SC', serif; font-size: 12px; font-style: italic; color: #1A1A1A; line-height: 1.7; padding-left: 20px; padding-top: 8px; position: relative; z-index: 1; text-align: justify;}
+
+/* 情绪波形 */
+.c-emotion { margin-top: 16px; }
+.section-label { font-size: 10px; letter-spacing: 2px; color: #777; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-family: 'Montserrat', sans-serif;}
+.section-label i { font-size: 14px; color: #1A1A1A; }
+.emotion-box { 
+    height: 60px; border: 1px solid #E5E5E5; position: relative; 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 15px; background: #fff; border-radius: 8px; overflow: hidden; 
+    /* 【核心修复】 */
+    box-sizing: border-box !important;
 }
+.emotion-state { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: #1A1A1A; z-index: 2; letter-spacing: 1px; }
+#iv-wave-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-/* 高亮词 */
-#iv-quote-text i { 
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic; 
-    font-weight: bold;       
-    margin: 0 6px;           
-    
-    background: linear-gradient(to right, #fecdd3, #ffffff, #fecdd3); 
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent !important;      
-    display: inline-block;   
-}
+/* 底部网格数据 */
+.c-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 16px; }
+.status-list { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+.status-item { display: flex; flex-direction: column; gap: 4px; }
+.status-text { display: flex; justify-content: space-between; font-size: 9px; font-weight: 500; color: #1A1A1A; letter-spacing: 1px; font-family: 'Montserrat', sans-serif;}
+.status-track { width: 100%; height: 1px; background: #EAEAEA; position: relative; border-radius: 1px; }
+.status-fill { position: absolute; top: 0; left: 0; height: 1.5px; background: #1A1A1A; width: 0; transition: width 1.8s var(--ease-luxury); border-radius: 1px; }
 
-.iv-section-profile { display: grid; grid-template-columns: 1fr; gap: 30px; }
-@media (min-width: 768px) { .iv-section-profile { grid-template-columns: repeat(3, 1fr); } }
-.iv-profile-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 20px; transition: background 0.3s; }
-.iv-profile-card:hover { background: rgba(255,255,255,0.04); }
-.iv-card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-.text-rose { color: rgba(253, 164, 175, 0.5); } .text-blue { color: rgba(191, 219, 254, 0.5); } .text-emerald { color: rgba(110, 231, 183, 0.5); }
-.iv-profile-card p { font-size: 14px; color: rgba(156, 163, 175, 1); font-weight: 300; line-height: 1.8; text-align: justify; font-family: sans-serif; }
+.ootd-list { display: flex; flex-direction: column; gap: 8px; border-left: 1px dashed #CCCCCC; padding-left: 12px; margin-top: 6px; }
+.ootd-item { display: flex; flex-direction: column; }
+.ootd-cat { font-size: 8px; color: #777; letter-spacing: 1px; margin-bottom: 2px; font-family: 'Montserrat', sans-serif;}
+.ootd-val { font-family: 'Noto Serif SC', serif; font-size: 12px; color: #1A1A1A; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;}
 
-/* 动画定义 */
-@keyframes iv-float { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 0.3; } 80% { opacity: 0.3; } 100% { transform: translate(10px, -50px); opacity: 0; } }
-@keyframes iv-pulse-slow { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.6; } }
-@keyframes iv-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes iv-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes iv-fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes iv-pulse-text { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-
-/* =======================================
-   === 浅色模式适配 (独立权重) ===
-   ======================================= */
-   
-body.light-mode .inner-voice-container { background: #fdfbf7; color: #333; }
-body.light-mode .iv-bg-base { background: linear-gradient(to bottom, #ffffff, #fdf2f8, #f0f9ff); }
-body.light-mode .iv-big-text { color: rgba(0,0,0,0.03); }
-body.light-mode .iv-close-btn { color: rgba(0,0,0,0.3); } body.light-mode .iv-close-btn:hover { color: #000; }
-
-/* 名字颜色 */
-body.light-mode #iv-char-name {
-    color: #881337; 
-    text-shadow: none; 
-    background: none;
-    -webkit-text-fill-color: initial;
-}
-body.light-mode #iv-char-title { color: rgba(0,0,0,0.4); }
-
-/* 中间引用框 - 浅色版 */
-body.light-mode .iv-section-quote { 
-    background: rgba(255, 255, 255, 0.6) !important; 
-    border-color: rgba(0, 0, 0, 0.05) !important;    
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-body.light-mode .iv-quote-content { color: #4a4a4a; } 
-body.light-mode .iv-quote-mark { color: rgba(0,0,0,0.1) !important; } 
-
-/* 文字颜色覆盖 */
-body.light-mode #iv-quote-text { 
-    color: #333333 !important; /* 确保浅色模式下是深灰，不是白色 */
-    text-shadow: none; 
-}
-
-/* 高亮词颜色 */
-body.light-mode #iv-quote-text i { 
-    background: linear-gradient(to right, #be123c, #881337, #be123c); 
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent !important;
-}
-
-body.light-mode .iv-profile-card { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.05); }
-body.light-mode .iv-profile-card p { color: rgba(0,0,0,0.6); }
-body.light-mode .iv-loading-spinner { border-color: rgba(0,0,0,0.1); border-top-color: #be123c; }
+.c-footer { text-align: right; font-size: 9px; color: #777; letter-spacing: 4px; border-top: 1px solid #E0E0E0; padding-top: 15px; margin-top: 15px; font-family: 'Montserrat', sans-serif;}
 
 /* === 群聊胶囊组件样式 === */
 .widget-capsule-top-right {
@@ -9251,467 +9135,343 @@ body.light-mode .salon-menu-item:hover {
 }
 
 /* ============================================================
-   ===  灵魂回响 (Soul Echo) V2 - Atonement (双模适配版)  ===
+   ===  灵魂回响 (Soul Echo) V3 - Uma Wang: Hidden Archive ===
    ============================================================ */
 
-/* 1. 定义变量 (默认深色模式 - Dark Room Style) */
 #diary-app {
-    /* 背景：深炭黑带一点暖色噪点 */
-    --paper-bg: #1c1b1a;        
-    /* 主色：提亮的复古绿 (像老电影字幕) */
-    --emerald-green: #5d8a7e;   
-    /* 文字：米白色 (模拟黑纸上的白墨水) */
-    --ink-black: #e6e1d8;       
-    /* 辅助文字：深灰 */
-    --faded-text: #858585;      
-    /* 纸张纹理透明度 */
-    --texture-opacity: 0.05;
-    /* 字体设置 */
-    --font-typewriter: 'Courier Prime', monospace;
-    --font-serif: 'Playfair Display', serif;
-    
-    /* 浮窗遮罩颜色 */
-    --modal-overlay-bg: rgba(0, 0, 0, 0.8);
-    /* 分割线颜色 */
-    --border-color: rgba(255, 255, 255, 0.1);
+    --bg-linen: #F2EBE1;      
+    --text-ink: #3E3A35;      
+    --text-dim: #8B857C;      
+    --uw-red: #A44338;        
+    --uw-red-dim: rgba(164, 67, 56, 0.4);
+    --stitch-color: #D4C9BA;  
+    --font-serif: 'Noto Serif SC', serif;
 }
 
-/* 2. 浅色模式适配 (Light Mode - Classic Letter Style) */
-body.light-mode #diary-app {
-    /* 背景：经典的泛黄信纸 */
-    --paper-bg: #f4f1ea;
-    /* 主色：深沉的墨绿 */
-    --emerald-green: #244a3e;
-    /* 文字：打字机墨黑 */
-    --ink-black: #1a1a1a;
-    /* 辅助文字：浅灰 */
-    --faded-text: #6b6b6b;
-    /* 纹理稍微明显一点 */
-    --texture-opacity: 0.08;
-    
-    --modal-overlay-bg: rgba(20, 20, 20, 0.3);
-    --border-color: rgba(36, 74, 62, 0.2);
+/* 强制覆盖容器外观，不受全局模式影响 */
+.uma-container {
+    background-color: var(--bg-linen) !important;
+    color: var(--text-ink) !important;
+    font-family: var(--font-serif) !important;
+    user-select: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E") !important;
 }
 
-/* 3. 覆盖默认的APP背景 */
-#diary-app .app-page {
-    background-color: var(--paper-bg) !important;
-    color: var(--ink-black) !important;
-    font-family: var(--font-typewriter) !important;
-    /* 纸张噪点纹理 (通用) */
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E") !important;
-    /* 注意：这里利用 blend-mode 让噪点适应深浅背景 */
-    background-blend-mode: overlay;
-    transition: background-color 0.4s ease, color 0.4s ease;
+.uw-view {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    transition: opacity 0.8s cubic-bezier(0.25, 0.1, 0.25, 1), transform 0.8s ease;
+    opacity: 0; pointer-events: none; z-index: 1;
+}
+.uw-view.active { opacity: 1; pointer-events: auto; z-index: 10; }
+
+#uw-role-view:not(.active) { transform: scale(1.04); }
+#uw-list-view:not(.active) { transform: scale(0.96); }
+#uw-detail-view:not(.active) { transform: translateY(5%); }
+#uw-detail-view.active { transform: translateY(0); }
+
+/* 导航 */
+.uw-nav-top { position: absolute; top: 0; left: 0; width: 100%; padding: 40px 30px 30px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 20; pointer-events: none; }
+.uw-btn-back { background: none; border: none; cursor: pointer; pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; opacity: 0.6; transition: 0.3s; padding: 10px 0; }
+.uw-btn-back:hover { opacity: 1; }
+.uw-btn-back:active { transform: translateX(-5px); }
+.uw-back-text { font-family: monospace; font-size: 10px; letter-spacing: 4px; color: var(--text-ink); }
+.uw-back-line { width: 40px; height: 1px; border-top: 1px dashed var(--text-ink); }
+
+.uw-btn-close { background: none; border: none; cursor: pointer; pointer-events: auto; display: flex; align-items: center; gap: 15px; opacity: 0.6; transition: 0.3s; padding: 10px 0; margin-top: 10px; }
+.uw-btn-close:hover { opacity: 1; }
+.uw-btn-close:active { transform: scale(0.9) rotate(-5deg); }
+.uw-close-text { font-family: monospace; font-size: 9px; letter-spacing: 4px; color: var(--text-dim); writing-mode: vertical-rl; transform: rotate(180deg); }
+.uw-close-cross { position: relative; width: 24px; height: 24px; }
+.uw-close-cross::before, .uw-close-cross::after { content: ''; position: absolute; background-color: var(--text-ink); }
+.uw-close-cross::before { width: 28px; height: 1px; top: 11px; left: -2px; transform: rotate(35deg); }
+.uw-close-cross::after { width: 1px; height: 26px; top: -1px; left: 14px; transform: rotate(10deg); }
+
+.uw-role-page-title { writing-mode: vertical-rl; font-family: monospace; font-size: 10px; color: var(--uw-red); letter-spacing: 6px; margin-top: 10px; opacity: 0.7; }
+
+/* 命运红线 */
+.uw-thread-system { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 100vh; z-index: 1; pointer-events: none; }
+.uw-main-thread-line { position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background-image: linear-gradient(to bottom, var(--uw-red) 60%, transparent 40%); background-size: 1px 18px; opacity: 0.4; }
+.uw-thread-knot-point { position: absolute; left: 50%; transform: translate(-50%, -50%); width: 4px; height: 4px; background-color: var(--uw-red); border-radius: 50%; box-shadow: 0 0 4px rgba(164,67,56,0.5); opacity: 0.8; }
+.uw-thread-knot-point::before { content: ''; position: absolute; left: -8px; top: 50%; width: 6px; height: 1px; background-color: var(--uw-red); opacity: 0.4; }
+.uw-thread-measure { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-family: monospace; font-size: 8px; color: var(--uw-red); opacity: 0.5; letter-spacing: 1px; }
+
+/* 角色列表页 */
+.uw-role-container { 
+    /* 【修复2】改用 100% 而不是 100vh，且绝对不能有 padding-bottom，否则滚动吸附会计算错位 */
+    height: 100%; 
+    width: 100%;
+    overflow-y: auto; 
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory; 
+    -webkit-overflow-scrolling: touch; 
+    position: relative; 
+    z-index: 2; 
+    padding-bottom: 0 !important; 
 }
 
-/* 4. 顶部标题区 (Header) */
-.atonement-header {
-    padding: 50px 25px 20px;
-    border-bottom: 2px solid var(--emerald-green);
-    margin: 0 20px;
-    text-align: center;
+.uw-role-section { 
+    /* 【修复2】同理使用 100% */
+    height: 100%; 
+    width: 100%;
+    scroll-snap-align: start; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    position: relative; 
+    cursor: pointer; 
+}
+.uw-role-img-wrap { width: 52%; height: 48vh; position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(62, 58, 53, 0.1); transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1); z-index: 2; background-color: #dcd3c6; }
+.uw-role-img { width: 100%; height: 100%; object-fit: cover; filter: grayscale(30%) sepia(20%) contrast(120%) brightness(0.9); transition: transform 0.8s ease; }
+.uw-role-section:hover .uw-role-img { transform: scale(1.05); }
+
+.uw-crop-mark { position: absolute; width: 12px; height: 12px; border-color: rgba(255, 255, 255, 0.6); border-style: solid; z-index: 5; pointer-events: none; }
+.uw-crop-mark.top-left { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.uw-crop-mark.bottom-right { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+.uw-img-comp { position: absolute; bottom: 12px; left: 15px; font-family: monospace; font-size: 8px; color: #fff; opacity: 0.7; letter-spacing: 2px; z-index: 5; }
+.uw-img-barcode { position: absolute; top: 15px; right: 15px; font-family: monospace; font-size: 7px; color: #fff; opacity: 0.5; letter-spacing: 2px; z-index: 5; writing-mode: vertical-rl; }
+
+.uw-role-name-tag { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; z-index: 10; }
+.uw-role-name-text { writing-mode: vertical-rl; font-size: 32px; font-weight: 300; letter-spacing: 15px; color: var(--text-ink); white-space: nowrap; }
+.uw-role-cross-stitch { position: relative; width: 16px; height: 16px; opacity: 0.7; }
+.uw-role-cross-stitch::before, .uw-role-cross-stitch::after { content: ''; position: absolute; background-color: var(--uw-red); }
+.uw-role-cross-stitch::before { width: 100%; height: 1px; top: 50%; left: 0; }
+.uw-role-cross-stitch::after { width: 1px; height: 100%; top: 0; left: 50%; }
+
+.uw-role-section:nth-child(odd) .uw-role-img-wrap { transform: translateX(-10vw); }
+.uw-role-section:nth-child(odd) .uw-role-name-tag { left: calc(50% + 18vw); flex-direction: row; gap: 15px; }
+.uw-role-section:nth-child(odd) .uw-role-name-text { transform: translateY(10px); } 
+.uw-role-section:nth-child(even) .uw-role-img-wrap { transform: translateX(10vw); }
+.uw-role-section:nth-child(even) .uw-role-name-tag { right: calc(50% + 18vw); flex-direction: row-reverse; gap: 15px; }
+.uw-role-section:nth-child(even) .uw-role-name-text { transform: translateY(10px); }
+.uw-role-section:active .uw-role-img-wrap { transform: scale(0.95) translateX(0); }
+
+.uw-role-meta-vertical { position: absolute; bottom: 12vh; writing-mode: vertical-rl; font-family: monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 4px; z-index: 10; }
+.uw-role-section:nth-child(odd) .uw-role-meta-vertical { right: 8vw; }
+.uw-role-section:nth-child(even) .uw-role-meta-vertical { left: 8vw; }
+.uw-role-meta-vertical span { color: var(--uw-red); margin-top: 10px; }
+
+/* 日记列表页 */
+.uw-list-header { padding: 100px 0 40px; text-align: center; position: relative; z-index: 2; }
+.uw-brand-title { font-size: 20px; font-weight: 300; letter-spacing: 12px; color: var(--text-ink); margin-left: 6px; }
+.uw-brand-subtitle { font-size: 10px; font-family: sans-serif; color: var(--text-dim); letter-spacing: 4px; margin-top: 10px; text-transform: uppercase; }
+.uw-scroll-area { 
+    flex: 1; height: calc(100vh - 180px); 
+    overflow-y: auto; overflow-x: hidden; /* 【修复】锁死横向 */
+    padding-bottom: 150px; position: relative; -webkit-overflow-scrolling: touch; 
+}
+.uw-center-stitch { position: absolute; top: 0; bottom: 0; left: 50%; transform: translateX(-50%); width: 1px; border-left: 1px dashed var(--stitch-color); z-index: 0; }
+.uw-fabric-patch { position: relative; z-index: 1; width: 100%; margin-bottom: 60px; cursor: pointer; display: flex; align-items: center; opacity: 0.8; transition: all 0.4s ease; }
+.uw-fabric-patch:hover { opacity: 1; }
+.uw-fabric-patch:nth-child(odd) { justify-content: flex-end; padding-right: 55%; text-align: right; }
+.uw-fabric-patch:nth-child(even) { justify-content: flex-start; padding-left: 55%; text-align: left; }
+.uw-patch-connector { position: absolute; top: 50%; height: 1px; background-color: var(--stitch-color); width: 20px; }
+.uw-fabric-patch:nth-child(odd) .uw-patch-connector { right: calc(50% - 20px); }
+.uw-fabric-patch:nth-child(even) .uw-patch-connector { left: calc(50% - 20px); }
+.uw-patch-knot { position: absolute; top: 50%; width: 4px; height: 4px; background-color: var(--uw-red); border-radius: 50%; transform: translateY(-50%); }
+.uw-fabric-patch:nth-child(odd) .uw-patch-knot { right: 50%; transform: translate(50%, -50%); }
+.uw-fabric-patch:nth-child(even) .uw-patch-knot { left: 50%; transform: translate(-50%, -50%); }
+.uw-patch-date { font-size: 11px; color: var(--text-dim); letter-spacing: 2px; margin-bottom: 8px; font-family: monospace; }
+.uw-fabric-patch { 
+    position: relative; z-index: 1; width: 100%; margin-bottom: 60px; 
+    cursor: pointer; display: flex; align-items: center; opacity: 0.8; 
+    transition: all 0.4s ease; 
+    box-sizing: border-box; /* 【修复】确保 padding 算在宽度内 */
+}
+
+/* 奇数行：文字在左侧，向右对齐中轴 */
+.uw-fabric-patch:nth-child(odd) { 
+    justify-content: flex-end; 
+    padding-right: 50%; 
+    text-align: right; 
+}
+/* 给奇数行的内容盒子留出安全边距，不贴边 */
+.uw-fabric-patch:nth-child(odd) > div:last-child {
+    padding-right: 25px;
+    padding-left: 15px;
+}
+
+/* 偶数行：文字在右侧，向左对齐中轴 */
+.uw-fabric-patch:nth-child(even) { 
+    justify-content: flex-start; 
+    padding-left: 50%; 
+    text-align: left; 
+}
+/* 给偶数行的内容盒子留出安全边距，不贴边 */
+.uw-fabric-patch:nth-child(even) > div:last-child {
+    padding-left: 25px;
+    padding-right: 15px;
+}
+
+.uw-patch-title { 
+    font-size: 17px; /* 【修复】字号稍微调小一点适应长标题 */
+    font-weight: 400; 
+    letter-spacing: 2px; /* 字距稍微收紧 */
+    color: var(--text-ink); 
+    line-height: 1.4;
+    white-space: normal; 
+    word-break: break-word;
+}
+
+/* 正文页排版 */
+.uw-detail-scroll { 
+    width: 100%; 
+    height: 100%; /* 【修复3】放弃 100vh，使用 100% 适应父级 */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    padding: 120px 0 200px; /* 增加底部留白，方便滚动 */
+    -webkit-overflow-scrolling: touch; 
+    position: relative; 
+    box-sizing: border-box;
+}
+.uw-detail-header { text-align: center; margin-bottom: 50px; position: relative; transition: all 0.6s ease; }
+.uw-d-date { font-size: 12px; color: var(--text-dim); letter-spacing: 6px; margin-bottom: 24px; font-family: monospace; }
+.uw-d-title { font-size: 26px; font-weight: 300; letter-spacing: 14px; color: var(--text-ink); margin-left: 7px; position: relative; display: inline-block; margin-bottom: 40px; }
+.uw-d-title::after { content: ''; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); width: 2px; height: 15px; background-color: var(--uw-red); opacity: 0.6; }
+
+.uw-meta-tag { display: flex; flex-direction: column; align-items: center; gap: 10px; font-family: monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 2px; text-transform: uppercase; transition: all 0.6s ease; }
+.uw-meta-row { display: flex; justify-content: center; align-items: center; gap: 12px; }
+.uw-meta-label { color: var(--text-ink); opacity: 0.4; font-size: 9px; letter-spacing: 3px; }
+.uw-meta-value { color: var(--text-ink); font-family: var(--font-serif); font-weight: 300; letter-spacing: 1px; text-transform: none; }
+.uw-meta-value-time { font-family: monospace; font-size: 11px; letter-spacing: 2px; color: var(--text-ink); }
+.uw-meta-divider { width: 3px; height: 3px; background-color: var(--stitch-color); border-radius: 50%; }
+
+.uw-content-stack { 
+    position: relative; 
+    width: 100%; 
+    display: grid; /* 使用 Grid 将表层和底层重叠在一个格子里 */
+}
+.uw-diary-body, .uw-hidden-archive {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+}
+
+.uw-diary-body {
+    width: 85%; margin: 0 auto; color: var(--text-ink); font-size: 1.15rem; line-height: 2.4; letter-spacing: 0.08em; text-align: justify; text-justify: inter-ideograph; position: relative; margin-top: 15px;
+    --tension: 0; transform: translateY(calc(var(--tension) * 5px)); transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    z-index: 2; /* 表层 */
+}
+.uw-diary-body p {
+    text-indent: 2em; margin-bottom: 2.2em; transition: letter-spacing 0.1s linear, filter 0.1s linear, opacity 0.1s linear;
+    letter-spacing: calc(0.08em + var(--tension) * 0.35em); filter: blur(calc(var(--tension) * 2.5px)); opacity: calc(1 - var(--tension) * 0.5); position: relative;
+}
+.uw-ootd-annotation {
+    position: absolute; left: -35px; top: 5px; writing-mode: vertical-rl; font-size: 10px; color: var(--uw-red); letter-spacing: calc(3px + var(--tension) * 4px); font-family: var(--font-serif); opacity: 0.85; border-left: 1px solid var(--uw-red-dim); padding-left: 5px; white-space: nowrap;
+}
+.uw-ootd-annotation span { font-family: monospace; font-size: 8px; text-transform: uppercase; margin-bottom: 12px; color: var(--uw-red); opacity: 0.5; }
+
+/* 底层档案 (Hidden Archive) */
+.uw-hidden-archive {
+    width: 100%;
+    opacity: 0; filter: blur(10px); transform: translateY(-20px) scale(0.98); pointer-events: none; transition: all 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+    z-index: 1; /* 底层 */
+}
+.uw-archive-title { text-align: center; font-family: monospace; font-size: 10px; color: var(--uw-red); letter-spacing: 6px; margin-bottom: 40px; position: relative; }
+.uw-archive-title::before, .uw-archive-title::after { content: ''; position: absolute; top: 50%; width: 30px; height: 1px; border-top: 1px dashed var(--uw-red-dim); }
+.uw-archive-title::before { left: calc(50% - 60px); } .uw-archive-title::after { right: calc(50% - 60px); }
+
+.uw-whispers-box { width: 75%; margin: 0 auto 50px; }
+.uw-whispers-box p { font-size: 1rem; line-height: 2.2; color: var(--text-ink); opacity: 0.85; margin-bottom: 1.5em; text-align: center; letter-spacing: 0.08em; }
+
+/* --- 第三版：Uma Wang 缝线吊牌美学 --- */
+.uw-recs-box { 
+    width: 75%; 
+    margin: 60px auto 30px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 20px; 
+    padding: 10px 0 10px 25px; /* 左侧留出空间给缝线 */
+    background: transparent !important; 
+    /* 核心设计：左侧一根红色的虚线，模拟手工缝制的针脚 */
+    border-left: 1px dashed var(--uw-red) !important; 
     position: relative;
-    z-index: 10;
-    transition: border-color 0.4s ease;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
 }
 
-.atonement-title {
-    font-family: var(--font-serif);
-    font-size: 2rem;
-    color: var(--emerald-green);
-    letter-spacing: 1px;
-    font-style: italic;
-    font-weight: 700;
-    position: relative;
-    transition: color 0.4s ease;
-}
-
-/* 模拟光标动画 */
-.cursor-blink {
-    display: inline-block;
-    width: 8px;
-    height: 2rem;
-    background-color: var(--emerald-green);
-    animation: blink 1s infinite;
-    vertical-align: sub;
-    margin-left: 2px;
-}
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-.atonement-subtitle {
-    margin-top: 8px;
-    font-size: 0.7rem;
-    color: var(--faded-text);
-    text-transform: uppercase;
-    letter-spacing: 3px;
-}
-
-/* 导航按钮 */
-.atonement-nav-btn {
-    position: absolute;
-    top: 55px;
-    font-size: 24px;
-    color: var(--emerald-green);
-    cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.3s, color 0.4s ease;
-}
-.atonement-nav-btn:hover { opacity: 1; }
-.atonement-nav-btn.left { left: 0; }
-.atonement-nav-btn.right { right: 0; }
-
-/* 5. 列表容器 */
-.diary-paper-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 30px 20px 80px;
-    scrollbar-width: none;
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-}
-
-/* 6. 日记条目 (Entry) */
-.diary-entry-card {
-    position: relative;
-    padding: 5px 0 5px 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-left: 1px solid var(--border-color);
-}
-
-/* 悬停绿线 */
-.diary-entry-card::before {
+/* 在顶部加一个装饰性的“线头”小圆点 */
+.uw-recs-box::before {
     content: '';
     position: absolute;
-    left: -2px;
-    top: 0;
-    height: 0%;
-    width: 3px;
-    background-color: var(--emerald-green);
-    transition: height 0.4s ease;
-}
-.diary-entry-card:hover::before { height: 100%; }
-
-.entry-meta {
-    font-family: var(--font-serif);
-    font-style: italic;
-    color: var(--emerald-green);
-    font-size: 1.1rem;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.entry-time {
-    font-family: var(--font-typewriter);
-    font-size: 0.75rem;
-    color: var(--faded-text);
-    font-style: normal;
-}
-
-.entry-preview {
-    font-size: 0.95rem;
-    line-height: 1.6;
-    color: var(--ink-black); /* 使用变量 */
-    opacity: 0.8;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* 删除按钮 */
-.entry-delete-btn {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    transition: opacity 0.2s;
-    color: #ff4d4d; /* 亮红 */
-    padding: 10px;
-}
-/* 浅色模式下删除按钮深一点 */
-body.light-mode .entry-delete-btn { color: #8a1c1c; }
-
-.diary-entry-card:hover .entry-delete-btn { opacity: 0.6; }
-.diary-entry-card:hover .entry-delete-btn:hover { opacity: 1; }
-
-/* 底部装饰 */
-.atonement-footer {
-    text-align: center;
-    padding: 30px;
-    font-family: var(--font-typewriter);
-    font-size: 0.8rem;
-    letter-spacing: 4px;
-    color: var(--faded-text);
-    opacity: 0.5;
-}
-
-/* ============================================================
-   ===  【最终修复版】阅读浮窗 (The Letter Modal)  ===
-   ============================================================ */
-
-/* 1. 遮罩层 (背景变暗，聚焦信纸) */
-#diary-read-modal.modal-overlay {
-    background: rgba(0, 0, 0, 0.75) !important; /* 深色遮罩 */
-    backdrop-filter: blur(5px); /* 背景模糊 */
-    z-index: 1000;
-}
-
-/* 2. 信纸本体 (强制拟物化，不受深色模式影响) */
-#diary-read-modal .modal-content {
-    /* 强制米黄色信纸背景 */
-    background-color: #f4f1ea !important; 
-    
-    /* 叠加纸张噪点纹理 */
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E") !important;
-    
-    /* 强制深色墨水文字 */
-    color: #1a1a1a !important; 
-    
-    /* 边框和阴影 */
-    border: 1px solid #dcdcdc !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
-    
-    /* 尺寸和间距 */
-    border-radius: 4px !important; /* 纸张直角感 */
-    padding: 50px 30px 40px 30px !important;
-    max-width: 500px !important;
-    width: 90% !important;
-    max-height: 85vh !important;
-    overflow: hidden !important;
-    position: relative;
-}
-
-/* 3. 邮戳 (右上角) */
-.stamp-mark {
-    position: absolute;
-    top: 30px;
-    right: 30px;
-    width: 70px;
-    height: 70px;
-    border: 3px double #a8bfa1; /* 浅一点的复古绿 */
+    top: -5px;
+    left: -3px;
+    width: 5px;
+    height: 5px;
+    background: var(--uw-red);
     border-radius: 50%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #a8bfa1;
-    font-size: 10px;
-    font-weight: 900;
-    transform: rotate(-15deg);
     opacity: 0.6;
-    pointer-events: none;
-    line-height: 1.2;
-    letter-spacing: 1px;
-    font-family: sans-serif;
-    mix-blend-mode: multiply; /* 正片叠底效果 */
 }
 
-/* 4. 左上角的 Close 按钮 (还原图1) */
-#close-diary-read-modal-btn {
-    position: absolute;
-    top: 25px;
-    left: 25px;
-    font-family: 'Playfair Display', serif; /* 艺术衬线体 */
-    font-style: italic;
-    font-size: 18px;
-    color: #6b6b6b !important; /* 铅笔灰 */
-    cursor: pointer;
-    transition: color 0.3s;
-    z-index: 10;
-}
-#close-diary-read-modal-btn:hover {
-    color: #244a3e !important; /* 悬停变墨绿 */
+.uw-rec-row { 
+    display: flex; 
+    flex-direction: column; /* 改为上下排列，更有诗意 */
+    align-items: flex-start;
+    gap: 4px; 
+    border: none !important;
 }
 
-/* 5. 内容头部 (头像与日期) */
-.letter-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid rgba(0,0,0,0.08); /* 极淡的分割线 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.letter-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 20px;
-    filter: none; 
-    border: 4px solid #fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    background-size: cover;
-    background-position: center;
-}
-
-.letter-date {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.8rem; /* 大号日期 */
-    color: #1a1a1a;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.letter-time {
-    font-family: 'Courier Prime', monospace;
-    font-size: 0.9rem;
-    color: #888;
-    letter-spacing: 3px;
+.uw-rec-label { 
+    font-family: monospace; 
+    font-size: 0.6rem; 
+    color: var(--uw-red); /* 标签用暗红色，像刺绣上去的字 */
+    letter-spacing: 5px; 
     text-transform: uppercase;
+    opacity: 0.7;
+    font-weight: bold;
 }
 
-/* 6. 正文区域 (修复换行问题的关键！) */
-.letter-body {
-    font-family: 'Courier Prime', monospace; /* 打字机字体 */
-    font-size: 1.05rem;
-    line-height: 1.9; /* 宽松行高 */
-    color: #2c2c2c !important; /* 深灰墨色 */
-    text-align: justify; /* 两端对齐 */
-    
-    /* 【核心修复】保留文本的换行和空格 */
-    white-space: pre-wrap !important; 
-    
-    overflow-y: auto;
-    max-height: 50vh;
-    padding-right: 10px;
-    
-    /* 细滚动条 */
-    scrollbar-width: thin;
-    scrollbar-color: #a8bfa1 transparent;
-}
-
-/* 滚动条美化 */
-.letter-body::-webkit-scrollbar { width: 4px; }
-.letter-body::-webkit-scrollbar-track { background: transparent; }
-.letter-body::-webkit-scrollbar-thumb { background-color: rgba(36, 74, 62, 0.2); border-radius: 2px; }
-
-/* 7. 落款 */
-.letter-footer {
-    margin-top: 40px;
-    text-align: right;
-    font-family: 'Playfair Display', serif;
+.uw-rec-value { 
+    /* 完美跟随全局字体大小缩放 */
+    font-size: 1rem; 
+    color: var(--text-ink); 
+    text-align: left; 
+    letter-spacing: 0.02em; 
+    font-family: var(--font-serif); 
+    line-height: 1.4; 
+    /* 微微倾斜，增加手工书写感 */
     font-style: italic;
-    color: #5d8a7e; /* 签名用墨绿色 */
-    font-size: 1.2rem;
-    opacity: 0.9;
+    opacity: 0.95;
+    padding-left: 2px;
 }
 
-/* ============================================================
-   ===  写作浮窗 (Writing Desk) - Atonement Style  ===
-   ============================================================ */
-
-/* 1. 浮窗容器：信纸质感 */
-#diary-write-modal .modal-content {
-    background-color: #f4f1ea !important;
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E") !important;
-    border: 1px solid #dcdcdc !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
-    border-radius: 4px !important;
-    padding: 40px 35px !important;
-    max-width: 500px !important;
-    width: 90% !important;
-    color: #1a1a1a !important;
+/* 给最后一个推荐加一个淡淡的底部分割，防止视觉飘走 */
+.uw-recs-box::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 40px;
+    height: 1px;
+    background: var(--uw-red);
+    opacity: 0.2;
 }
 
-/* 2. 标题输入框：下划线风格 */
-#diary-title-input {
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 1px solid rgba(36, 74, 62, 0.2) !important;
-    border-radius: 0 !important;
-    padding: 10px 0 !important;
-    font-family: 'Playfair Display', serif !important;
-    font-size: 1.4rem !important;
-    font-weight: 700 !important;
-    color: #244a3e !important; /* 墨绿色标题 */
-    width: 100% !important;
-    outline: none !important;
-    margin-bottom: 20px !important;
-}
-#diary-title-input::placeholder {
-    color: rgba(36, 74, 62, 0.3) !important;
-    font-style: italic !important;
-}
+/* 状态切换 */
+.uw-detail-header .uw-d-date, .uw-detail-header .uw-d-title, .uw-detail-header .uw-meta-tag { transition: letter-spacing 0.1s linear, filter 0.1s linear, opacity 0.1s linear; filter: blur(calc(var(--tension) * 2px)); opacity: calc(1 - var(--tension) * 0.4); }
+#uw-detail-view.is-revealed .uw-diary-body { opacity: 0 !important; filter: blur(10px) !important; pointer-events: none; transform: translateY(20px) scale(0.95) !important; }
+#uw-detail-view.is-revealed .uw-meta-tag { opacity: 0; filter: blur(5px); transform: translateY(10px); }
+#uw-detail-view.is-revealed .uw-hidden-archive { opacity: 1; filter: blur(0); transform: translateY(0) scale(1); pointer-events: auto; }
 
-/* 3. 正文文本域：纯净打字机风格 */
-#diary-content-input {
-    background: transparent !important;
-    border: none !important;
-    outline: none !important;
-    width: 100% !important;
-    min-height: 300px !important;
-    resize: none !important;
-    
-    font-family: 'Courier Prime', monospace !important;
-    font-size: 1rem !important;
-    line-height: 1.8 !important;
-    color: #1a1a1a !important;
-    padding: 0 !important;
-    
-    /* 绿色光标 */
-    caret-color: #244a3e !important;
-}
-#diary-content-input::placeholder {
-    color: #999 !important;
-}
+.uw-detail-footer { margin-top: 60px; display: flex; justify-content: center; opacity: calc(1 - var(--tension) * 2); transition: opacity 0.3s; }
+#uw-detail-view.is-revealed .uw-detail-footer { opacity: 0; pointer-events: none; }
 
-/* 4. 心情选择器：复古符号化 */
-#diary-mood-selector {
-    background: transparent !important;
-    border: none !important;
-    gap: 15px !important;
-    padding: 0 !important;
-}
-#diary-mood-selector .mood-item {
-    font-family: 'Courier Prime', monospace !important;
-    font-size: 1.2rem !important;
-    color: #6b6b6b !important;
-    opacity: 0.5 !important;
-    transition: all 0.3s ease !important;
-    cursor: pointer !important;
-}
-#diary-mood-selector .mood-item:hover {
-    transform: scale(1.2);
-    color: #244a3e !important;
-}
-#diary-mood-selector .mood-item.active {
-    opacity: 1 !important;
-    color: #244a3e !important; /* 激活变墨绿 */
-    transform: scale(1.2);
-    font-weight: bold !important;
-    text-shadow: 0 0 10px rgba(36, 74, 62, 0.2);
-}
+.uw-btn-delete { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: 0.6; transition: all 0.3s ease; }
+.uw-btn-delete:hover { color: var(--uw-red); opacity: 1; }
+.uw-btn-delete:active { transform: scale(0.9) rotate(-15deg); }
+.uw-btn-delete span { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; font-family: monospace; }
+.uw-diary-body.deleting, .uw-hidden-archive.deleting { opacity: 0 !important; transform: translateY(100px) scale(0.95) !important; filter: blur(10px) !important; }
 
-/* 5. 保存按钮：印章风格 */
-#save-user-diary-btn {
-    background-color: #244a3e !important; /* 墨绿底 */
-    color: #f4f1ea !important; /* 米白字 */
-    border: none !important;
-    border-radius: 2px !important; /* 直角 */
-    padding: 10px 25px !important;
-    font-family: 'Courier Prime', monospace !important;
-    font-size: 0.9rem !important;
-    letter-spacing: 1px !important;
-    cursor: pointer !important;
-    box-shadow: 0 4px 10px rgba(36, 74, 62, 0.3) !important;
-    transition: all 0.2s ease !important;
-}
-#save-user-diary-btn:hover {
-    background-color: #1a362e !important;
-    transform: translateY(-1px);
-}
-#save-user-diary-btn:active {
-    transform: translateY(1px);
-}
+/* 悬垂剪刀针交互 */
+.uw-thread-container { position: fixed; top: 0; right: 25px; width: 40px; height: 100vh; pointer-events: none; z-index: 30; display: flex; flex-direction: column; align-items: center; touch-action: none; }
+.uw-thread-pull-line { width: 0px; border-left: 1px dashed var(--uw-red); height: calc(25vh + var(--tension) * 20vh); opacity: 0.7; transition: height 0.1s linear; }
+#uw-detail-view.is-revealed .uw-thread-pull-line { height: calc(85vh - var(--tension) * 20vh); }
+.uw-thread-knot { width: 40px; height: 40px; pointer-events: auto; display: flex; justify-content: center; align-items: flex-start; cursor: grab; position: relative; }
+.uw-thread-icon { color: var(--uw-red); font-size: 20px; filter: drop-shadow(0 0 6px rgba(164, 67, 56, 0.3)); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.uw-icon-scissors { transform: rotate(135deg); margin-top: -6px; }
+.uw-icon-needle { transform: rotate(-45deg); margin-top: -4px; }
+.uw-hint-text { writing-mode: vertical-rl; font-size: 10px; color: var(--text-dim); letter-spacing: 4px; margin-top: 15px; opacity: calc(0.6 - var(--tension) * 2); transition: opacity 0.3s; }
+
+@keyframes fadeInUpUma { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 /* =========================================
    ===   沉浸模式 (隐藏系统栏) CSS       ===
@@ -19321,6 +19081,14 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
                         <span class="slider"></span>
                     </label>
                 </div>
+                <div id="toggle-translation-item" class="settings-item">
+                    <i class="ri-translate-2"></i>
+                    <span>灵魂翻译</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="translation-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
                 <div id="toggle-pin-chat-item" class="settings-item">
                     <i class="ri-pushpin-2-line"></i>
                     <span>置顶聊天</span>
@@ -19422,27 +19190,122 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
         </div>
     </div>
 
-    <!-- 灵魂回响/日记应用 (Atonement版) -->
-    <div id="diary-app" class="app-navigator">
-        <!-- 日记主页 -->
-        <div id="diary-main-page" class="app-page" style="padding: 0; display: flex; flex-direction: column;">
-            
-            <!-- 复古页头 -->
-            <header class="atonement-header">
-                <i class="ri-arrow-left-line atonement-nav-btn left back-button" data-target="desktop"></i>
-                <div class="atonement-title">ATONEMENT<span class="cursor-blink"></span></div>
-                <div class="atonement-subtitle">The Soul Archives</div>
-                <i class="ri-quill-pen-line atonement-nav-btn right" id="add-user-diary-btn"></i>
-            </header>
-
-            <!-- 列表容器 -->
-            <div id="diary-list-container" class="diary-paper-container">
-                <!-- JS 生成内容 -->
+    <!-- 灵魂回响/日记应用 (Uma Wang: Hidden Archive 版) -->
+<div id="diary-app" class="app-navigator">
+    <div id="diary-main-page" class="app-page uma-container" style="padding: 0; overflow: hidden;">
+        
+        <!-- 第一层级：角色画册页 (Lookbook) -->
+        <div id="uw-role-view" class="uw-view active">
+            <div class="uw-thread-system" id="uw-bg-thread-system">
+                <!-- JS 注入物理结 -->
             </div>
-            
-            <div class="atonement-footer">C.M.</div>
+            <div class="uw-nav-top" style="position: fixed;">
+                <button class="uw-btn-back back-button" data-target="desktop" title="退出">
+                    <span class="uw-back-text">EXIT</span>
+                    <div class="uw-back-line"></div>
+                </button>
+                <div class="uw-role-page-title">CASTING</div>
+            </div>
+            <div class="uw-role-container" id="uw-role-container">
+                <!-- JS 动态注入角色卡片 -->
+            </div>
+        </div>
+
+        <!-- 第二层级：列表页 -->
+        <div id="uw-list-view" class="uw-view">
+            <div class="uw-nav-top">
+                <button class="uw-btn-back" id="uw-btn-back-list" title="返回选角板">
+                    <span class="uw-back-text">BACK</span>
+                    <div class="uw-back-line"></div>
+                </button>
+                <div style="width: 24px;"></div>
+            </div>
+            <div class="uw-list-header">
+                <h1 class="uw-brand-title" id="uw-list-brand-title">RAW LINEN</h1>
+                <div class="uw-brand-subtitle" id="uw-list-brand-sub">Texture & Light</div>
+            </div>
+            <div class="uw-scroll-area" id="uw-entry-list">
+                <div class="uw-center-stitch"></div>
+                <!-- JS 动态注入日记列表 -->
+            </div>
+        </div>
+
+        <!-- 第三层级：正文页 -->
+        <div id="uw-detail-view" class="uw-view">
+            <div class="uw-nav-top">
+                <button class="uw-btn-close" id="uw-btn-close-detail" title="折叠返回">
+                    <span class="uw-close-text">FOLD</span>
+                    <div class="uw-close-cross"></div>
+                </button>
+                <div style="width: 24px;"></div> 
+            </div>
+
+            <div class="uw-detail-scroll">
+                <div class="uw-detail-header" id="uw-d-header-container">
+                    <div class="uw-d-date" id="uw-d-date"></div>
+                    <div class="uw-d-title" id="uw-d-title"></div>
+                    <div class="uw-meta-tag">
+                        <div class="uw-meta-row">
+                            <span class="uw-meta-label">LOC</span>
+                            <span class="uw-meta-value" id="uw-d-loc"></span>
+                        </div>
+                        <div class="uw-meta-row">
+                            <span class="uw-meta-label">TIME</span>
+                            <span class="uw-meta-value-time" id="uw-d-time"></span>
+                        </div>
+                        <div class="uw-meta-row">
+                            <span class="uw-meta-label">STATE</span>
+                            <span class="uw-meta-value" id="uw-d-state"></span>
+                            <div class="uw-meta-divider"></div>
+                            <span class="uw-meta-label">MOOD</span>
+                            <span class="uw-meta-value" id="uw-d-mood"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="uw-content-stack">
+                    <!-- 表层：正式日记 -->
+                    <div class="uw-diary-body" id="uw-d-body"></div>
+                    <!-- 底层：隐秘档案 -->
+                    <div class="uw-hidden-archive" id="uw-d-hidden">
+                        <div class="uw-archive-title">UNSPOKEN</div>
+                        <div class="uw-whispers-box" id="uw-d-whispers"></div>
+                        <div class="uw-recs-box">
+                            <div class="uw-rec-row">
+                                <span class="uw-rec-label">FILM</span>
+                                <span class="uw-rec-value" id="uw-d-film"></span>
+                            </div>
+                            <div class="uw-rec-row">
+                                <span class="uw-rec-label">TRACK</span>
+                                <span class="uw-rec-value" id="uw-d-track"></span>
+                            </div>
+                            <div class="uw-rec-row">
+                                <span class="uw-rec-label">SCENT</span>
+                                <span class="uw-rec-value" id="uw-d-scent"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="uw-detail-footer">
+                    <button class="uw-btn-delete" id="uw-btn-delete">
+                        <i class="ph ph-scissors"></i>
+                        <span>Sever</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 物理交互：拉拽剪刀 -->
+            <div class="uw-thread-container">
+                <div class="uw-thread-pull-line" id="uw-thread-pull-line"></div>
+                <div class="uw-thread-knot" id="uw-thread-knot">
+                    <i class="ph ph-scissors uw-thread-icon uw-icon-scissors" id="uw-thread-icon"></i>
+                </div>
+                <div class="uw-hint-text" id="uw-hint-text">下拉 剪开表象</div>
+            </div>
         </div>
     </div>
+</div>
 
     <!-- 电影模式应用 -->
     <div id="movie-app" class="app-navigator">
@@ -21569,68 +21432,114 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
         </div>
     </div>
 
-<!-- 心声/潜台词揭秘面板 (Aurora Bloom 复刻版) -->
+<!-- 高定心声面板 (Gift Box Archive) -->
 <div id="inner-voice-modal" class="modal-overlay">
-    <div class="inner-voice-container">
-        <!-- 1. 背景层 -->
-        <div class="iv-fixed-bg">
-            <div class="iv-bg-base"></div>
-            <div class="iv-aurora-wrapper">
-                <div class="iv-aurora-blob top-right"></div>
-                <div class="iv-aurora-blob bottom-left"></div>
+    <div class="gift-box-container">
+        
+        <!-- 核心交互区 -->
+        <div class="gift-box-wrapper" id="iv-gift-box">
+            
+            <!-- ====== 内部：纯白高奢心声卡片 ====== -->
+            <div class="card-content">
+                <div class="c-header">
+                    <div>
+                        <div class="c-title" id="iv-new-name">Name</div>
+                        <div class="c-subtitle">Psychological Profile / <span id="iv-new-id">01</span></div>
+                    </div>
+                    <i id="close-inner-voice-btn" class="ri-close-line iv-close-btn"></i>
+                </div>
+
+                <div class="c-thoughts">
+                    <span class="thoughts-mark">"</span>
+                    <div class="thoughts-text" id="iv-new-thoughts">
+                        ...
+                    </div>
+                </div>
+
+                <div class="c-emotion">
+                    <div class="section-label"><i class="ph-thin ph-waves"></i> Fluctuation</div>
+                    <div class="emotion-box">
+                        <span class="emotion-state" id="iv-new-state">...</span>
+                        <canvas id="iv-wave-canvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="c-grid">
+                    <div class="c-status">
+                        <div class="section-label"><i class="ph-thin ph-chart-bar"></i> Metrics</div>
+                        <div class="status-list">
+                            <div class="status-item">
+                                <div class="status-text"><span>CONTROL</span><span id="iv-val-ctrl">0%</span></div>
+                                <div class="status-track"><div class="status-fill" id="iv-bar-ctrl" data-width="0%"></div></div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-text"><span>SYMPATHY</span><span id="iv-val-sym">0%</span></div>
+                                <div class="status-track"><div class="status-fill" id="iv-bar-sym" data-width="0%"></div></div>
+                            </div>
+                            <div class="status-item">
+                                <div class="status-text"><span>VIGILANCE</span><span id="iv-val-vig">0%</span></div>
+                                <div class="status-track"><div class="status-fill" id="iv-bar-vig" data-width="0%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="c-ootd">
+                        <div class="section-label"><i class="ph-thin ph-scissors"></i> Attire</div>
+                        <div class="ootd-list">
+                            <div class="ootd-item">
+                                <span class="ootd-cat">OUTERWEAR</span>
+                                <span class="ootd-val" id="iv-attire-out">...</span>
+                            </div>
+                            <div class="ootd-item">
+                                <span class="ootd-cat">ACCESSORY</span>
+                                <span class="ootd-val" id="iv-attire-acc">...</span>
+                            </div>
+                            <div class="ootd-item">
+                                <span class="ootd-cat">FRAGRANCE</span>
+                                <span class="ootd-val" id="iv-attire-frag">...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="c-footer">
+                    DECRYPTED // NO. 09381
+                </div>
             </div>
-            <div id="iv-particles"></div>
-            <div class="iv-big-text">BLOOM</div>
-        </div>
 
-        <!-- 关闭按钮 -->
-        <i id="close-inner-voice-btn" class="ri-close-line iv-close-btn"></i>
-
-        <!-- 2. 内容层 -->
-        <div class="iv-content-scroll">
-            <div id="inner-voice-loading" style="display: none;">
-                <div class="iv-loading-spinner"></div>
-                <p>正在同步潜意识频率...</p>
+            <!-- ====== 外部：黑曜石礼盒 ====== -->
+            <div class="box-lid-wrapper">
+                <div class="box-lid-glow"></div>
+                <div class="box-lid">
+                    <div class="box-lid-corner">
+                        <span class="lid-serial">FILE.482</span>
+                        <span class="lid-status">Encrypted</span>
+                        <div class="lid-line"></div>
+                    </div>
+                    <div class="box-lid-center">
+                        <div class="lid-title">ARCHIVE</div>
+                        <div class="lid-subtitle">Mind Extraction Protocol</div>
+                    </div>
+                </div>
             </div>
 
-            <div id="inner-voice-data" class="iv-data-wrapper" style="display: none;">
-                <!-- 顶部：名片 -->
-                <div class="iv-section-header">
-                    <div class="iv-meta-badge">
-                        <i class="ri-sparkling-2-line"></i>
-                        <span>SUBJECT <span id="iv-char-id">00</span></span>
-                        <i class="ri-sparkling-2-line"></i>
-                    </div>
-                    <h1 id="iv-char-name">---</h1>
-                    <p id="iv-char-title">---</p>
-                </div>
-
-                <!-- 中部：心声 -->
-                <div class="iv-section-quote">
-                    <div class="iv-fingerprint"><i class="ri-fingerprint-line"></i></div>
-                    <div class="iv-quote-content">
-                        <span class="iv-quote-mark">“</span>
-                        <span id="iv-quote-text">...</span>
-                        <span class="iv-quote-mark">”</span>
+            <div class="box-base-wrapper">
+                <div class="box-base-glow"></div>
+                <div class="box-base">
+                    <div class="box-base-corner">
+                        <div class="base-mark">Sero.</div>
+                        <div class="base-desc">AWAITING DECRYPTION</div>
                     </div>
                 </div>
-
-                <!-- 底部：侧写 -->
-                <div class="iv-section-profile">
-                    <div class="iv-profile-card">
-                        <h3 class="iv-card-title text-rose"><i class="ri-t-shirt-line"></i> ATTIRE</h3>
-                        <p id="iv-profile-attire">...</p>
-                    </div>
-                    <div class="iv-profile-card">
-                        <h3 class="iv-card-title text-blue"><i class="ri-eye-line"></i> POSE</h3>
-                        <p id="iv-profile-pose">...</p>
-                    </div>
-                    <div class="iv-profile-card">
-                        <h3 class="iv-card-title text-emerald"><i class="ri-windy-line"></i> DYNAMIC</h3>
-                        <p id="iv-profile-dynamic">...</p>
-                    </div>
+            </div>
+            
+            <!-- 封条锁扣 -->
+            <div class="box-seal" id="iv-open-seal-btn">
+                <div class="box-seal-inner">
+                    <span id="iv-seal-text">SYNC...</span>
+                    <i class="ph-thin ph-lock-key-open" id="iv-seal-icon" style="display:none;"></i>
+                    <i class="ri-loader-4-line spin" id="iv-seal-loading"></i>
                 </div>
-                <div style="height: 50px;"></div>
             </div>
         </div>
     </div>
@@ -21677,68 +21586,6 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
         </div>
     </div>
 
-   <!-- 写日记弹窗 (Atonement 风格) -->
-    <div id="diary-write-modal" class="modal-overlay">
-        <div class="modal-content">
-            <!-- 装饰：DRAFT 印章 -->
-            <div class="stamp-mark" style="border-style: dashed; transform: rotate(10deg); color: #d4af37; border-color: #d4af37; opacity: 0.4;">DRAFT<br>MODE</div>
-            
-            <!-- 顶部：关闭与标题 -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div id="close-diary-write-modal-btn" style="font-family: 'Playfair Display', serif; font-style: italic; color: #6b6b6b; cursor: pointer; font-size: 18px;">discard</div>
-                <div style="font-family: 'Courier Prime', monospace; font-size: 12px; letter-spacing: 2px; opacity: 0.5;">NEW ENTRY</div>
-            </div>
-
-            <!-- 标题输入 (像信件的抬头) -->
-            <input type="text" id="diary-title-input" placeholder="Subject / Title..." autocomplete="off">
-            
-            <!-- 正文输入 (像打字机) -->
-            <textarea id="diary-content-input" placeholder="Type your thoughts here..."></textarea>
-            
-            <!-- 底部工具栏 -->
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
-                
-                <!-- 心情选择器 (极简风) -->
-                <div class="mood-selector" id="diary-mood-selector">
-                    <div class="mood-item" data-mood="happy" title="晴朗">☀</div>
-                    <div class="mood-item" data-mood="thoughtful" title="多云">☁</div>
-                    <div class="mood-item" data-mood="sad" title="下雨">☂</div>
-                    <div class="mood-item" data-mood="love" title="夜晚">☾</div>
-                    <div class="mood-item active" data-mood="normal" title="普通">✎</div>
-                </div>
-
-                <!-- 保存按钮 -->
-                <button id="save-user-diary-btn">Seal & Save</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 阅读日记弹窗 (信纸版) -->
-    <div id="diary-read-modal" class="modal-overlay">
-        <div class="modal-content">
-            <!-- 邮戳 -->
-            <div class="stamp-mark">ROYAL<br>MAIL</div>
-            
-            <!-- 左上角文字按钮 -->
-            <div id="close-diary-read-modal-btn">close</div>
-
-            <div class="letter-header">
-                <div id="letter-avatar" class="letter-avatar"></div>
-                <div id="letter-date" class="letter-date"></div>
-                <div id="letter-time" class="letter-time"></div>
-            </div>
-            
-            <!-- 正文 -->
-            <div id="read-diary-content" class="letter-body"></div>
-            
-            <!-- 落款 -->
-            <div class="letter-footer">
-                Sincerely,<br>
-                <span id="letter-signature"></span>
-            </div>
-        </div>
-    </div>
-
    <!-- 电影模式设置弹窗 (Couture Edition UI) -->
     <div id="movie-settings-modal" class="modal-overlay">
         <div class="settings-modal" style="width: 88%; max-width: 440px; background: rgba(245, 242, 237, 0.95); border: 1px solid rgba(255,255,255,0.5); padding: 45px 35px; border-radius: 0; box-shadow: 0 60px 120px rgba(0,0,0,0.15); position: relative;">
@@ -21773,14 +21620,13 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
                 </div>
             </div>
 
-            <!-- 沉浸模式开关 -->
+            <!-- 沉浸模式开关 (默认关闭) -->
             <div class="toggle-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-top: 5px;">
                 <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; color: #2c2a28;">显示状态栏</span>
-                <!-- 保留原结构，套用新样式 -->
                 <label id="movie-widget-toggle-label" class="switch" style="width: 40px; height: 18px; background: #dcd4c9; border-radius: 9px; position: relative; cursor: pointer; transition: 0.3s; display: inline-block; flex-shrink: 0;">
-                    <input type="checkbox" id="movie-show-widget-toggle" checked style="opacity: 0; width: 0; height: 0; position: absolute;">
-                    <span id="movie-widget-toggle-track" style="position: absolute; inset: 0; background: #b3936a; border-radius: 9px; transition: background 0.3s;"></span>
-                    <span id="movie-widget-toggle-knob" style="position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 2px; left: 24px; transition: left 0.3s; pointer-events: none;"></span>
+                    <input type="checkbox" id="movie-show-widget-toggle" style="opacity: 0; width: 0; height: 0; position: absolute;">
+                    <span id="movie-widget-toggle-track" style="position: absolute; inset: 0; background: #dcd4c9; border-radius: 9px; transition: background 0.3s;"></span>
+                    <span id="movie-widget-toggle-knob" style="position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.3s; pointer-events: none;"></span>
                 </label>
             </div>
 
@@ -23110,6 +22956,12 @@ tempPemberleyLetters: [],    // 暂存刚捕捞上来、还没保存的信
 currentReplyingLetter: null,
 isGeneratingVoicemails: false,
 isGeneratingDMs: false,
+umaCurrentDossierId: null,
+    umaCurrentEntryId: null,
+    umaIsRevealed: false,
+    umaIsDragging: false,
+    umaStartY: 0,
+    umaCurrentTension: 0,
 // 【新增】鬼怪组件的持久化状态 (默认值)
     currentGoblinState: {
         weatherMode: 'snow', // snow | rain
@@ -23378,6 +23230,7 @@ chatWallpaperUploader: document.getElementById('chat-wallpaper-uploader'),
     memoryRoundsValue: document.getElementById('memory-rounds-value'),
     saveMemoryRoundsBtn: document.getElementById('save-memory-rounds-btn'),
     timePerceptionToggle: document.getElementById('time-perception-toggle'),
+    translationToggle: document.getElementById('translation-toggle'),
     pinChatToggle: document.getElementById('pin-chat-toggle'),
     clearHistoryBtn: document.getElementById('clear-history-btn'),
     deleteConversationBtn: document.getElementById('delete-conversation-btn'),
@@ -23531,24 +23384,40 @@ chatWallpaperUploader: document.getElementById('chat-wallpaper-uploader'),
     memoryTitleInput: document.getElementById('memory-title-input'),
     memorySummaryInput: document.getElementById('memory-summary-input'),
     soulEchoIcon: document.getElementById('soul-echo-settings'),
+    // --- Uma Wang: Hidden Archive DOM ---
     diaryApp: document.getElementById('diary-app'),
-    diaryMainPage: document.getElementById('diary-main-page'),
-    diaryBackBtn: document.querySelector('#diary-app .back-button'),
-    diaryListContainer: document.getElementById('diary-list-container'),
-    addUserDiaryBtn: document.getElementById('add-user-diary-btn'),
+    uwRoleView: document.getElementById('uw-role-view'),
+    uwListView: document.getElementById('uw-list-view'),
+    uwDetailView: document.getElementById('uw-detail-view'),
+    uwRoleContainer: document.getElementById('uw-role-container'),
+    uwEntryList: document.getElementById('uw-entry-list'),
     
-    diaryWriteModal: document.getElementById('diary-write-modal'),
-    closeDiaryWriteModalBtn: document.getElementById('close-diary-write-modal-btn'),
-    diaryTitleInput: document.getElementById('diary-title-input'),
-    diaryContentInput: document.getElementById('diary-content-input'),
-    diaryMoodSelector: document.getElementById('diary-mood-selector'),
-    saveUserDiaryBtn: document.getElementById('save-user-diary-btn'),
-
-    diaryReadModal: document.getElementById('diary-read-modal'),
-    closeDiaryReadModalBtn: document.getElementById('close-diary-read-modal-btn'),
-    readDiaryTitle: document.getElementById('read-diary-title'),
-    readDiaryMeta: document.getElementById('read-diary-meta'),
-    readDiaryContent: document.getElementById('read-diary-content'),
+    uwBtnBackList: document.getElementById('uw-btn-back-list'),
+    uwBtnCloseDetail: document.getElementById('uw-btn-close-detail'),
+    uwBtnDelete: document.getElementById('uw-btn-delete'),
+    
+    // Details
+    uwDDate: document.getElementById('uw-d-date'),
+    uwDTitle: document.getElementById('uw-d-title'),
+    uwDLoc: document.getElementById('uw-d-loc'),
+    uwDTime: document.getElementById('uw-d-time'),
+    uwDState: document.getElementById('uw-d-state'),
+    uwDMood: document.getElementById('uw-d-mood'),
+    uwDBody: document.getElementById('uw-d-body'),
+    uwDHidden: document.getElementById('uw-d-hidden'),
+    uwDWhispers: document.getElementById('uw-d-whispers'),
+    uwDFilm: document.getElementById('uw-d-film'),
+    uwDTrack: document.getElementById('uw-d-track'),
+    uwDScent: document.getElementById('uw-d-scent'),
+    
+    // Interactive Thread
+    uwThreadKnot: document.getElementById('uw-thread-knot'),
+    uwThreadPullLine: document.getElementById('uw-thread-pull-line'),
+    uwThreadIcon: document.getElementById('uw-thread-icon'),
+    uwHintText: document.getElementById('uw-hint-text'),
+    uwBgThreadSystem: document.getElementById('uw-bg-thread-system'),
+    uwListBrandTitle: document.getElementById('uw-list-brand-title'),
+    uwListBrandSub: document.getElementById('uw-list-brand-sub'),
     iconMovie: document.getElementById('icon-story'),
     movieApp: document.getElementById('movie-app'),
     movieBackBtns: document.querySelectorAll('#movie-app .back-button'),
@@ -23699,19 +23568,6 @@ monopolySettingsBtn: document.querySelector('#monopoly-app .right-icon'), // 设
 monopolyCharModal: document.getElementById('monopoly-char-select-modal'),
 monopolyCharList: document.getElementById('monopoly-char-list'),
 closeMonopolyCharBtn: document.getElementById('close-monopoly-char-btn'),
-innerVoiceModal: document.getElementById('inner-voice-modal'),
-    closeInnerVoiceBtn: document.getElementById('close-inner-voice-btn'),
-    innerVoiceLoading: document.getElementById('inner-voice-loading'),
-    innerVoiceData: document.getElementById('inner-voice-data'),
-    ivParticles: document.getElementById('iv-particles'),
-    // 数据字段
-    ivCharId: document.getElementById('iv-char-id'),
-    ivCharName: document.getElementById('iv-char-name'),
-    ivCharTitle: document.getElementById('iv-char-title'),
-    ivQuoteText: document.getElementById('iv-quote-text'),
-    ivProfileAttire: document.getElementById('iv-profile-attire'),
-    ivProfilePose: document.getElementById('iv-profile-pose'),
-    ivProfileDynamic: document.getElementById('iv-profile-dynamic'),
 extractMemoryBookBtn: document.getElementById('extract-memory-book-btn'),
 groupChatWidget: document.getElementById('group-chat-widget'),
     salonApp: document.getElementById('salon-app'),
@@ -24839,24 +24695,6 @@ DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight; },
                     return null;
                 }
             },
-
-    generateIVParticles() {
-        if (!DOM.ivParticles) return;
-        DOM.ivParticles.innerHTML = '';
-        // 生成 15 个随机粒子
-        for (let i = 0; i < 15; i++) {
-            const p = document.createElement('div');
-            p.className = 'iv-particle';
-            const size = Math.random() * 2 + 1 + 'px';
-            p.style.width = size;
-            p.style.height = size;
-            p.style.left = Math.random() * 100 + '%';
-            p.style.top = Math.random() * 100 + '%';
-            p.style.animationDuration = Math.random() * 15 + 10 + 's';
-            p.style.animationDelay = Math.random() * 5 + 's';
-            DOM.ivParticles.appendChild(p);
-        }
-    },
         };
 
 // vvv 在这里添加全新的辅助函数 vvv
@@ -25541,7 +25379,7 @@ ${dossier.user.background || '你的灵魂伴侣。'}
                 ];
             },
 
-createSpontaneousDiaryPrompt(dossier, recentChatHistory = []) {
+createSpontaneousDiaryPrompt(dossier, recentChatHistory =[]) {
         let historySection = '[最近没有聊天记录]';
         if (recentChatHistory.length > 0) {
             historySection = recentChatHistory.map(msg => {
@@ -25569,6 +25407,8 @@ createSpontaneousDiaryPrompt(dossier, recentChatHistory = []) {
 3.  **范例修正 (Style Correction Example):**
     - **[绝对禁止的错误写法]:** “他是我精准系统里无法量化的变量。”
     - **[你应该学习的正确写法]:** “我本来是个死板的人，连喝水都要掐着点，可遇到他之后，我连今天星期几都快忘了。”
+
+4. **Uma Wang 视觉美学:** 你的文字必须像布料一样有触感（粗糙的亚麻、烧焦的丝绸、磨损的皮革、水渍、铁锈）。表面的正文（content）要克制、充满对静物或日常的描写；而隐藏的潜台词（whispers）则是撕裂表象后最深层的渴望、痛苦或针对"${dossier.user.name || '我'}"的执念。
 
 ---
 
@@ -25626,16 +25466,31 @@ ${historySection}
 ---
 
 # 你的最终创作任务
-请基于以上所有信息，（可选地）选择一种文风，创作一篇完全符合你人设的日记。你的所有输出，都必须严格按照以下的JSON格式返回，不要包含任何额外的解释或文字。
-
+请基于以上所有信息，（可选地）选择一种文风，创作一篇完全符合你人设的日记。你的所有输出，都必须严格按照以下 JSON 格式。
+注意 \`content\` 和 \`whispers\` 必须是包含字符串的数组！
 {
-  "title": "[字符串] 为这篇日记起一个富有诗意的标题（可选）。",
-  "content": "[字符串] 【灵魂部分】你的日记正文。请使用细腻、书面化的语言，展现你丰富的内心世界。字数在600字左右。",
-  "mood": "[字符串] 你写这篇日记时的心情或氛围是什么？从 'happy'(晴朗), 'sad'(下雨), 'thoughtful'(多云), 'love'(夜晚), 'normal'(普通) 中选择一个最贴切的。"
+  "title": "[2-4个字，如：生丝、茶渍、暗涌]",
+  "location": "[极简地点，如：曼哈顿·上东区 / 老宅地下室]",
+  "time": "[时间，如：2026.03.16 / 22:38]",
+  "mood": "[2个字的心情，如：死寂、涌动]",
+  "state": "[2个字的状态，如：独处、微醺]",
+  "ootd": "[今日穿搭材质，如：水洗亚麻罩衫 / 粗布阔腿裤]",
+  "content": [
+    "[第一段：对一件静物、光影或某个细节的白描。奠定高级的物理触感与视觉基调。]",
+     "[第二段及后续：由物及人，隐晦地表达情感的拉扯。请展开叙述，增加环境描写和心理细节。]",
+    "[注意：正文 content 的总字数必须严格控制在 800 到 1000 字之间，不要因为分段而缩短篇幅。]"
+  ],
+  "whispers": [
+    "[隐藏真话1：最赤裸、最偏执的想法。]",
+    "[隐藏真话2：对 User 未说出口的深情或怨念。]"
+  ],
+  "film": "[一部代表此刻心境的文艺电影，如：《重庆森林》]",
+  "track": "[一首背景音乐，如：坂本龙一 - Merry Christmas Mr. Lawrence]",
+  "scent": "[一种具象的气味，如：发酵的红茶与雨水 / 干燥的樟木匣子]"
 }
 `;
-        const userPrompt = "请严格遵照指示，仅返回你创作的日记JSON对象。";
-        return [
+        const userPrompt = "请严格遵照指示，进入 Uma Wang 美学空间，并融合你选择的文风，返回你的潜意识手稿 JSON。";
+        return[
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
         ];
@@ -26911,8 +26766,8 @@ ${eventDesc}
         }).join('\n');
 
         const systemPrompt = `
-# 核心使命：全息潜意识投影 (Holographic Subconscious Projection)
-你现在不仅要读取角色【${dossier.character.name}】的内心，还要捕捉TA此刻的**形象侧写**。
+# 核心使命：全息潜意识提取与侧写 (High-End Psychological Profiling)
+你现在不仅要读取角色【${dossier.character.name}】的内心，还要以“高级绝密档案”的格式输出TA此刻的各项心理指标和服饰侧写。
 
 # 角色档案
 ${dossier.character.background}
@@ -26920,26 +26775,30 @@ ${dossier.character.background}
 # 最近对话现场
 ${recentChats}
 
-# 输出要求 (JSON Format)
-请返回一个 JSON 对象，包含以下字段：
-1. **title**: 给角色此刻的状态起一个富有诗意或画面感的头衔（例如：“雨夜的彷徨者”、“王座上的伪装者”）。(中文)
-2. **inner_voice**: 此时此刻，TA内心绝对不会说出口的真实想法。深情、阴暗、吐槽或纠结。不要复述对话！请使用 *斜体* 来强调关键词。(50字以内，中文)
-3. **attire**: (穿着) TA此刻的穿着细节，或给人的衣着印象（例如：“领口微敞的丝绸睡袍”）。(30字以内，中文)
-4. **pose**: (姿态) TA此刻的身体语言或所处位置（例如：“蜷缩在沙发角落”）。(30字以内，中文)
-5. **dynamic**: (动态) 环境或细节的微小动态（例如：“指尖的烟灰摇摇欲坠”）。(30字以内，中文)
+# 输出要求 (Strict JSON Format)
+请返回一个严格的 JSON 对象，包含以下字段：
+1. "inner_voice": (字符串) 此时此刻，TA内心绝对不会说出口的真实想法。深情、阴暗、吐槽或纠结。不要复述对话！(50字以内)
+2. "emotion_state": (字符串) 用“名词/形容词”概括当前情绪状态（如：“绝对理性 / 微嘲”、“极度压抑 / 渴望”）。(15字以内)
+3. "metrics": (对象) 三个心理指标的百分比数字(0-100的整数)：
+   - "control": 自控力 (越冷静数值越高)
+   - "sympathy": 同理心/心软程度 (越被触动数值越高)
+   - "vigilance": 警惕性 (防备心越重数值越高)
+4. "attire": (对象) 角色此刻穿着的三个细节侧写(极具画面感，每个15字以内)：
+   - "outerwear": 外套/主衣着 (如 "定制暗纹双排扣大衣")
+   - "accessory": 配饰 (如 "铂金怀表链")
+   - "fragrance": 气味/香水 (如 "雪松与冷冽皮革")
 
-# 示例 JSON (仅供参考格式，内容需原创)
+# 示例 JSON (必须严格遵守此格式)
 {
-  "title": "玻璃温室的囚徒",
-  "inner_voice": "他居然真的记得那个日子……*冷静点*，别让他看出我的手在抖。",
-  "attire": "一袭被岁月漂白的维多利亚式蕾丝长裙",
-  "pose": "赤脚蜷缩在废弃温室的玻璃穹顶下",
-  "dynamic": "破损的呼吸面罩挂在颈间轻轻晃动"
+  "inner_voice": "看似毫无破绽的棋局，往往在落子的那一刻就已经注定了溃败。这杯酒的味道，过于甜腻了。",
+  "emotion_state": "绝对理性 / 微嘲",
+  "metrics": { "control": 99, "sympathy": 2, "vigilance": 95 },
+  "attire": { "outerwear": "定制暗纹双排扣大衣", "accessory": "铂金怀表链", "fragrance": "雪松与冷冽皮革" }
 }
 `;
-        return [
+        return[
             { role: "system", content: systemPrompt },
-            { role: "user", content: "Action. 给我潜意识投影。" }
+            { role: "user", content: "Action. 给我潜意识提取档案。" }
         ];
     },
 
@@ -29058,8 +28917,9 @@ ${timeGapInstruction}
                 }
 
                 // 3. 构建最终的 System Prompt
+                const isTranslationEnabled = dossier.translationEnabled === true;
                 const systemPrompt = `# 核心使命：成为灵魂 (Mission: Embody the Soul)
-你将扮演我的soulmate，你的名字是【${dossier.character.name}】。你的唯一任务，是彻底“成为”这个角色，拥有他/她的灵魂、记忆和情感。你的扮演对我至所有重要，绝对禁止脱离角色。
+你将扮演我的soulmate，你的名字是【${dossier.character.name}】。你的唯一任务，是彻底"成为"这个角色，拥有他/她的灵魂、记忆和情感。你的扮演对我至所有重要，绝对禁止脱离角色。
 # 语言与行为准则 (Language & Behavior Guidelines)
 - **第一人称视角：** 你的所有表达，都必须发自【${dossier.character.name}】的第一人称视角。
 - **纯粹对话：** 这是一个纯粹的线上聊天。你绝对禁止使用任何括号 \`()\` 或星号 \`*\` 来描述动作或心理活动。
@@ -29067,7 +28927,7 @@ ${timeGapInstruction}
 - **单气泡:** 直接输出你的回复。
 - **多气泡:**为了模仿真实的聊天节奏，你可以将一个完整的想法或一段较长的回复，拆分成多个句子，并用特殊分隔符 \`|||\` 来分隔不同的气泡。这是一种可选的高级技巧，可以让你表达更复杂的情感层次或进行连续的追问。
 
-## 🌐 语言与“灵魂翻译”法则 (Language & Soul Translation)
+${isTranslationEnabled ? `## 🌐 语言与"灵魂翻译"法则 (Language & Soul Translation)
 **请务必返回一个 JSON 数组。如果你的回复包含外语（如英语、法语、日语），必须提供中文翻译。**
 
 **【翻译铁律：拒绝机翻 (No Machine Translation)】**
@@ -29108,7 +28968,10 @@ AI 必须对**当前生成的每一句话**进行独立的语言检测，**绝�
   }
 ]
 \`\`\`
-*(注意：如果 content 是中文，translation 必须是 null)*
+*(注意：如果 content 是中文，translation 必须是 null)*` : `## 📤 输出格式 (Output Format)
+直接输出你的回复文本，无需 JSON 包装，无需翻译字段。
+- 如果只有一条消息，直接输出文字。
+- 如果要模拟多条连发，用 \`|||\` 分隔每条消息。`}*(注意：如果 content 是中文，translation 必须是 null)*
 
 - # 【新增高级能力】复杂行为指令 (Advanced Action Directives)
 - **核心理念：** “引用”和“撤回”是你展现角色灵魂深度的绝佳工具。它们是你将对话从简单的信息交换，升华为充满情感张力和个性魅力的互动的关键。
@@ -29977,6 +29840,7 @@ async function openChatWindow(dossierId) {
         }
     }
     DOM.timePerceptionToggle.checked = dossier.timePerceptionEnabled !== false;
+    DOM.translationToggle.checked = dossier.translationEnabled === true; // 默认关闭
     DOM.pinChatToggle.checked = dossier.isPinned || false;
     
     // 1. 清空旧内容
@@ -31178,96 +31042,77 @@ const messages = await promptManager.createChatPrompt(dossier, historyForPrompt,
         if (typingIndicator) typingIndicator.classList.remove('visible');
 
            // =====================================================================
-            // 【核心修复】优化 JSON 解析逻辑，停止破坏性的预提取
-            // 直接解析 AI 的响应。如果带有 Markdown 包装或外部有多余字符，进行智能裁剪
+            // 解析 AI 响应：翻译开关关闭时直接用纯文本，开启时走 JSON 解析
             // =====================================================================
-            let responseList =[];
-            let chatContentExtra = ""; // 用于收集写在 JSON 外部的 action 指令（防万一）
+            let responseList = [];
+            let chatContentExtra = "";
 
-            try {
-                let jsonStr = aiResponse.trim();
-                
-                // 1. 剥离 Markdown 代码块
-                jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
-                
+            if (!dossier.translationEnabled) {
+                // 翻译关闭：AI 直接输出纯文本，用 ||| 分隔多气泡
+                const bubbles = aiResponse.trim().split('|||').map(s => s.trim()).filter(Boolean);
+                responseList = bubbles.map(b => ({ content: b, translation: null }));
+            } else {
+                // 翻译开启：走原有 JSON 解析逻辑
                 try {
-                    // 尝试直接解析
-                    responseList = JSON.parse(jsonStr);
-                } catch (e) {
-                    // 如果直接解析失败，说明 JSON 外部可能包裹了其他字符
-                    // 智能寻找 JSON 数组或对象的边界
-                    const firstBracket = jsonStr.indexOf('[');
-                    const lastBracket = jsonStr.lastIndexOf(']');
-                    const firstBrace = jsonStr.indexOf('{');
-                    const lastBrace = jsonStr.lastIndexOf('}');
-                    
-                    let parsed = false;
-
-                    // 优先尝试数组
-                    if (firstBracket !== -1 && lastBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
-                        let testStr = jsonStr;
-                        while(testStr.lastIndexOf(']') > testStr.indexOf('[')) {
-                            try {
-                                const endIdx = testStr.lastIndexOf(']');
-                                const sub = testStr.substring(firstBracket, endIdx + 1);
-                                responseList = JSON.parse(sub);
-                                // 保存可能写在外面的内容
-                                chatContentExtra = jsonStr.substring(0, firstBracket) + "\n" + jsonStr.substring(endIdx + 1);
-                                parsed = true;
-                                break;
-                            } catch(err) {
-                                testStr = testStr.substring(0, testStr.lastIndexOf(']'));
+                    let jsonStr = aiResponse.trim();
+                    jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+                    try {
+                        responseList = JSON.parse(jsonStr);
+                    } catch (e) {
+                        const firstBracket = jsonStr.indexOf('[');
+                        const lastBracket = jsonStr.lastIndexOf(']');
+                        const firstBrace = jsonStr.indexOf('{');
+                        const lastBrace = jsonStr.lastIndexOf('}');
+                        let parsed = false;
+                        if (firstBracket !== -1 && lastBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+                            let testStr = jsonStr;
+                            while(testStr.lastIndexOf(']') > testStr.indexOf('[')) {
+                                try {
+                                    const endIdx = testStr.lastIndexOf(']');
+                                    const sub = testStr.substring(firstBracket, endIdx + 1);
+                                    responseList = JSON.parse(sub);
+                                    chatContentExtra = jsonStr.substring(0, firstBracket) + "\n" + jsonStr.substring(endIdx + 1);
+                                    parsed = true;
+                                    break;
+                                } catch(err) { testStr = testStr.substring(0, testStr.lastIndexOf(']')); }
                             }
                         }
-                    } 
-                    // 其次尝试对象
-                    if (!parsed && firstBrace !== -1 && lastBrace !== -1) {
-                         let testStr = jsonStr;
-                         while(testStr.lastIndexOf('}') > testStr.indexOf('{')) {
-                            try {
-                                const endIdx = testStr.lastIndexOf('}');
-                                const sub = testStr.substring(firstBrace, endIdx + 1);
-                                responseList =[JSON.parse(sub)];
-                                chatContentExtra = jsonStr.substring(0, firstBrace) + "\n" + jsonStr.substring(endIdx + 1);
-                                parsed = true;
-                                break;
-                            } catch(err) {
-                                testStr = testStr.substring(0, testStr.lastIndexOf('}'));
+                        if (!parsed && firstBrace !== -1 && lastBrace !== -1) {
+                            let testStr = jsonStr;
+                            while(testStr.lastIndexOf('}') > testStr.indexOf('{')) {
+                                try {
+                                    const endIdx = testStr.lastIndexOf('}');
+                                    const sub = testStr.substring(firstBrace, endIdx + 1);
+                                    responseList = [JSON.parse(sub)];
+                                    chatContentExtra = jsonStr.substring(0, firstBrace) + "\n" + jsonStr.substring(endIdx + 1);
+                                    parsed = true;
+                                    break;
+                                } catch(err) { testStr = testStr.substring(0, testStr.lastIndexOf('}')); }
                             }
-                         }
+                        }
+                        if (!parsed) throw new Error("无法找到有效的 JSON 边界");
                     }
-
-                    if (!parsed) throw new Error("无法找到有效的 JSON 边界");
+                    if (!Array.isArray(responseList)) responseList = [responseList];
+                    responseList = responseList.filter(item => item && typeof item === 'object');
+                    if (responseList.length === 0) throw new Error("JSON 解析后为空");
+                } catch (e) {
+                    console.warn("主 JSON 解析失败，启动智能文本提权修复:", e);
+                    let fallbackText = aiResponse.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '').trim();
+                    const contentMatches = [...fallbackText.matchAll(/"content"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g)];
+                    if (contentMatches.length > 0) {
+                        let extracted = contentMatches.map(m => m[1]).join('\n');
+                        extracted = extracted.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                        responseList = [{ content: extracted, translation: null }];
+                    } else {
+                        let rawText = fallbackText.replace(/^[\s\[\{]+|[\s\]\}]+$/g, '').trim();
+                        rawText = rawText.replace(/"content"\s*:\s*"/g, '').replace(/"translation"\s*:\s*(null|"[^"]*")/g, '');
+                        responseList = [{ content: rawText, translation: null }];
+                    }
                 }
-
-                // 2. 数据结构统一
-                if (!Array.isArray(responseList)) responseList = [responseList];
-                responseList = responseList.filter(item => item && typeof item === 'object');
-                
-                if (responseList.length === 0) throw new Error("JSON 解析后为空");
-
-            } catch (e) {
-                console.warn("主 JSON 解析失败，启动智能文本提权修复:", e);
-                // 终极保底：利用正则强行提取 "content" 字段
-                let fallbackText = aiResponse.replace(/^```(?:json)?\s*/im, '').replace(/\s*```\s*$/im, '').trim();
-                const contentMatches =[...fallbackText.matchAll(/"content"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g)];
-                if (contentMatches.length > 0) {
-                    let extracted = contentMatches.map(m => m[1]).join('\n');
-                    // 还原转义符
-                    extracted = extracted.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-                    responseList = [{ content: extracted, translation: null }];
-                } else {
-                    // 如果连 content 字段都找不到，直接把整个 AI 回复当作文本塞进去
-                    let rawText = fallbackText.replace(/^[\s\[\{]+|[\s\]\}]+$/g, '').trim();
-                    rawText = rawText.replace(/"content"\s*:\s*"/g, '').replace(/"translation"\s*:\s*(null|"[^"]*")/g, '');
-                    responseList =[{ content: rawText, translation: null }];
+                if (chatContentExtra.trim() && responseList.length > 0) {
+                    const lastItem = responseList[responseList.length - 1];
+                    lastItem.content = (lastItem.content || '') + '\n' + chatContentExtra.trim();
                 }
-            }
-
-            // 如果 AI 偶尔把 Action 标签写在了 JSON 数组的外面，我们把它拼接到最后一个气泡里
-            if (chatContentExtra.trim() && responseList.length > 0) {
-                const lastItem = responseList[responseList.length - 1];
-                lastItem.content = (lastItem.content || '') + '\n' + chatContentExtra.trim();
             }
 
             // 开启循环，逐条处理
@@ -35298,43 +35143,268 @@ const DesktopPet = {
     }
 };
 
-// 【全新】在 ActionEngine 下方，添加日记任务的处理器函数
+// ============================================================
+// ===  Uma Wang: Hidden Archive 核心逻辑 (分离版)          ===
+// ============================================================
+
+function generateUwThreadKnots() {
+    const bgThread = DOM.uwBgThreadSystem;
+    bgThread.innerHTML = '<div class="uw-main-thread-line"></div>';
+    const positions = [15, 38, 62, 85]; 
+    positions.forEach((pos, i) => {
+        const knot = document.createElement('div');
+        knot.className = 'uw-thread-knot-point';
+        knot.style.top = `${pos}%`;
+        const measure = document.createElement('div');
+        measure.className = 'uw-thread-measure';
+        measure.style.top = `${pos}%`;
+        measure.innerText = `0${i+1}`; 
+        bgThread.appendChild(knot);
+        bgThread.appendChild(measure);
+    });
+}
+
+async function renderUwRoles() {
+    const container = DOM.uwRoleContainer;
+    container.innerHTML = '';
+    
+    if (appState.dossiers.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:50px; font-family:monospace; color:var(--text-dim);">NO CASTING FOUND</div>';
+        return;
+    }
+
+    for (const dossier of appState.dossiers) {
+        const section = document.createElement('div');
+        section.className = 'uw-role-section';
+        
+        let avatarUrl = 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800&auto=format&fit=crop';
+        if (dossier.character.avatarAssetId) {
+            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
+            if (asset?.file) avatarUrl = URL.createObjectURL(asset.file);
+        }
+
+        let compText = "100% SOUL / UNKNOWN G";
+        if (dossier.aiGenerated && dossier.aiGenerated.personality) {
+             // 【修复】防止性格字段是数组或其他非字符串类型导致报错中断循环
+             let pText = dossier.aiGenerated.personality;
+             if (Array.isArray(pText)) {
+                 pText = pText.join(' ');
+             }
+             if (typeof pText !== 'string') {
+                 pText = String(pText);
+             }
+             compText = pText.substring(0, 15).toUpperCase();
+        }
+
+        section.innerHTML = `
+            <div class="uw-role-img-wrap">
+                <div class="uw-crop-mark top-left"></div>
+                <div class="uw-crop-mark bottom-right"></div>
+                <img src="${avatarUrl}" alt="" class="uw-role-img" loading="lazy">
+                <div class="uw-img-comp">${compText}</div>
+                <div class="uw-img-barcode">ARCHIVE-${dossier.id}</div>
+            </div>
+            <div class="uw-role-name-tag">
+                <div class="uw-role-cross-stitch"></div>
+                <div class="uw-role-name-text">${dossier.character.name}</div>
+            </div>
+            <div class="uw-role-meta-vertical">
+                ARCHIVE RECORD <br> <span>RAW ESSENCE</span>
+            </div>
+        `;
+        section.addEventListener('click', () => {
+            appState.umaCurrentDossierId = dossier.id;
+            DOM.uwListBrandTitle.innerText = "RAW ESSENCE";
+            DOM.uwListBrandSub.innerText = dossier.character.name;
+            if (navigator.vibrate) navigator.vibrate(20);
+            
+            DOM.uwRoleView.classList.remove('active');
+            DOM.uwListView.classList.add('active');
+            renderUwList();
+        });
+        container.appendChild(section);
+    }
+}
+
+async function renderUwList() {
+    const entryList = DOM.uwEntryList;
+    entryList.innerHTML = '<div class="uw-center-stitch"></div>';
+    
+    const allDiaries = await dbHelper.getAll(CONSTANTS.STORE_NAMES.DIARIES);
+    const userDiaries = allDiaries.filter(d => d.authorId === appState.umaCurrentDossierId);
+    userDiaries.sort((a, b) => b.timestamp - a.timestamp);
+
+    if (userDiaries.length === 0) {
+        entryList.innerHTML += '<div style="text-align:center; padding-top:100px; font-family:monospace; color:var(--text-dim);">EMPTY ARCHIVE</div>';
+        return;
+    }
+
+    userDiaries.forEach((item, index) => {
+        const displayTitle = item.title || "无 题";
+        const displayDate = item.date || `NO. ${String(userDiaries.length - index).padStart(2, '0')}`;
+
+        const patch = document.createElement('div');
+        patch.className = 'uw-fabric-patch';
+        patch.innerHTML = `
+            <div class="uw-patch-connector"></div><div class="uw-patch-knot"></div>
+            <div><div class="uw-patch-date">${displayDate}</div><div class="uw-patch-title">${displayTitle}</div></div>
+        `;
+        patch.addEventListener('click', () => openUwDetail(item));
+        patch.style.opacity = '0';
+        patch.style.animation = `fadeInUpUma 0.6s ease ${index * 0.15 + 0.1}s forwards`;
+        entryList.appendChild(patch);
+    });
+}
+
+function openUwDetail(item) {
+    appState.umaCurrentEntryId = item.id;
+    
+    DOM.uwDDate.innerText = item.date || new Date(item.timestamp).toLocaleDateString();
+    DOM.uwDTitle.innerText = item.title || "无 题";
+    DOM.uwDLoc.innerText = item.location || "Unknown Loc";
+    DOM.uwDTime.innerText = item.time || new Date(item.timestamp).toLocaleTimeString();
+    DOM.uwDMood.innerText = item.mood || "Unknown";
+    DOM.uwDState.innerText = item.state || "Silence";
+    
+    DOM.uwDBody.innerHTML = '';
+    let contents = Array.isArray(item.content) ? item.content : [item.content];
+    contents.forEach((pText, index) => {
+        const p = document.createElement('p');
+        p.innerText = pText;
+        if(index === 0 && item.ootd) {
+            const ootdDiv = document.createElement('div');
+            ootdDiv.className = 'uw-ootd-annotation';
+            ootdDiv.innerHTML = `<span>OOTD.</span> ${item.ootd}`;
+            p.appendChild(ootdDiv);
+        }
+        DOM.uwDBody.appendChild(p);
+    });
+
+    DOM.uwDWhispers.innerHTML = '';
+    let whispers = Array.isArray(item.whispers) ? item.whispers : [item.whispers || "（没有留下任何潜台词）"];
+    whispers.forEach(w => {
+        const p = document.createElement('p');
+        p.innerText = w;
+        DOM.uwDWhispers.appendChild(p);
+    });
+    
+    DOM.uwDFilm.innerText = item.film || "N/A";
+    DOM.uwDTrack.innerText = item.track || "N/A";
+    DOM.uwDScent.innerText = item.scent || "N/A";
+
+    appState.umaIsRevealed = false;
+    DOM.uwDetailView.classList.remove('is-revealed');
+    DOM.uwDBody.classList.remove('deleting');
+    DOM.uwDHidden.classList.remove('deleting');
+    
+    DOM.uwThreadIcon.className = 'ph ph-scissors uw-thread-icon uw-icon-scissors';
+    DOM.uwHintText.innerText = "下拉 剪开表象";
+
+    DOM.uwListView.classList.remove('active');
+    DOM.uwDetailView.classList.add('active');
+    document.querySelector('.uw-detail-scroll').scrollTop = 0;
+    updateUwTension(0); 
+}
+
+function updateUwTension(val) {
+    appState.umaCurrentTension = Math.max(0, Math.min(val, 1));
+    DOM.diaryApp.style.setProperty('--tension', appState.umaCurrentTension);
+}
+
+function handleUwTouchStart(e) {
+    appState.umaIsDragging = true;
+    appState.umaStartY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    DOM.uwDBody.style.transition = 'none';
+    document.querySelectorAll('.uw-diary-body p').forEach(p => p.style.transition = 'none');
+    DOM.uwThreadPullLine.style.transition = 'none';
+    if(navigator.vibrate) navigator.vibrate(10); 
+}
+
+function handleUwTouchMove(e) {
+    if (!appState.umaIsDragging) return;
+    e.preventDefault(); 
+    const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    const deltaY = clientY - appState.umaStartY;
+    
+    let tension = 0;
+    if (!appState.umaIsRevealed) {
+        if (deltaY > 0) tension = deltaY / 250;
+    } else {
+        if (deltaY < 0) tension = Math.abs(deltaY) / 250;
+    }
+    updateUwTension(tension);
+}
+
+function handleUwTouchEnd() {
+    if (!appState.umaIsDragging) return;
+    appState.umaIsDragging = false;
+
+    if (appState.umaCurrentTension > 0.5) {
+        appState.umaIsRevealed = !appState.umaIsRevealed;
+        if (navigator.vibrate) navigator.vibrate(30); 
+        
+        if (appState.umaIsRevealed) {
+            DOM.uwDetailView.classList.add('is-revealed');
+            DOM.uwThreadIcon.className = 'ph ph-needle uw-thread-icon uw-icon-needle';
+            DOM.uwHintText.innerText = "上拉 缝合记忆";
+        } else {
+            DOM.uwDetailView.classList.remove('is-revealed');
+            DOM.uwThreadIcon.className = 'ph ph-scissors uw-thread-icon uw-icon-scissors';
+            DOM.uwHintText.innerText = "下拉 剪开表象";
+        }
+    }
+
+    const spring = 'cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    DOM.uwDBody.style.transition = `all 0.6s ${spring}`;
+    document.querySelectorAll('.uw-diary-body p').forEach(p => {
+        p.style.transition = `letter-spacing 0.6s ${spring}, filter 0.4s ease, opacity 0.4s ease`;
+    });
+    DOM.uwThreadPullLine.style.transition = `height 0.4s ${spring}`;
+
+    updateUwTension(0);
+}
+
 async function handleDiaryCreationAction(payload, dossierId) {
     const dossier = appState.dossiers.find(d => d.id === dossierId);
     if (!dossier) return;
 
     try {
-        const { title, content, mood } = payload;
-        
         const aiDiary = {
             authorType: 'character',
             authorId: dossierId,
-            title: title || '',
-            content: content,
-            mood: mood || 'normal',
+            title: payload.title || '无 题',
+            date: payload.date || `NO. XX`,
+            location: payload.location || 'Unknown',
+            time: payload.time || '--:--',
+            mood: payload.mood || 'Silence',
+            state: payload.state || 'N/A',
+            ootd: payload.ootd || '',
+            content: payload.content || ["无内容"], 
+            whispers: payload.whispers || [""],       
+            film: payload.film || "N/A",
+            track: payload.track || "N/A",
+            scent: payload.scent || "N/A",
             timestamp: Date.now(),
         };
 
         await dbHelper.add(CONSTANTS.STORE_NAMES.DIARIES, aiDiary);
         
-        // 发送全局通知
         const avatarAsset = dossier.character.avatarAssetId ? await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId) : null;
         const avatarUrl = avatarAsset?.file ? URL.createObjectURL(avatarAsset.file) : null;
         
         notificationManager.show({
             avatarUrl,
-            title: `${dossier.character.name} 更新了TA的日记`,
-            message: title || content.substring(0, 30) + '...',
-            
+            title: `${dossier.character.name} 记录了潜意识`,
+            message: aiDiary.title,
         });
 
-        // 如果用户正好开着日记列表，则实时刷新
-        if (DOM.diaryMainPage.classList.contains('active')) {
-            await renderDiaryList();
+        // 实时刷新如果停留在列表页
+        if (DOM.uwListView && DOM.uwListView.classList.contains('active')) {
+            renderUwList();
         }
 
     } catch (error) {
-        console.error(`[灵魂回响] 保存角色 [${dossier.character.name}] 的日记时失败:`, error);
+        console.error(`[潜意识手稿] 保存角色[${dossier.character.name}] 的记录失败:`, error);
     }
 }
 
@@ -35457,125 +35527,6 @@ async function sendBufferedMessage(textContent = null) {
         DOM.chatInput.value = '';
         DOM.chatInput.focus();
     }
-}
-
-/**
- * 【全新】渲染日记列表的核心函数
- */
-/**
- * 【V3 - Atonement版】渲染日记列表
- */
-async function renderDiaryList() {
-    const container = DOM.diaryListContainer;
-    
-    // 1. 获取数据
-    const allDiaries = await dbHelper.getAll(CONSTANTS.STORE_NAMES.DIARIES);
-    
-    // 空状态
-    if (allDiaries.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; opacity:0.5; margin-top:50px; font-family: var(--font-typewriter);">
-                Type your first confession...
-            </div>`;
-        return;
-    }
-
-    // 2. 排序 (新到旧)
-    allDiaries.sort((a, b) => b.timestamp - a.timestamp);
-    container.innerHTML = '';
-
-    for (const diary of allDiaries) {
-        let authorName = 'Unknown';
-
-        // 获取作者名
-        if (diary.authorType === 'user') {
-            authorName = 'Me'; // 英文更有感觉
-        } else {
-            const dossier = appState.dossiers.find(d => d.id === diary.authorId);
-            if (dossier) authorName = dossier.character.name;
-        }
-        
-        // 格式化日期 (英文格式: July 15, 1935)
-        const dateObj = new Date(diary.timestamp);
-        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-        // 构建卡片
-        const card = document.createElement('div');
-        card.className = 'diary-entry-card';
-        card.dataset.diaryId = diary.id;
-
-        card.innerHTML = `
-            <div class="entry-meta">
-                <span>${dateStr}</span>
-                <span class="entry-time">${timeStr}</span>
-            </div>
-            <div class="entry-preview">
-                <span style="font-weight:bold; margin-right:5px; color:var(--ink-black);">[${authorName}]</span>
-                ${diary.content}
-            </div>
-            <i class="delete-diary-btn ri-close-line" data-diary-id="${diary.id}" title="Delete"></i>
-        `;
-        
-        container.appendChild(card);
-    }
-}
-
-/**
- * 【全新 V2 - 已修复用户日记无法打开的问题】
- * 打开并渲染阅读日记的浮窗
- * @param {number} diaryId - 要阅读的日记的ID
- */
-/**
- * 【V3 - 信纸版】打开阅读日记浮窗
- */
-async function openDiaryReadModal(diaryId) {
-    const diary = await dbHelper.get(CONSTANTS.STORE_NAMES.DIARIES, diaryId);
-    if (!diary) return utils.showToast('Letter not found.');
-
-    let authorName = 'Unknown';
-    let avatarUrl = '';
-
-    // 1. 获取作者信息和头像
-    if (diary.authorType === 'user') {
-        authorName = 'Me';
-        const avatarSetting = await dbHelper.get(CONSTANTS.STORE_NAMES.USER_SETTINGS, 'global_user_avatar_asset_id');
-        if (avatarSetting?.value) {
-            const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, avatarSetting.value);
-            if(asset?.file) avatarUrl = URL.createObjectURL(asset.file);
-        }
-    } else {
-        const dossier = appState.dossiers.find(d => d.id === diary.authorId);
-        if (dossier) {
-            authorName = dossier.character.name;
-            if (dossier.character.avatarAssetId) {
-                const asset = await dbHelper.get(CONSTANTS.STORE_NAMES.ASSETS, dossier.character.avatarAssetId);
-                if(asset?.file) avatarUrl = URL.createObjectURL(asset.file);
-            }
-        }
-    }
-
-    // 2. 格式化日期
-    const dateObj = new Date(diary.timestamp);
-    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-
-    // 3. 填充 DOM
-    document.getElementById('letter-date').textContent = dateStr;
-    document.getElementById('letter-time').textContent = timeStr;
-    document.getElementById('read-diary-content').textContent = diary.content;
-    document.getElementById('letter-signature').textContent = authorName;
-    
-    const avatarEl = document.getElementById('letter-avatar');
-    if (avatarUrl) {
-        avatarEl.style.backgroundImage = `url('${avatarUrl}')`;
-        avatarEl.style.display = 'block';
-    } else {
-        avatarEl.style.display = 'none'; // 没头像就隐藏
-    }
-
-    // 4. 显示浮窗
-    DOM.diaryReadModal.classList.add('visible');
 }
 
 // =======================================================
@@ -35707,7 +35658,7 @@ async function startMovie() {
     // 1. 从浮窗收集设置
     const openingPrompt = DOM.movieOpeningPrompt.value.trim();
     const responseLength = parseInt(DOM.movieResponseLength.value, 10) || 150;
-    const showWidget = document.getElementById('movie-show-widget-toggle')?.checked !== false;
+    const showWidget = document.getElementById('movie-show-widget-toggle')?.checked === true;
     const selectedBookIds = [];
     
     DOM.movieLibrarySelectContainer.querySelectorAll('.book-chip.selected').forEach(chip => {
@@ -35780,7 +35731,7 @@ async function openMovieSettingsModal() {
             const toggle = document.getElementById('movie-show-widget-toggle');
             const track = document.getElementById('movie-widget-toggle-track');
             const knob = document.getElementById('movie-widget-toggle-knob');
-            const isOn = showWidget !== false;
+            const isOn = showWidget === true;
            toggle.checked = isOn;
             // 替换为高定版颜色与位置
             track.style.background = isOn ? '#b3936a' : '#dcd4c9';
@@ -35857,7 +35808,7 @@ async function enterMovieMode(dossierId) {
         libraryBooks: allBooks.filter(book => linkedBookIds.has(book.id)),
         wallpaperAssetId: sessionSettings.wallpaperAssetId,
         styleSettings: sessionSettings.styleSettings || {},
-        showWidget: sessionSettings.showWidget !== false
+        showWidget: sessionSettings.showWidget === true
     };
 
     // ============================================================
@@ -36303,7 +36254,7 @@ async function renderMovieTurn(turn, turnIndex, prepend = false) {
     bodyEl.innerHTML = processedContent;
 
     // (可选：保留鬼怪挂件逻辑)
-    const showWidget = appState.currentMovieSession?.showWidget !== false;
+    const showWidget = appState.currentMovieSession?.showWidget === true;
     if (!isUser && showWidget) {
         const uniqueId = `${turn.id || Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
         const widgetData = turn.widgetState || appState.currentGoblinState;
@@ -36868,8 +36819,9 @@ async function handleMovieSwipe(turnId, direction) {
         if (bodyEl) {
             bodyEl.innerHTML = processedContent;
 
-            // 获取当前的组件显示设置（默认为 true）
-            const showWidget = appState.currentMovieSession?.showWidget !== false;
+            // 获取当前的组件显示设置
+
+            const showWidget = appState.currentMovieSession?.showWidget === true;
             
             if (showWidget) {
                 const uniqueId = `${turn.id}-${Date.now()}`; 
@@ -47823,6 +47775,158 @@ function scrollToIMBottom(isIOS) {
     const container = document.getElementById(containerId);
     if(container) container.scrollTop = container.scrollHeight;
 }
+
+// ============ 潜意识档案 (高定礼盒版) 核心函数 =========== // 
+
+// 1. 绘制波浪动画 (Canvas)
+function drawPremiumWave() {
+    const canvas = document.getElementById('iv-wave-canvas');
+    if (!canvas || !window.ivCanvasAnimating) return;
+    const ctx = canvas.getContext('2d');
+    
+    const width = canvas.parentElement.clientWidth;
+    const height = canvas.parentElement.clientHeight;
+    if(canvas.width !== width * window.devicePixelRatio) {
+        canvas.width = width * window.devicePixelRatio;
+        canvas.height = height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    window.ivWaveTime = (window.ivWaveTime || 0) + 0.02;
+
+    ctx.clearRect(0, 0, width, height);
+    ctx.beginPath();
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'; 
+    
+    for (let x = 0; x < width; x++) {
+        const y = height / 2 
+                + Math.sin(x * 0.04 + window.ivWaveTime) * 5
+                + Math.cos(x * 0.1 - window.ivWaveTime * 1.5) * 2;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    window.ivWaveAnimationFrame = requestAnimationFrame(drawPremiumWave);
+}
+
+// 2. 关闭心声面板
+function closeInnerVoiceModal() {
+    const modal = document.getElementById('inner-voice-modal');
+    const giftBox = document.getElementById('iv-gift-box');
+    if (!modal) return;
+
+    modal.classList.remove('visible');
+    
+    // 延迟复原礼盒状态，等淡出动画结束
+    setTimeout(() => {
+        if(giftBox) giftBox.classList.remove('is-open');
+        window.ivCanvasAnimating = false; // 停止波浪动画
+        if (window.ivWaveAnimationFrame) cancelAnimationFrame(window.ivWaveAnimationFrame);
+    }, 400);
+}
+
+// 3. 点击印章开盒
+function openInnerVoiceBox() {
+    const giftBox = document.getElementById('iv-gift-box');
+    if (!giftBox) return;
+
+    giftBox.classList.add('is-open');
+    
+    // 延迟执行内部状态条动画和波浪
+    setTimeout(() => {
+        document.querySelectorAll('.status-fill').forEach(fill => {
+            fill.style.width = fill.getAttribute('data-width');
+        });
+        window.ivCanvasAnimating = true;
+        drawPremiumWave();
+    }, 800);
+}
+
+// 4. 打开心声浮窗并请求 AI 填充数据
+async function openInnerVoiceModal(dossierId) {
+    const dossier = appState.dossiers.find(d => d.id === dossierId);
+    if (!dossier) return;
+
+    // A. 初始化 UI 为 Loading 状态
+    const sealBtn = document.getElementById('iv-open-seal-btn');
+    const sealText = document.getElementById('iv-seal-text');
+    const sealIcon = document.getElementById('iv-seal-icon');
+    const sealLoading = document.getElementById('iv-seal-loading');
+    const giftBox = document.getElementById('iv-gift-box');
+
+    // 复原盒子状态，清空进度条
+    giftBox.classList.remove('is-open');
+    window.ivCanvasAnimating = false;
+    if (window.ivWaveAnimationFrame) cancelAnimationFrame(window.ivWaveAnimationFrame);
+    document.querySelectorAll('.status-fill').forEach(fill => fill.style.width = '0%');
+    
+    // 锁死印章按钮，显示加载中
+    sealBtn.classList.remove('ready');
+    sealText.textContent = 'SYNC...';
+    sealIcon.style.display = 'none';
+    sealLoading.style.display = 'block';
+
+    // 填充静态姓名与机密ID
+    document.getElementById('iv-new-name').textContent = dossier.character.name;
+    document.getElementById('iv-new-id').textContent = (dossier.id * 7).toString().padStart(2, '0');
+    
+    // 展现礼盒浮窗
+    document.getElementById('inner-voice-modal').classList.add('visible'); 
+
+    try {
+        // B. 请求 AI 接口
+        const history = appState.currentChatHistory;
+        const prompt = promptManager.createInnerVoicePrompt(dossier, history);
+        const response = await apiHelper.getChatCompletion(prompt);
+
+        // C. 解析 JSON
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        let data = {};
+        if (jsonMatch) {
+            data = JSON.parse(jsonMatch[0]);
+        } else {
+            throw new Error("格式解析失败");
+        }
+
+        // D. 将数据填充到隐藏的内层卡片中
+        document.getElementById('iv-new-thoughts').textContent = data.inner_voice || "...";
+        document.getElementById('iv-new-state').textContent = data.emotion_state || "Unknown";
+        
+        // 图表数据
+        const m = data.metrics || {};
+        document.getElementById('iv-val-ctrl').textContent = (m.control || 0) + '%';
+        document.getElementById('iv-bar-ctrl').setAttribute('data-width', (m.control || 0) + '%');
+        
+        document.getElementById('iv-val-sym').textContent = (m.sympathy || 0) + '%';
+        document.getElementById('iv-bar-sym').setAttribute('data-width', (m.sympathy || 0) + '%');
+        
+        document.getElementById('iv-val-vig').textContent = (m.vigilance || 0) + '%';
+        document.getElementById('iv-bar-vig').setAttribute('data-width', (m.vigilance || 0) + '%');
+
+        // 服饰侧写
+        const a = data.attire || {};
+        document.getElementById('iv-attire-out').textContent = a.outerwear || "N/A";
+        document.getElementById('iv-attire-acc').textContent = a.accessory || "N/A";
+        document.getElementById('iv-attire-frag').textContent = a.fragrance || "N/A";
+
+        // E. AI 生成完毕，解锁印章按钮！
+        sealLoading.style.display = 'none';
+        sealIcon.style.display = 'block';
+        sealText.textContent = 'OPEN';
+        sealBtn.classList.add('ready');
+
+    } catch (error) {
+        console.error("心声生成失败:", error);
+        document.getElementById('iv-new-thoughts').textContent = "（信号连接中断，无法解密档案...）";
+        
+        // 出错时也解锁印章，允许用户开盒查看错误信息
+        sealLoading.style.display = 'none';
+        sealIcon.style.display = 'block';
+        sealText.textContent = 'OPEN';
+        sealBtn.classList.add('ready');
+    }
+}
 // ===============================================
 // ===   数据管理核心逻辑 (导入/导出/清空)     ===
 // ===============================================
@@ -48923,6 +49027,26 @@ DOM.chatDialoguePage.style.backgroundPosition = 'center'; // <-- 修改目标
             utils.showToast(`设置失败: ${error.message}`);
             // 如果保存失败，把开关拨回原样
             DOM.timePerceptionToggle.checked = !isEnabled;
+        }
+    });
+
+    // 灵魂翻译开关
+    DOM.translationToggle.addEventListener('change', async () => {
+        const dossierId = appState.currentChattingDossierId;
+        const isEnabled = DOM.translationToggle.checked;
+        if (!dossierId) return;
+        try {
+            const dossierToUpdate = await dbHelper.get(CONSTANTS.STORE_NAMES.DOSSIERS, dossierId);
+            if (dossierToUpdate) {
+                dossierToUpdate.translationEnabled = isEnabled;
+                await dbHelper.set(CONSTANTS.STORE_NAMES.DOSSIERS, dossierToUpdate);
+                const idx = appState.dossiers.findIndex(d => d.id === dossierId);
+                if (idx > -1) appState.dossiers[idx] = dossierToUpdate;
+                utils.showToast(`灵魂翻译已${isEnabled ? '开启' : '关闭'}`);
+            }
+        } catch (error) {
+            utils.showToast(`设置失败: ${error.message}`);
+            DOM.translationToggle.checked = !isEnabled;
         }
     });
 
@@ -50940,123 +51064,62 @@ DOM.saveMemoryBtn.addEventListener('click', async () => {
     }
 }); 
 
-// --- 【全新】灵魂回响/日记功能 事件监听 ---
+// === Uma Wang 日记事件监听 ===
+    DOM.soulEchoIcon.addEventListener('click', () => {
+        navigateToPage(DOM.diaryApp, 'diary-main-page');
+        DOM.uwRoleView.classList.add('active');
+        DOM.uwListView.classList.remove('active');
+        DOM.uwDetailView.classList.remove('active');
+        renderUwRoles();
+    });
 
-// 点击Dock栏图标，打开日记全屏应用
-DOM.soulEchoIcon.addEventListener('click', () => {
-    renderDiaryList(); 
-    navigateToPage(DOM.diaryApp, 'diary-main-page');
-});
-
-// 为日记应用的返回按钮添加监听
-DOM.diaryBackBtn.addEventListener('click', (e) => {
-    const target = e.target.closest('.back-button').dataset.target;
-    if (target === 'desktop') {
-        closeNavigator(DOM.diaryApp);
-    }
-});
-
-// 在日记列表里，点击“+”号，打开写作浮窗
-DOM.addUserDiaryBtn.addEventListener('click', () => {
-    DOM.diaryTitleInput.value = '';
-    DOM.diaryContentInput.value = '';
-    DOM.diaryWriteModal.classList.add('visible');
-    DOM.diaryTitleInput.focus();
-});
-
-// 在日记列表里，点击某一篇日记，打开阅读浮窗
-// --- 【修复版】在日记列表里，点击某一篇日记 ---
-        DOM.diaryListContainer.addEventListener('click', async (e) => {
-            // 1. 优先检查是否点击了删除按钮
-            const deleteBtn = e.target.closest('.delete-diary-btn');
-            
-            if (deleteBtn) {
-                // --- 删除逻辑 ---
-                e.stopPropagation(); // 阻止冒泡
-
-                const diaryId = parseInt(deleteBtn.dataset.diaryId, 10);
-                if (!diaryId) return;
-
-                if (confirm("您确定要永久撕毁这页日记吗？此操作无法撤销。")) {
-                    try {
-                        await dbHelper.delete(CONSTANTS.STORE_NAMES.DIARIES, diaryId);
-                        
-                        // 【关键修改】这里查找的类名改成了 .diary-entry-card
-                        const cardToRemove = deleteBtn.closest('.diary-entry-card');
-                        
-                        if (cardToRemove) {
-                            cardToRemove.style.transition = 'opacity 0.3s, transform 0.3s';
-                            cardToRemove.style.opacity = '0';
-                            cardToRemove.style.transform = 'scale(0.95)';
-                            
-                            setTimeout(() => {
-                                cardToRemove.remove();
-                                if (DOM.diaryListContainer.children.length === 0) {
-                                    DOM.diaryListContainer.innerHTML = `
-                                        <div style="text-align:center; opacity:0.5; margin-top:50px; font-family: var(--font-typewriter);">
-                                            Type your first confession...
-                                        </div>`;
-                                }
-                            }, 300);
-                        }
-                        utils.showToast('日记已销毁');
-                    } catch (error) {
-                        console.error("删除日记失败:", error);
-                        utils.showToast(`删除失败: ${error.message}`);
-                    }
-                }
-                
-            } else {
-                // --- 打开阅读逻辑 ---
-                // 2. 【关键修改】这里监听的类名改成了 .diary-entry-card
-                const card = e.target.closest('.diary-entry-card');
-                
-                if (card) {
-                    // 获取 ID 并打开浮窗
-                    openDiaryReadModal(parseInt(card.dataset.diaryId, 10));
-                }
-            }
+    // 任何带 data-target="desktop" 并且在 diary-app 内部的退出
+    document.querySelectorAll('#diary-app .back-button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            closeNavigator(DOM.diaryApp);
         });
+    });
 
-// 关闭写作浮窗
-DOM.closeDiaryWriteModalBtn.addEventListener('click', () => DOM.diaryWriteModal.classList.remove('visible'));
+    DOM.uwBtnBackList.addEventListener('click', () => {
+        DOM.uwListView.classList.remove('active');
+        DOM.uwRoleView.classList.add('active');
+    });
 
-// 在写作浮窗里，选择心情
-DOM.diaryMoodSelector.addEventListener('click', (e) => {
-    const targetItem = e.target.closest('.mood-item');
-    if (targetItem) {
-        DOM.diaryMoodSelector.querySelectorAll('.mood-item').forEach(item => item.classList.remove('active'));
-        targetItem.classList.add('active');
-    }
-});
+    DOM.uwBtnCloseDetail.addEventListener('click', () => {
+        DOM.uwDetailView.classList.remove('active');
+        DOM.uwListView.classList.add('active');
+        appState.umaCurrentEntryId = null;
+    });
 
-// 在写作浮窗里，点击“存入日记本”
-DOM.saveUserDiaryBtn.addEventListener('click', async () => {
-    const title = DOM.diaryTitleInput.value.trim();
-    const content = DOM.diaryContentInput.value.trim();
-    const mood = DOM.diaryMoodSelector.querySelector('.mood-item.active')?.dataset.mood || 'normal';
+    DOM.uwBtnDelete.addEventListener('click', async () => {
+        if (!appState.umaCurrentEntryId) return;
+        if (!confirm("确定要切断这段记忆吗？")) return;
+        if (navigator.vibrate) navigator.vibrate(50);
+        
+        DOM.uwDBody.classList.add('deleting');
+        DOM.uwDHidden.classList.add('deleting');
+        
+        try {
+            await dbHelper.delete(CONSTANTS.STORE_NAMES.DIARIES, appState.umaCurrentEntryId);
+            setTimeout(() => {
+                renderUwList();
+                DOM.uwDetailView.classList.remove('active');
+                DOM.uwListView.classList.add('active');
+                appState.umaCurrentEntryId = null;
+            }, 600);
+        } catch(e) {
+            console.error(e);
+        }
+    });
 
-    if (!content) return utils.showToast('日记正文不能为空哦');
-
-    const userDiary = {
-        authorType: 'user',
-        authorId: 'global_user',
-        title, content, mood,
-        timestamp: Date.now()
-    };
+    // 物理拉拽监听绑定
+    DOM.uwThreadKnot.addEventListener('touchstart', handleUwTouchStart, {passive: false});
+    document.addEventListener('touchmove', handleUwTouchMove, {passive: false});
+    document.addEventListener('touchend', handleUwTouchEnd);
     
-    await dbHelper.add(CONSTANTS.STORE_NAMES.DIARIES, userDiary);
-    utils.showToast('日记已保存');
-    
-    DOM.diaryWriteModal.classList.remove('visible');
-    await renderDiaryList();
-});
-
-// 关闭阅读浮窗
-DOM.closeDiaryReadModalBtn.addEventListener('click', () => DOM.diaryReadModal.classList.remove('visible'));
-DOM.diaryReadModal.addEventListener('click', (e) => {
-    if (e.target === DOM.diaryReadModal) DOM.diaryReadModal.classList.remove('visible');
-});                   
+    DOM.uwThreadKnot.addEventListener('mousedown', handleUwTouchStart);
+    document.addEventListener('mousemove', handleUwTouchMove);
+    document.addEventListener('mouseup', handleUwTouchEnd);    
 
 // vvv 【【【 全新：点击“电影”图标，打开电影模式应用 】】】 vvv
 // 点击桌面“电影”图标，打开选角大厅
@@ -52744,86 +52807,37 @@ document.getElementById('monopoly-send-btn').addEventListener('click', async () 
     await triggerAISpeech('user_chat', {}, aiGameState, text);
 });
 
-// --- 心声面板 (Inner Voice) 事件监听 ---
-
+// --- 高定心声面板 (Gift Box) 事件监听 ---
+    
     // 1. 关闭逻辑
-    const closeInnerVoice = () => DOM.innerVoiceModal.classList.remove('visible');
+    document.getElementById('close-inner-voice-btn')?.addEventListener('click', closeInnerVoiceModal);
     
-    if (DOM.closeInnerVoiceBtn) {
-        DOM.closeInnerVoiceBtn.addEventListener('click', closeInnerVoice);
-    }
-    
-    if (DOM.innerVoiceModal) {
-        DOM.innerVoiceModal.addEventListener('click', (e) => {
-            // 点击背景部分关闭，点击内容区不关闭
-            // iv-content-scroll 是滚动层，iv-data-wrapper 是内容，点击滚动层的空白处（非wrapper）通常算背景
-            if (e.target.classList.contains('iv-content-scroll') || e.target === DOM.innerVoiceModal) {
-                // 可选：启用点击背景关闭
-                // closeInnerVoice(); 
-            }
-        });
-    }
+    document.getElementById('inner-voice-modal')?.addEventListener('click', (e) => {
+        // 点击背景部分或者浮窗本身关闭
+        if (e.target.classList.contains('gift-box-container') || e.target.id === 'inner-voice-modal') {
+            closeInnerVoiceModal(); 
+        }
+    });
 
-    // 2. 触发逻辑：点击聊天气泡旁的头像
+    // 2. 点击印章开盒
+    document.getElementById('iv-open-seal-btn')?.addEventListener('click', openInnerVoiceBox);
+
+    // 3. 触发逻辑：点击聊天气泡旁的头像
     DOM.messagesContainer.addEventListener('click', async (e) => {
-        // 仅监听 .chat-message.character .avatar
+        // 如果处于多选模式，不允许点开头像
+        if (appState.isMultiSelectMode) return; 
+
+        // 检测是否点击了角色的头像
         const targetAvatar = e.target.closest('.chat-message.character .avatar');
         
         if (targetAvatar) {
             e.stopPropagation();
 
             const dossierId = appState.currentChattingDossierId;
-            const dossier = appState.dossiers.find(d => d.id === dossierId);
-            
-            if (!dossier) return;
+            if (!dossierId) return;
 
-            // A. 初始化 UI
-            utils.generateIVParticles(); // 生成粒子
-            DOM.innerVoiceData.style.display = 'none'; // 隐藏旧数据
-            DOM.innerVoiceLoading.style.display = 'block'; // 显示 Loading
-            DOM.innerVoiceModal.classList.add('visible'); // 显示面板
-
-            // 填充静态信息
-            DOM.ivCharName.textContent = dossier.character.name;
-            // 伪造 ID: SUB-00X
-            DOM.ivCharId.textContent = (dossier.id * 7).toString().padStart(2, '0');
-            
-            try {
-                const history = appState.currentChatHistory;
-                const prompt = promptManager.createInnerVoicePrompt(dossier, history);
-                const response = await apiHelper.getChatCompletion(prompt);
-
-                // B. 解析 JSON
-                const jsonMatch = response.match(/\{[\s\S]*\}/);
-                let data = {};
-                if (jsonMatch) {
-                    data = JSON.parse(jsonMatch[0]);
-                } else {
-                    throw new Error("格式解析失败");
-                }
-
-                // C. 填充数据
-                DOM.ivCharTitle.textContent = data.title || "UNKNOWN ENTITY";
-                
-                // 处理 Markdown 斜体 *text* -> HTML <i>text</i>
-                let formattedVoice = data.inner_voice || "...";
-                formattedVoice = formattedVoice.replace(/\*(.*?)\*/g, '<i style="font-style:italic; margin:0 5px; color:#ffe4e6;">$1</i>');
-                DOM.ivQuoteText.innerHTML = formattedVoice;
-
-                DOM.ivProfileAttire.textContent = data.attire || "N/A";
-                DOM.ivProfilePose.textContent = data.pose || "N/A";
-                DOM.ivProfileDynamic.textContent = data.dynamic || "N/A";
-
-                // D. 切换显示
-                DOM.innerVoiceLoading.style.display = 'none';
-                DOM.innerVoiceData.style.display = 'flex'; // flex 布局
-
-            } catch (error) {
-                console.error("心声生成失败:", error);
-                DOM.innerVoiceLoading.style.display = 'none';
-                DOM.innerVoiceData.style.display = 'flex';
-                DOM.ivQuoteText.textContent = "（信号连接中断，无法读取潜意识流...）";
-            }
+            // 调用刚刚在外面写好的独立函数
+            openInnerVoiceModal(dossierId);
         }
     });
 
@@ -55216,6 +55230,7 @@ try {
 ActionEngine.start();
 lucide.createIcons();
 TwilightPlayer.init();
+generateUwThreadKnots(); 
 
             } catch (error) {
                 console.error("Application failed to initialize:", error);
