@@ -28,7 +28,6 @@
    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Pinyon+Script&family=Noto+Serif+SC:wght@200;300;400;500&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
    <script src="https://unpkg.com/pinyin-pro"></script>
    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-   <script src="https://unpkg.com/lucide@latest"></script>
    <script src="https://unpkg.com/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
    <script src="https://unpkg.com/idb@7/build/umd.js"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -19788,7 +19787,7 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
                     
                     <!-- 金色羽毛笔按钮 -->
                     <button id="salon-quill-btn" class="btn-ghost-gold" title="Narration">
-                        <i data-lucide="feather"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.67 19a2 2 0 0 0 1.416-.588l6.154-6.172a6 6 0 0 0-8.49-8.49L5.586 9.914A2 2 0 0 0 5 11.328V18a1 1 0 0 0 1 1z"/><path d="M16 8 2 22"/><path d="M17.5 15H9"/></svg>
                     </button>
 
                     <!-- 发送按钮 (大号悬浮音符) -->
@@ -41372,7 +41371,6 @@ appState.currentChatHistory = history;
     container.appendChild(typingEl);
     
     // 8. 激活图标并滚动
-    if (typeof lucide !== 'undefined') lucide.createIcons();
     setTimeout(() => {
         container.scrollTop = container.scrollHeight;
     }, 50);
@@ -41528,7 +41526,6 @@ async function handleSalonSendMessage(mode) {
                         container.appendChild(el);
                     }
                     container.scrollTop = container.scrollHeight;
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
                 }
                 
                 // 更新列表预览 (不增加红点)
@@ -41584,9 +41581,9 @@ async function createSalonMessageElement(msg) {
         div.className = 'salon-msg-narration';
         div.innerHTML = `
             <div class="inner-wrapper">
-                <i data-lucide="sparkles" class="narration-star top-left"></i>
+                <svg class="narration-star top-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
                 <p>${msg.content}</p>
-                <i data-lucide="sparkles" class="narration-star bottom-right"></i>
+                <svg class="narration-star bottom-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
             </div>
         `;
         return div;
@@ -55228,7 +55225,6 @@ try {
                 await restoreDesktopState();
                 initializeEventListeners();
 ActionEngine.start();
-lucide.createIcons();
 TwilightPlayer.init();
 generateUwThreadKnots(); 
 
