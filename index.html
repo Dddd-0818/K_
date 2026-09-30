@@ -18025,7 +18025,6 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
     </div>
 
     <!-- 🎵 iOS PWA 音频元素：muted 模式可自动播放，用户触摸后再取消静音 -->
-    <audio id="splash-audio-el" loop muted playsinline preload="none"></audio>
 
     <!-- ⏭ SKIP 按钮 -->
     <div class="skip-btn" id="splash-skip-btn">SKIP <span style="opacity:0.6">›</span></div>
@@ -20542,7 +20541,7 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
                         <span>NOW PLAYING</span>
                         <marquee scrollamount="3">Love Scenario - iKON</marquee>
                     </div>
-                    <i class="ri-netease-cloud-music-line vinyl-icon"></i>
+                    <i class="ri-music-2-line vinyl-icon"></i>
                 </div>
                 
                 <!-- 组件B: 恋爱热度/灵感 -->
@@ -22341,8 +22340,6 @@ body.light-mode #movie-character-select-page { background-color: var(--u-bg) !im
 
 const AlchemySplashController = {
     canvas: null, ctx: null, particlesArray:[],
-    // 👇 在这里放入网易云歌曲ID (默认填了 Blade Runner 的 Tears in Rain)
-    musicId: '3313555607', 
     audio: null,
 
     scriptLines: [
@@ -22355,9 +22352,6 @@ const AlchemySplashController = {
     async init() {
         const splashEl = document.getElementById('alchemy-splash');
         if (!splashEl) return;
-
-        // --- 🎵 通过自建 API 获取音频 URL 并播放 ---
-        this.playMusic(); // 不 await，让音频在后台加载，不阻塞动画
 
         // 1. 生成古籍背景文字
         const bg = document.getElementById('splash-manuscriptBg');
@@ -22380,9 +22374,6 @@ const AlchemySplashController = {
 
         // 4. 绑定进入系统按钮
         document.getElementById('splash-enter-btn').addEventListener('click', () => {
-            // --- 🎵 新增：点击进入时，音乐渐弱 ---
-            this.fadeOutMusic();
-
             // 添加 css 类名触发飞升/模糊动画
             splashEl.classList.add('leave-sequence');
             
@@ -22400,7 +22391,6 @@ const AlchemySplashController = {
         // 5. SKIP 按钮：2秒后淡入出现，点击立即跳过
         const skipBtn = document.getElementById('splash-skip-btn');
         const triggerLeave = () => {
-            this.fadeOutMusic();
             splashEl.classList.add('leave-sequence');
             setTimeout(() => {
                 splashEl.remove();
@@ -22413,64 +22403,6 @@ const AlchemySplashController = {
             }
         }, 2000);
         skipBtn.addEventListener('click', triggerLeave);
-    },
-
-    // --- 🎵 播放音乐逻辑（PWA修复版）---
-    async playMusic() {
-        // 【核心修复】通过自建网易云 API 获取真实可跨域的音频 URL
-        const NETEASE_API = 'https://api-enhanced-phi.vercel.app';
-        const audioEl = document.getElementById('splash-audio-el');
-        if (!audioEl) return;
-        this.audio = audioEl;
-        this.audio.loop = true;
-        this.audio.volume = 0.6;
-
-        try {
-            const res = await fetch(`${NETEASE_API}/song/url/v1?id=${this.musicId}&level=exhigh`);
-            const data = await res.json();
-            const audioUrl = data.data?.[0]?.url;
-            if (!audioUrl) throw new Error('API 未返回 url');
-
-            this.audio.src = audioUrl;
-            this.audio.muted = true; // 显式设置，防止部分浏览器忽略 HTML 属性
-
-            // muted 自动播放（绕过所有浏览器/PWA 自动播放策略）
-            // 用户首次触摸 → 取消静音
-            this.audio.play().then(() => {
-                console.log('🎵 静音播放中，等待触摸取消静音...');
-            }).catch(e => console.warn('🎵 静音播放失败:', e));
-
-            const unmute = () => {
-                if (!this.audio) return;
-                try {
-                    const ac = new (window.AudioContext || window.webkitAudioContext)();
-                    ac.resume().catch(() => {});
-                } catch(e) {}
-                this.audio.muted = false;
-                console.log('🎵 已取消静音！');
-            };
-            const splashEl = document.getElementById('alchemy-splash');
-            if (splashEl) {
-                splashEl.addEventListener('touchstart', unmute, { once: true, passive: true });
-                splashEl.addEventListener('mousedown',  unmute, { once: true });
-            }
-
-        } catch(e) {
-            console.warn('🎵 获取音频 URL 失败，跳过开屏音乐:', e);
-        }
-    },
-
-    // --- 🎵 音乐渐弱逻辑 ---
-    fadeOutMusic() {
-        if (!this.audio) return;
-        const fadeAudio = setInterval(() => {
-            if (this.audio && this.audio.volume > 0.05) {
-                this.audio.volume -= 0.05;
-            } else {
-                if (this.audio) this.audio.pause();
-                clearInterval(fadeAudio);
-            }
-        }, 100);
     },
 
     resizeCanvas() {
@@ -28249,9 +28181,6 @@ createChronicleArticlePrompt(dossier, personaSupplement, existingTitles = [], ex
         if (existingTitles.length > 0) {
             banListStr += `\n- **[禁止重复] 已有章节标题：** ${existingTitles.join(', ')}`;
         }
-        if (existingSongs.length > 0) {
-            banListStr += `\n- **[禁止重复] 已用过的BGM：** ${existingSongs.join(', ')}`;
-        }
 
     const systemPrompt = `
 # 核心使命：撰写高质量专属同人文 (Fanfiction)
@@ -28323,17 +28252,6 @@ ${banListStr}
    请根据当前的剧情氛围，恰如其分地引用一句极具宿命感或文艺感的【真实经典电影台词】（如王家卫、昆汀、诺兰的电影）。
    **必须严格使用此 HTML 格式：**
    <div class="comp-quote"><div class="quote-text">"在这里填入电影台词的内容"</div><div style="text-align:right; font-family:'Jost', sans-serif; font-size:10px; color:#888; margin-top:12px; letter-spacing:1px; text-transform:uppercase;">—— 《电影名称 / MOVIE TITLE》</div></div>
-# 3.5 🎵 BGM 选曲指令 (最重要的修改点)
-你必须为这篇文章配一首 **网易云音乐** 里的歌。
-**⚠️ 选曲铁律：**
-1. **拒绝千篇一律：** 严禁总是选择《Merry Christmas Mr. Lawrence》、《Cornfield Chase》等烂大街的纯音乐！
-2. **风格多样化：** 请根据文章情绪，大胆选择 **带有人声/歌词** 的歌曲！
-   -如果是都市情感，选 **R&B, Soul, City Pop** (如 The Weeknd, 落日飞车)。
-   -如果是情绪宣泄，选 **Indie Rock, Alternative** (如 Radiohead, 告五人)。
-   -如果是怀旧，选 **经典华语/欧美老歌** (如 王菲, Lana Del Rey)。
-   - **不要只局限于纯音乐/古典乐！我们需要“像电影插曲”一样的有词歌曲。**
-3. **精准搜索：** 提供的关键词格式必须是 **"歌手名 - 歌名"** (例如 "The Weeknd - Starboy")，这样搜索才准。
-
 4. **【UI 设计师模式 (Creative UI Design)】[至少1个]：** 
     **🚀 核心指令：拒绝模版化！拒绝千篇一律！**
 下方的“参考风格”仅仅是**灵感种子**。请根据文章内容，发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！
@@ -28362,7 +28280,6 @@ ${banListStr}
 ⚠️ 致命警告：为了防止 JSON 解析崩溃，"contentHtml" 里的所有 HTML 代码必须压缩合并成单行！绝对禁止在 JSON 字符串值中直接物理换行！
 {
   "title": "[文章标题，英文或中文，要具有电影感]",
-  "bgm_keyword": "[歌手名 - 歌名]，绝对不能填 null，绝对不能和[已用过的BGM]重复。",
   "secret_message_deleted": "[字符串] 角色写下却又惊慌删掉的【失控废稿】。必须是当时最不理智、最赤裸、最想越界但不敢发出的念头（如极端的占有欲、脆弱的乞求、浓烈的嫉妒）。带有浓烈的喘息感和挣扎感，随后被理智强制退格删除。",
   "secret_message": "[字符串] 角色删掉失控念头后，最终留下的【加密独白】。5-8句。可能是隐忍的让步、暗戳戳的誓言、或是看似平静实则执念极深的喃喃自语。它不仅是一封微型情书，更是本章情绪余韵的极致浓缩。",
   "contentHtml": "[包含上述所有要求的完整 HTML 代码，必须在同一行内完成]"
@@ -28379,9 +28296,6 @@ ${banListStr}
         let banListStr = '';
         if (existingTitles.length > 0) {
             banListStr += `\n- **[禁止重复] 已有章节标题：** ${existingTitles.join(', ')}`;
-        }
-        if (existingSongs.length > 0) {
-            banListStr += `\n- **[禁止重复] 已用过的BGM：** ${existingSongs.join(', ')}`;
         }
 
         const systemPrompt = `
@@ -28455,17 +28369,6 @@ ${banListStr}
    请根据当前的剧情氛围，恰如其分地引用一句极具宿命感或文艺感的【真实经典电影台词】（如王家卫、昆汀、诺兰的电影）。
    **必须严格使用此 HTML 格式：**
    <div class="comp-quote"><div class="quote-text">"在这里填入电影台词的内容"</div><div style="text-align:right; font-family:'Jost', sans-serif; font-size:10px; color:#888; margin-top:12px; letter-spacing:1px; text-transform:uppercase;">—— 《电影名称 / MOVIE TITLE》</div></div>
-# 3.5 🎵 BGM 选曲指令 (最重要的修改点)
-你必须为这篇文章配一首 **网易云音乐** 里的歌。
-**⚠️ 选曲铁律：**
-1. **拒绝千篇一律：** 严禁总是选择《Merry Christmas Mr. Lawrence》、《Cornfield Chase》等烂大街的纯音乐！
-2. **风格多样化：** 请根据文章情绪，大胆选择 **带有人声/歌词** 的歌曲！
-   -如果是都市情感，选 **R&B, Soul, City Pop** (如 The Weeknd, 落日飞车)。
-   -如果是情绪宣泄，选 **Indie Rock, Alternative** (如 Radiohead, 告五人)。
-   -如果是怀旧，选 **经典华语/欧美老歌** (如 王菲, Lana Del Rey)。
-   - **不要只局限于纯音乐/古典乐！我们需要“像电影插曲”一样的有词歌曲。**
-3. **精准搜索：** 提供的关键词格式必须是 **"歌手名 - 歌名"** (例如 "The Weeknd - Starboy")，这样搜索才准。
-
 4. **【UI 设计师模式 (Creative UI Design)】[至少1个]：** 
     **🚀 核心指令：拒绝模版化！拒绝千篇一律！**
 下方的“参考风格”仅仅是**灵感种子**。请根据文章内容，发挥你的想象力，创造出全新的视觉形态！你可以做任何东西！
@@ -28494,7 +28397,6 @@ ${banListStr}
 ⚠️ 致命警告：为了防止 JSON 解析崩溃，"contentHtml" 里的所有 HTML 代码必须压缩合并成单行！绝对禁止在 JSON 字符串值中直接物理换行！
 {
   "title": "[文章标题，英文或中文，要具有电影感]",
-  "bgm_keyword": "[歌手名 - 歌名]，绝对不能填 null，绝对不能和[已用过的BGM]重复。",
   "secret_message_deleted": "[字符串] 角色写下却又惊慌删掉的【失控废稿】。必须是当时最不理智、最赤裸、最想越界但不敢发出的念头（如极端的占有欲、脆弱的乞求、浓烈的嫉妒）。带有浓烈的喘息感和挣扎感，随后被理智强制退格删除。",
   "secret_message": "[字符串] 角色删掉失控念头后，最终留下的【加密独白】。5-8句。可能是隐忍的让步、暗戳戳的誓言、或是看似平静实则执念极深的喃喃自语。它不仅是一封微型情书，更是本章情绪余韵的极致浓缩。",
   "contentHtml": "[包含上述所有要求的完整 HTML 代码，必须在同一行内完成]"
@@ -35740,7 +35642,7 @@ function createGoblinWidget(uniqueId, data = null) {
     container.style.setProperty('--gob-accent', initialAccent);
 
     // 【修复点 1】更换为稳定的音频链接 (Archive.org)
-    // 如果这个也失效，你可以换成你自己的本地文件路径，或者网易云的外链
+    // 如果这个也失效，你可以换成你自己的本地文件路径
     const audioSrc = "http://43.140.245.243:1080/ppp.php?u=kglb&ikey=34625775414b5246334f6547705779324d42766533754f334f65624f67724d614f54346d59766f322f72306154484b77554934384962736648656466686a6d654e794c476a5750494c44446b716b5765373934476b7538566255727858703348416c62534b5343566a54616a626c4c44776565694d2b566c373251735a74774f&d=41376669756159425253316a6549704b524f364b41566675626456394778385136446b6330717a484d424b68433850672f436d614737334e35712f304c6243426156507377306d4f4c70617a517a587a573337336470643135373635467457553035637332716478762b593d&type=302";
 
     // --- 构建 HTML ---

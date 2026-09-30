@@ -3,10 +3,6 @@ const ChronicleApp = {
     rootId: 'chronicle-app-container',
     currentData: null,
 
-neteaseApiBase: 'https://api-enhanced-phi.vercel.app', 
-    currentAudio: null,
-
-vipCookie: 'MUSIC_U=0083DBEBBBE43BB0D5B4BD18E5FAB80C5A1205AF561EE73EF1E3FE563D6773EF4657F18F2114D6AD197664866FB97B9F1F09034B907DEA55DF5B1967389692EC5FB8220DAC58220E71404EEE9EEA497C81F12393F9099D9D1622FDF029BBEF973B7A44B5143352C0350D7C3633013E55D7E44E432C5EA867C9EB1B52D1395C4BFBDBE4A60BAF8EB48D5140A374AD73CA77F59B1CD35A30BE19FDC1C6590CC49CFA3616B67564A9E08C13946756330A0421E813ECA1E331742284C5EF9D5609DAB9C734C6AA8841B1E8B646443E4AC31A99DCFC3A69EFE16996C14A60BB7699D68AC9ADE42CF85DFAF6CEE42E3A4027CCE1740156540CAAD95DDBAD9CF0689C5C1A21BCC538EE8084FE81AAF7FE14920443BB8037C1F55257B9BEFEA1C511DFEAB7ED8F189832D15093D8A92EBD0E9DC7839751546E222FAE9CFA4710E372A9C60D38E3EDB54CDEB19AA43606F6053805E60DA548BD0326E307CC887A82546598D7440A843AD6BBE59EED28D09BCB2FEBFCF99A90377E8DE26A96DD4F5BFF8D3E9CA231B8888E7B4653F436A23372F77AD23A73C2ECC95AC81DF2BD28640DF97827;', 
     currentAudio: null,
     staticChaptersTemplate: [],
 
@@ -15,78 +11,6 @@ toggleNote(element) {
         return; 
     },
 
-// 👇 新增：网易云音乐搜索解析引擎 (GET 请求 + Cookie 瘦身 + 防缓存兼容版)
-    async fetchNeteaseMusic(keyword) {
-        if (!keyword || keyword === 'null') return null;
-        try {
-            console.log(`🎵 [网易云] 开始检索关键词: "${keyword}"`);
-            
-            // 1. Cookie 瘦身：只取 MUSIC_U，防止 URL 过长报错
-            let cleanCookie = '';
-            if (this.vipCookie) {
-                const match = this.vipCookie.match(/MUSIC_U=[^;]+/);
-                cleanCookie = match ? match[0] : this.vipCookie;
-            }
-            
-            // 2. 组装基础参数 (加上 timestamp 防止缓存导致链接失效)
-            const baseParams = `timerstamp=${Date.now()}`;
-            const cookieParam = cleanCookie ? `&cookie=${encodeURIComponent(cleanCookie)}` : '';
-
-            // 3. 搜索歌曲 (GET 请求)
-            const searchUrl = `${this.neteaseApiBase}/search?keywords=${encodeURIComponent(keyword)}&limit=5&${baseParams}${cookieParam}`;
-            const searchRes = await fetch(searchUrl);
-            const searchData = await searchRes.json();
-            const songs = searchData.result?.songs;
-            
-            if (!songs || songs.length === 0) {
-                console.warn(`⚠️ [网易云] 未找到歌曲: ${keyword}`);
-                return null;
-            }
-
-            // 4. 批量获取 URL (GET 请求，请求 exhigh 无损)
-            const songIds = songs.map(s => s.id).join(',');
-            const audioUrlPath = `${this.neteaseApiBase}/song/url/v1?id=${songIds}&level=exhigh&${baseParams}${cookieParam}`;
-            
-            const urlRes = await fetch(audioUrlPath);
-            const urlData = await urlRes.json();
-
-            // 5. 找到第一个能用的链接
-            const validUrlObj = urlData.data?.find(item => item.url && item.url.trim() !== '');
-            
-            if (!validUrlObj) {
-                console.warn(`⚠️ [网易云] 搜索结果全部无效: ${keyword}`);
-                window.utils.showToast(`歌曲暂无音源`);
-                return null;
-            }
-
-            const finalSongId = validUrlObj.id;
-            const audioUrl = validUrlObj.url;
-
-            // 6. 匹配歌曲信息
-            const finalSongMeta = songs.find(s => s.id === finalSongId);
-            const title = finalSongMeta.name;
-            const artist = finalSongMeta.artists?.[0]?.name || 'Unknown';
-
-            console.log(`🎵 [网易云VIP] 锁定歌曲: ${title} - ${artist}`);
-
-            // 7. 获取封面
-            const detailUrl = `${this.neteaseApiBase}/song/detail?ids=${finalSongId}&${baseParams}${cookieParam}`;
-            const detailRes = await fetch(detailUrl);
-            const detailData = await detailRes.json();
-            const coverUrl = detailData.songs?.[0]?.al?.picUrl || '';
-
-            console.log(`✅ [网易云VIP] 音乐加载成功！`);
-            return { id: finalSongId, title, artist, audioUrl, coverUrl };
-            
-        } catch (e) {
-            console.error("❌ [网易云] 网络请求失败:", e);
-            // 只有网络真断了才会报这个错
-            if (e.message.includes('Load failed')) {
-                window.utils.showToast("网络连接被阻断，请检查代理设置");
-            }
-            return null;
-        }
-    },
 
     // 初始化
     init() {
@@ -1388,11 +1312,6 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
                 wrapper.classList.toggle('active');
             }
             
-            // 2. 👇 新增：音乐播放器点击逻辑
-            const musicPlayer = e.target.closest('.chronicle-music-player');
-            if (musicPlayer && document.getElementById('chronicle-app-container').contains(musicPlayer)) {
-                this.toggleMusic(musicPlayer);
-            }
         });
     },
 
@@ -1543,44 +1462,7 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
                 }
             }
 
-            // 获取音乐
             let bgmHtml = '';
-            if (result.bgm_keyword && result.bgm_keyword !== 'null') {
-                if (statusText) statusText.textContent = "TUNING RESONANCE"; 
-                const musicData = await this.fetchNeteaseMusic(result.bgm_keyword);
-                if (musicData) {
-                    bgmHtml = `
-                        <div class="chronicle-music-player" data-id="${musicData.id}" data-src="${musicData.audioUrl}">
-                            <div class="cmp-cassette cmp-wave">
-                                <div class="cs-screw tl"></div><div class="cs-screw tr"></div>
-                                <div class="cs-screw bl"></div><div class="cs-screw br"></div>
-                                <div class="cs-sticker">
-                                    <div class="cs-left">
-                                        <div class="cmp-cover" style="background-image: url('${musicData.coverUrl}')">
-                                            <i class="fa-solid fa-play cmp-btn"></i>
-                                        </div>
-                                        <div class="cs-side"><span>A</span></div>
-                                    </div>
-                                    <div class="cs-window">
-                                        <div class="cs-reel"></div><div class="cs-gauge"></div><div class="cs-reel"></div>
-                                    </div>
-                                    <div class="cs-right">
-                                        <div class="cs-song-info">
-                                            <div class="cmp-title">${musicData.title}</div>
-                                            <div class="cmp-artist">${musicData.artist}</div>
-                                        </div>
-                                        <div class="cs-brand">NOIR<br>ARCHIVE</div>
-                                    </div>
-                                </div>
-                                <div class="cs-bottom-holes">
-                                    <div class="cs-hole sm"></div><div class="cs-hole"></div>
-                                    <div class="cs-hole"></div><div class="cs-hole sm"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
 
             // 获取留言
             let memoHtml = '';
@@ -1980,89 +1862,6 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
         this.navTo('read');
     },
 
-// 👇 新增：支持动态刷新防盗链的播放控制引擎
-    async toggleMusic(playerEl) {
-        const songId = playerEl.dataset.id;
-        let src = playerEl.dataset.src;
-
-        if (!songId && !src) return;
-
-        if (!this.currentAudio) {
-            this.currentAudio = new Audio();
-            this.currentAudio.loop = true; // 循环播放
-        }
-
-        const icon = playerEl.querySelector('.cmp-btn');
-        const wave = playerEl.querySelector('.cmp-wave');
-
-        // 1. 如果点击的是正在播放的同一首歌 (控制暂停/继续)
-        if (this.currentAudio.dataset.songId === songId || this.currentAudio.src === src) {
-            if (this.currentAudio.paused) {
-                this.currentAudio.play();
-                icon.className = 'fa-solid fa-pause cmp-btn';
-                wave.classList.add('playing');
-            } else {
-                this.currentAudio.pause();
-                icon.className = 'fa-solid fa-play cmp-btn';
-                wave.classList.remove('playing');
-            }
-            return;
-        }
-
-        // 2. 如果点击的是一首新歌，且带有 ID，先去“进货”获取最新链接！
-        if (songId) {
-            // 变成小菊花加载状态
-            icon.className = 'fa-solid fa-spinner fa-spin cmp-btn';
-            try {
-                // 提取瘦身版 Cookie
-                let cleanCookie = '';
-                if (this.vipCookie) {
-                    const match = this.vipCookie.match(/MUSIC_U=[^;]+/);
-                    cleanCookie = match ? match[0] : this.vipCookie;
-                }
-                const baseParams = `timerstamp=${Date.now()}`;
-                const cookieParam = cleanCookie ? `&cookie=${encodeURIComponent(cleanCookie)}` : '';
-                
-                // 实时发起请求，换取最新的有效 URL
-                const urlRes = await fetch(`${this.neteaseApiBase}/song/url/v1?id=${songId}&level=exhigh&${baseParams}${cookieParam}`);
-                const urlData = await urlRes.json();
-                const validUrlObj = urlData.data?.find(item => item.url && item.url.trim() !== '');
-                
-                if (validUrlObj) {
-                    src = validUrlObj.url; // 拿到最新链接
-                    playerEl.dataset.src = src; // 更新 DOM 缓存
-                } else {
-                    window.utils.showToast("歌曲因版权受限，无法获取最新音源");
-                    icon.className = 'fa-solid fa-play cmp-btn';
-                    return;
-                }
-            } catch (e) {
-                console.error("获取新链接失败:", e);
-                window.utils.showToast("网络异常，尝试使用历史链接...");
-            }
-        }
-
-        // 3. 把页面上其他的播放器都重置为暂停 UI
-        document.querySelectorAll('.chronicle-music-player').forEach(p => {
-            p.querySelector('.cmp-btn').className = 'fa-solid fa-play cmp-btn';
-            p.querySelector('.cmp-wave').classList.remove('playing');
-        });
-
-        // 4. 播放！
-        this.currentAudio.src = src;
-        this.currentAudio.dataset.songId = songId; // 记住当前播放的 ID
-        
-        try {
-            await this.currentAudio.play();
-            icon.className = 'fa-solid fa-pause cmp-btn';
-            wave.classList.add('playing');
-        } catch(e) {
-            console.error(e);
-            window.utils.showToast("播放失败：链接已过期且无法刷新");
-            icon.className = 'fa-solid fa-play cmp-btn';
-        }
-    },
-
     // 核心逻辑：渲染角色列表
     async renderLobby() {
         const container = document.getElementById('chronicle-char-deck');
@@ -2287,66 +2086,7 @@ document.getElementById('btn-reader-reroll').onclick = (e) => {
                 }
             }
 
-            // --- 网易云音乐逻辑 (在动画覆盖下静默执行) ---
             let bgmHtml = '';
-            if (result.bgm_keyword && result.bgm_keyword !== 'null') {
-                // 此时还在转圈，我们悄悄改一下 loading 文字，显得很智能
-                statusText.textContent = "TUNING RESONANCE"; 
-                
-                const musicData = await this.fetchNeteaseMusic(result.bgm_keyword);
-                
-                if (musicData) {
-                    bgmHtml = `
-                        <!-- 专属 BGM 磁带播放器 -->
-                        <div class="chronicle-music-player" data-id="${musicData.id}" data-src="${musicData.audioUrl}">
-                            
-                            <!-- 磁带本体 (复用 cmp-wave 接收播放状态) -->
-                            <div class="cmp-cassette cmp-wave">
-                                <!-- 玻璃外壳的4个螺丝 -->
-                                <div class="cs-screw tl"></div>
-                                <div class="cs-screw tr"></div>
-                                <div class="cs-screw bl"></div>
-                                <div class="cs-screw br"></div>
-
-                                <!-- 贴纸层 -->
-                                <div class="cs-sticker">
-                                    <div class="cs-left">
-                                        <div class="cmp-cover" style="background-image: url('${musicData.coverUrl}')">
-                                            <i class="fa-solid fa-play cmp-btn"></i>
-                                        </div>
-                                        <div class="cs-side"><span>A</span></div>
-                                    </div>
-                                    
-                                    <!-- 中间磁条视窗与转轮 -->
-                                    <div class="cs-window">
-                                        <div class="cs-reel"></div>
-                                        <div class="cs-gauge"></div> <!-- 刻度简略，增加通透感 -->
-                                        <div class="cs-reel"></div>
-                                    </div>
-
-                                    <div class="cs-right">
-                                        <!-- 👇 核心修改：歌曲信息现在位于贴纸右上角 -->
-                                        <div class="cs-song-info">
-                                            <div class="cmp-title">${musicData.title}</div>
-                                            <div class="cmp-artist">${musicData.artist}</div>
-                                        </div>
-                                        <!-- 👇 核心修改：文案改为 NOIR ARCHIVE -->
-                                        <div class="cs-brand">NOIR<br>ARCHIVE</div>
-                                    </div>
-                                </div>
-
-                                <!-- 磁带底部凹槽 -->
-                                <div class="cs-bottom-holes">
-                                    <div class="cs-hole sm"></div>
-                                    <div class="cs-hole"></div>
-                                    <div class="cs-hole"></div>
-                                    <div class="cs-hole sm"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            }
 
             // --- 提取并生成加密信签组件 ---
             let memoHtml = '';
