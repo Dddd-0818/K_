@@ -307,7 +307,7 @@ toggleNote(element) {
 
 /* === 🎧 磁带音乐播放器 (透明亚克力版) === */
             .chronicle-music-player {
-                display: flex; justify-content: center;
+                display: none; justify-content: center;
                 margin: 50px 0 40px; cursor: pointer; position: relative; width: 100%;
                 -webkit-tap-highlight-color: transparent;
             }
