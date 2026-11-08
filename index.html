@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>KiKiPhone</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
@@ -84,6 +84,8 @@
             background-position: center;
             background-repeat: no-repeat;
         }
+        /* iOS 装到主屏后 dvh 铺不到屏幕底，standalone 里 vh 才是整屏 */
+        @media (display-mode: standalone) { body, html { height: 100vh; } }
 
         .screen { display: flex; flex-direction: column; height: 100%; width: 100%; box-sizing: border-box; }
         .status-bar { flex-shrink: 0; height: 40px; padding: 20px 30px 0 30px; display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: 600; z-index: 30; /* BUG修复：提升z-index */ position: relative; }
